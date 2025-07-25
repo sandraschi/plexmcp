@@ -1,0 +1,93 @@
+﻿{
+  "name": "PlexMCP",
+  "version": "2.1.0",
+  "description": "Comprehensive Plex Media Server management with Austrian efficiency - 24 sophisticated tools for media library control, remote playback, performance optimization, and Vienna-context recommendations.",
+  "author": "Sandra (Vienna Dev Team)",
+  "license": "MIT",
+  "homepage": "https://github.com/sandra-dev/plexmcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sandra-dev/plexmcp.git"
+  },
+  "keywords": [
+    "plex",
+    "media-server",
+    "mcp",
+    "fastmcp",
+    "automation",
+    "vienna",
+    "austrian-efficiency",
+    "anime",
+    "weeb-optimized",
+    "remote-control",
+    "performance",
+    "playlist-management"
+  ],
+  "categories": [
+    "Media Management",
+    "Server Administration",
+    "Entertainment",
+    "Automation",
+    "Performance Optimization"
+  ],
+  "tools": 24,
+  "quality_rating": "enterprise",
+  "complexity": "comprehensive",
+  "target_users": [
+    "Power Users",
+    "Home Theater Enthusiasts",
+    "System Administrators",
+    "Media Collectors",
+    "Anime/Japanese Content Fans"
+  ],
+  "features": [
+    "Complete media library management",
+    "Smart playlist creation and analytics",
+    "Multi-device remote playback control",
+    "Performance monitoring and optimization",
+    "User permission and access control",
+    "Server maintenance and cleanup",
+    "Vienna/Austrian cultural context awareness",
+    "Anime season tracking and recommendations",
+    "European content discovery",
+    "Bandwidth analysis and quality optimization",
+    "Real-time transcoding management",
+    "Advanced search and filtering"
+  ],
+  "requirements": {
+    "python": ">=3.8",
+    "plex_server": ">=1.30.0",
+    "network_access": true,
+    "admin_privileges": "recommended"
+  },
+  "configuration": {
+    "plex_url": "Plex server URL (required)",
+    "plex_token": "Plex authentication token (required)",
+    "vienna_context": "Enable Vienna-specific features (optional)",
+    "anime_preferences": "Japanese content optimization (optional)"
+  },
+  "ai_capabilities": {
+    "context_awareness": "High - Vienna/Austrian cultural context",
+    "user_adaptation": "Excellent - Weeb and efficiency optimization",
+    "automation_level": "Advanced - Smart recommendations and maintenance",
+    "error_handling": "Comprehensive - Graceful degradation"
+  },
+  "deployment": {
+    "platform": "cross-platform",
+    "installation": "pip install + DXT integration",
+    "startup_time": "<5 seconds",
+    "resource_usage": "low"
+  },
+  "vienna_optimization": {
+    "gemütlichkeit_mode": true,
+    "austrian_holidays": true,
+    "european_content_priority": true,
+    "efficiency_first": true
+  },
+  "weeb_features": {
+    "anime_season_tracking": true,
+    "japanese_content_search": true,
+    "manga_integration": "planned",
+    "cultural_context": true
+  }
+}
