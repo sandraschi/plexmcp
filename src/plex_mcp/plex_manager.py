@@ -195,7 +195,34 @@ class PlexManager:
     
     async def get_media_info(self, media_key: str) -> Dict[str, Any]:
         """Get detailed information about specific media"""
-        return await self._make_request(f"/library/metadata/{media_key}")
+        # Strip any leading slash and /children suffix from media_key
+        clean_key = media_key.strip('/').replace('/library/metadata/', '').replace('/children', '')
+        
+        response = await self._make_request(f"/library/metadata/{clean_key}")
+        
+        # Extract media data from response - try different container types
+        for media_type in ['Video', 'Directory', 'Artist', 'Album', 'Track', 'Photo']:
+            media_data = response.get(media_type, None)
+            if media_data:
+                # Return first item if it's a list, otherwise return the item
+                if isinstance(media_data, list):
+                    return media_data[0] if media_data else {}
+                return media_data
+        
+        # If no known media type found, return error response
+        return {
+            "key": clean_key,
+            "title": "Error loading media",
+            "type": "unknown",
+            "year": None,
+            "summary": None,
+            "rating": None,
+            "thumb": None,
+            "art": None,
+            "duration": None,
+            "added_at": 0,
+            "updated_at": 0
+        }
     
     async def get_library_content(self, library_id: str, limit: int = 50) -> List[Dict[str, Any]]:
         """Get content from specific library"""
@@ -218,11 +245,11 @@ class PlexManager:
         """Get available Plex clients"""
         response = await self._make_request("/clients")
         
-        servers = response.get('Server', [])
-        if not isinstance(servers, list):
-            servers = [servers] if servers else []
+        clients = response.get('Client', [])
+        if not isinstance(clients, list):
+            clients = [clients] if clients else []
         
-        return servers
+        return clients
     
     async def get_sessions(self) -> List[Dict[str, Any]]:
         """Get active playback sessions"""
