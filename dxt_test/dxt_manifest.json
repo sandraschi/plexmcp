@@ -1,0 +1,21 @@
+{
+  "dxt_version": "1.0.0",
+  "name": "plex-mcp",
+  "version": "1.0.0",
+  "description": "Plex Media Server MCP - Control and manage your Plex media server",
+  "author": {
+    "name": "Sandra",
+    "email": "sandra@example.com"
+  },
+  "server": {
+    "endpoint": "http://localhost:8000"
+  },
+  "tools": [],
+  "prompts": [
+    {
+      "name": "search_media_prompt",
+      "text": "Search Plex for '{query}' in {section}.",
+      "description": "Search for media in Plex library"
+    }
+  ]
+}

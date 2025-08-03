@@ -1,0 +1,73 @@
+name: Build and Publish DXT Package
+
+on:
+  push:
+    tags:
+      - 'v*' # Push events matching v1.0, v20.15.10, etc.
+  workflow_dispatch:
+    # Allows manual triggering of the workflow
+
+jobs:
+  build-dxt:
+    name: Build DXT Package
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .
+        
+    - name: Install DXT CLI
+      run: npm install -g @anthropic-ai/dxt
+      
+    - name: Build DXT package
+      run: |
+        dxt pack --output dist/plexmcp.dxt
+        
+    - name: Upload DXT package
+      uses: actions/upload-artifact@v3
+      with:
+        name: plexmcp-dxt-package
+        path: dist/plexmcp.dxt
+        retention-days: 5
+        
+    - name: Create GitHub Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        body: |
+          # Plex MCP ${{ github.ref_name }}
+          
+          ## Changes
+          - Built and packaged as DXT extension
+          
+          ## Installation
+          1. Download the `plexmcp.dxt` file from the assets below
+          2. Install using Claude Desktop's extension manager
+          
+          ## Configuration
+          Make sure to set up your Plex token in the Claude Desktop configuration.
+        draft: false
+        prerelease: false
+        
+    - name: Upload DXT package to Release
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./dist/plexmcp.dxt
+        asset_name: plexmcp.dxt
+        asset_content_type: application/octet-stream
