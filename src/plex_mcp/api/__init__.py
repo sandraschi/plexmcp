@@ -7,18 +7,16 @@ organized into logical modules for better maintainability.
 
 from fastmcp import FastMCP
 
-# Import all API modules to register their routes
-from . import core, playback, playlists, admin, vienna
+# Create the shared FastMCP instance
+mcp = FastMCP("PlexMCP")
 
-# Create the main FastMCP instance
-app = FastMCP("PlexMCP")
+# Import all API modules to register their tools with the shared mcp instance
+# The import order matters if there are dependencies between modules
+from . import core
+from . import playback
+from . import playlists
+from . import admin
+from . import vienna
 
-# Register all sub-apps
-app.mount("/core", core.app)
-app.mount("/playback", playback.app)
-app.mount("/playlists", playlists.app)
-app.mount("/admin", admin.app)
-app.mount("/vienna", vienna.app)
-
-# Re-export the main app instance
-__all__ = ['app']
+# Re-export the main FastMCP instance
+__all__ = ['mcp']

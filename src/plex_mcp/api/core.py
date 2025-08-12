@@ -21,8 +21,8 @@ from ..models import (
 # Import services (will be implemented later)
 # from ..services.plex_service import PlexService
 
-# Initialize FastMCP
-mcp = FastMCP("PlexMCP")
+# Import the shared FastMCP instance from the package level
+from . import mcp
 
 @mcp.tool()
 async def get_plex_status() -> PlexServerStatus:
@@ -196,5 +196,4 @@ async def scan_library(library_id: str) -> bool:
     print(f"Scanning library {library_id}...")
     return True
 
-# Export the FastMCP instance
-app = mcp.get_app()
+# No need to export app - tools are registered with the shared mcp instance

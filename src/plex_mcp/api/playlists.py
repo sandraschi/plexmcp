@@ -5,7 +5,8 @@ This module contains API endpoints for managing Plex playlists.
 """
 
 from typing import List, Optional, Dict, Any
-from fastmcp import FastMCP
+# Import the shared FastMCP instance from the package level
+from . import mcp
 
 # Import models
 from ..models import (
@@ -14,9 +15,6 @@ from ..models import (
     PlaylistAnalytics,
     MediaItem
 )
-
-# Initialize FastMCP
-mcp = FastMCP("PlexMCP_Playlists")
 
 @mcp.tool()
 async def create_playlist(
@@ -197,5 +195,4 @@ async def analyze_playlist(
         last_played=1625184000
     )
 
-# Export the FastMCP instance
-app = mcp.get_app()
+# No need to export app - tools are registered with the shared mcp instance

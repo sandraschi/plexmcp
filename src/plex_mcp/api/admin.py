@@ -6,7 +6,8 @@ and server maintenance.
 """
 
 from typing import List, Optional, Dict, Any
-from fastmcp import FastMCP
+# Import the shared FastMCP instance from the package level
+from . import mcp
 
 # Import models
 from ..models import (
@@ -20,9 +21,6 @@ from ..utils import get_logger, async_retry, run_in_executor, ValidationError
 
 # Initialize logger
 logger = get_logger(__name__)
-
-# Initialize FastMCP
-mcp = FastMCP("PlexMCP_Admin")
 
 @mcp.tool()
 async def get_users() -> List[UserPermissions]:
@@ -179,5 +177,4 @@ async def get_server_health() -> Dict[str, Any]:
         ]
     }
 
-# Export the FastMCP instance
-app = mcp.get_app()
+# No need to export app - tools are registered with the shared mcp instance

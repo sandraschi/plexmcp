@@ -7,7 +7,8 @@ and recommendations.
 
 from typing import List, Optional, Dict, Any
 from datetime import datetime
-from fastmcp import FastMCP
+# Import the shared FastMCP instance from the package level
+from . import mcp
 
 # Import models
 from ..models import (
@@ -22,9 +23,6 @@ from ..utils import get_logger, async_retry, run_in_executor, ValidationError
 
 # Initialize logger
 logger = get_logger(__name__)
-
-# Initialize FastMCP
-mcp = FastMCP("PlexMCP_Vienna")
 
 @mcp.tool()
 async def get_vienna_recommendations(
@@ -201,5 +199,4 @@ async def get_vienna_cultural_events(
     
     return events
 
-# Export the FastMCP instance
-app = mcp.get_app()
+# No need to export app - tools are registered with the shared mcp instance

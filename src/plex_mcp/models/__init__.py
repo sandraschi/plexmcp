@@ -1,7 +1,8 @@
 """
 PlexMCP Models Package
 
-This package contains all Pydantic models used throughout the PlexMCP application.
+This package contains all Pydantic models for the PlexMCP application,
+organized into logical modules for better maintainability.
 """
 
 # Core models
@@ -9,54 +10,39 @@ from .core import PlexServerStatus, MediaLibrary, MediaItem
 
 # Playback models
 from .playback import (
-    PlexSession,
-    PlexClient,
-    RemotePlaybackRequest,
-    CastRequest,
-    PlaybackControlResult,
+    PlexSession, PlexClient, RemotePlaybackRequest, 
+    CastRequest, PlaybackControlResult
 )
 
 # Playlist models
 from .playlists import PlexPlaylist, PlaylistCreateRequest, PlaylistAnalytics
 
-# Quality and performance models
+# Quality models
 from .quality import QualityProfile, TranscodingStatus, BandwidthAnalysis
 
-# Admin and user management models
+# Admin models
 from .admin import UserPermissions, ServerMaintenanceResult
 
 # Vienna/Austrian context models
 from .vienna import WienerRecommendation, EuropeanContent, AnimeSeasonInfo
 
 __all__ = [
-    # Core models
-    'PlexServerStatus',
-    'MediaLibrary',
-    'MediaItem',
+    # Core
+    'PlexServerStatus', 'MediaLibrary', 'MediaItem',
     
-    # Playback models
-    'PlexSession',
-    'PlexClient',
-    'RemotePlaybackRequest',
-    'CastRequest',
-    'PlaybackControlResult',
+    # Playback
+    'PlexSession', 'PlexClient', 'RemotePlaybackRequest', 
+    'CastRequest', 'PlaybackControlResult',
     
-    # Playlist models
-    'PlexPlaylist',
-    'PlaylistCreateRequest',
-    'PlaylistAnalytics',
+    # Playlists
+    'PlexPlaylist', 'PlaylistCreateRequest', 'PlaylistAnalytics',
     
-    # Quality models
-    'QualityProfile',
-    'TranscodingStatus',
-    'BandwidthAnalysis',
+    # Quality
+    'QualityProfile', 'TranscodingStatus', 'BandwidthAnalysis',
     
-    # Admin models
-    'UserPermissions',
-    'ServerMaintenanceResult',
+    # Admin
+    'UserPermissions', 'ServerMaintenanceResult',
     
-    # Vienna models
-    'WienerRecommendation',
-    'EuropeanContent',
-    'AnimeSeasonInfo',
+    # Vienna/Austrian context
+    'WienerRecommendation', 'EuropeanContent', 'AnimeSeasonInfo'
 ]

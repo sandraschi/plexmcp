@@ -5,7 +5,8 @@ This module contains API endpoints for managing Plex playback, sessions, and cli
 """
 
 from typing import List, Optional, Dict, Any
-from fastmcp import FastMCP
+# Import the shared FastMCP instance from the package level
+from . import mcp
 
 # Import models
 from ..models import (
@@ -15,9 +16,6 @@ from ..models import (
     CastRequest,
     PlaybackControlResult
 )
-
-# Initialize FastMCP
-mcp = FastMCP("PlexMCP_Playback")
 
 @mcp.tool()
 async def get_clients() -> List[PlexClient]:
@@ -141,5 +139,4 @@ async def cast_media(request: CastRequest) -> PlaybackControlResult:
         message=f"Successfully cast media to {request.client_id}"
     )
 
-# Export the FastMCP instance
-app = mcp.get_app()
+# No need to export app - tools are registered with the shared mcp instance
