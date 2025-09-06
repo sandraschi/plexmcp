@@ -1,0 +1,26 @@
+# Plex MCP Configuration
+
+# Server configuration
+server:
+  host: "0.0.0.0"  # Bind address
+  port: 8000       # Port to listen on
+  debug: false     # Enable debug mode (not recommended for production)
+
+# Plex server connection
+plex:
+  base_url: "http://localhost:32400"  # Plex server URL
+  token: "your-plex-token-here"        # Plex authentication token
+  timeout: 30                         # Request timeout in seconds
+
+# MCP server metadata
+mcp:
+  name: "plex-mcp"
+  version: "1.0.0"
+  description: "Plex Media Server MCP"
+  
+# Logging configuration
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  file: "plex_mcp.log"  # Log file path (optional)
+  max_size: 10  # Max log file size in MB
+  backup_count: 5  # Number of backup logs to keep

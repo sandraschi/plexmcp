@@ -7,7 +7,7 @@ and server maintenance.
 
 from typing import List, Optional, Dict, Any
 # Import the shared FastMCP instance from the package level
-from . import mcp
+from ..app import mcp
 
 # Import models
 from ..models import (

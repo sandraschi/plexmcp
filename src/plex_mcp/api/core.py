@@ -21,8 +21,8 @@ from ..models import (
 # Import services (will be implemented later)
 # from ..services.plex_service import PlexService
 
-# Import the shared FastMCP instance from the package level
-from . import mcp
+# Import the shared FastMCP instance from the app module
+from ..app import mcp
 
 @mcp.tool()
 async def get_plex_status() -> PlexServerStatus:

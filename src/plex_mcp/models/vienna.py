@@ -1,58 +1,37 @@
 """
-Vienna and Austrian context Pydantic models for PlexMCP.
+Vienna-specific models for PlexMCP.
 
-This module contains models related to Vienna-specific content and recommendations.
+This module contains models related to the Austrian/Vienna-specific functionality
+that was referenced in the project's models/__init__.py file.
 """
-
-from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field
+from typing import List, Optional
+from datetime import datetime
 
 class WienerRecommendation(BaseModel):
-    """Vienna-context content recommendation"""
-    media_key: str = Field(description="Media key/ID")
-    title: str = Field(description="Media title")
-    type: str = Field(description="Media type (movie, show, episode)")
-    year: Optional[int] = Field(description="Release year")
-    duration: Optional[int] = Field(description="Duration in minutes")
-    rating: Optional[float] = Field(description="Rating if available")
-    vienna_score: float = Field(description="Vienna context relevance score")
-    mood_match: str = Field(description="Mood category match")
-    austrian_context: Optional[str] = Field(
-        description="Austrian cultural relevance"
-    )
-    recommendation_reason: str = Field(
-        description="Why this content fits Vienna context"
-    )
-    best_time: str = Field(description="Optimal viewing time context")
-
+    """Model for Viennese cultural recommendations."""
+    title: str = Field(..., description="Title of the recommended content")
+    description: str = Field(..., description="Description of the recommendation")
+    category: str = Field(..., description="Category of the recommendation")
+    location: str = Field(..., description="Location in Vienna")
+    start_date: Optional[datetime] = Field(None, description="Start date and time")
+    end_date: Optional[datetime] = Field(None, description="End date and time")
 
 class EuropeanContent(BaseModel):
-    """European content discovery result"""
-    media_key: str = Field(description="Media key/ID")
-    title: str = Field(description="Original title")
-    local_title: Optional[str] = Field(description="Local/translated title")
-    country: str = Field(description="Country of origin")
-    language: str = Field(description="Primary language")
-    subtitles: List[str] = Field(description="Available subtitle languages")
-    genre: str = Field(description="Genre category")
-    year: Optional[int] = Field(description="Release year")
-    rating: Optional[float] = Field(description="Rating if available")
-    cultural_significance: Optional[str] = Field(
-        description="Cultural or historical importance"
-    )
-    eu_funding: bool = Field(description="EU co-production or funding")
-    awards: List[str] = Field(description="European film awards received")
-    availability_score: float = Field(
-        description="How easily available in Austria"
-    )
-
+    """Model for European cultural content."""
+    title: str = Field(..., description="Title of the content")
+    country: str = Field(..., description="Country of origin")
+    language: str = Field(..., description="Original language")
+    year: int = Field(..., description="Release year")
+    is_eu_funded: bool = Field(False, description="Whether the content received EU funding")
 
 class AnimeSeasonInfo(BaseModel):
-    """Anime season information for weebs"""
-    title: str = Field(description="Anime title")
-    year: int = Field(description="Release year")
-    season: Optional[str] = Field(description="Season (Winter, Spring, Summer, Fall)")
-    episodes_available: int = Field(description="Episodes available in library")
-    rating: Optional[float] = Field(description="Rating if available")
-    summary: Optional[str] = Field(description="Brief summary")
-    status: str = Field(description="Airing status (ongoing, completed, etc)")
+    """Model for anime season information."""
+    title: str = Field(..., description="Anime title")
+    season_number: int = Field(..., description="Season number")
+    episode_count: int = Field(..., description="Number of episodes")
+    year: int = Field(..., description="Release year")
+    studio: str = Field(..., description="Production studio")
+    is_viennese_dub: bool = Field(False, description="Has Viennese German dub")
+
+# Add any additional Vienna-specific models below

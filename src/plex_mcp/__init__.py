@@ -1,26 +1,11 @@
-"""
-PlexMCP - FastMCP 2.0 Server for Plex Media Server Management
+"""PlexMCP - Production Plex Media Server MCP Integration"""
 
-Austrian efficiency package for Sandra's media streaming workflow.
-Provides 13 tools: 10 core Plex operations + 3 Austrian efficiency tools.
-"""
+__version__ = "2.0.0"
+__author__ = "Sandra Schipal"
 
-__version__ = "1.0.0"
-__author__ = "Sandra"
-__description__ = "FastMCP 2.0 server for Plex Media Server management"
+# Single source of truth for imports
+from .config import get_settings
+from .services.plex_service import PlexService
+from .main import main
 
-# Core exports - handle both package and direct execution
-try:
-    from .server import mcp
-    from .config import PlexConfig  
-    from .plex_manager import PlexManager, PlexAPIError
-except ImportError:
-    # For direct execution, these imports may not be available
-    pass
-
-__all__ = [
-    "mcp",
-    "PlexConfig",
-    "PlexManager", 
-    "PlexAPIError"
-]
+__all__ = ["get_settings", "PlexService", "main"]

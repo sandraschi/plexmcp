@@ -6,7 +6,7 @@ This module contains API endpoints for managing Plex playlists.
 
 from typing import List, Optional, Dict, Any
 # Import the shared FastMCP instance from the package level
-from . import mcp
+from ..app import mcp
 
 # Import models
 from ..models import (

@@ -222,11 +222,11 @@ def get_plex_auth_url(
     query = urllib.parse.urlencode({k: v for k, v in params.items() if v is not None})
     return f"https://app.plex.tv/auth/#!?{query}"
 
-def validate_plex_url(url: str) -> bool:
-    """Validate a Plex server URL.
+def check_plex_url_connectivity(url: str) -> bool:
+    """Check if a Plex server URL is valid and reachable.
     
     Args:
-        url: URL to validate.
+        url: URL to check connectivity for.
         
     Returns:
         True if the URL is a valid Plex server URL, False otherwise.

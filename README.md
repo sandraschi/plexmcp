@@ -1,53 +1,150 @@
 # PlexMCP 🎬
 
-**FastMCP 2.0 & DXT package for comprehensive Plex Media Server management through Claude Desktop**
-
-[![FastMCP](https://img.shields.io/badge/FastMCP-2.0-blue)](https://github.com/jlowin/fastmcp)
-[![DXT](https://img.shields.io/badge/DXT-1.0.0-9cf)](https://developer.nvidia.com/rtx/ray-tracing/dlss/developer-toolkit)
+[![FastMCP](https://img.shields.io/badge/FastMCP-2.10+-blue)](https://github.com/jlowin/fastmcp)
 [![Python](https://img.shields.io/badge/Python-3.11+-green)](https://python.org)
 [![Plex](https://img.shields.io/badge/Plex-Media%20Server-orange)](https://plex.tv)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Austrian efficiency for Sandra's media streaming and anime collection management. Built with realistic AI-assisted development timelines.
+A FastMCP 2.10+ server implementation for managing Plex Media Server with a clean, type-safe API.
 
----
+## ✨ Features
 
-## 📺 About Plex Media Server
+- **Server Management**: Monitor and manage Plex server status
+- **Media Browsing**: Browse and search across all libraries
+- **Playback Control**: Control playback on connected clients
+- **Session Management**: View and manage active sessions
+- **Type-Safe API**: Built with Pydantic for robust data validation
+- **Async I/O**: High-performance async implementation
 
-**Plex Media Server** is the world's leading personal media streaming platform, created by Plex Inc. It transforms your computer into a powerful media server that organizes and streams your personal collection to any device, anywhere.
+## 🚀 Quick Start
 
-### Core Plex Features
+### Prerequisites
 
-- **Media Organization**: Automatically organizes movies, TV shows, music, and photos with rich metadata
-- **Streaming**: Stream your media to TVs, phones, tablets, computers, and streaming devices
-- **Remote Access**: Access your library from anywhere with internet connection
-- **Transcoding**: Real-time media conversion for optimal playback on any device
-- **Multi-User**: Create user accounts with personalized libraries and parental controls
-- **Plex Pass**: Premium features including hardware transcoding, mobile sync, and early access
+- Python 3.11+
+- Plex Media Server with network access
+- Plex authentication token
 
-### Plex Server Components
+### Installation
 
-- **Media Server**: Core application that scans, indexes, and serves media files
-- **Web Interface**: Browser-based management at `http://localhost:32400/web`
-- **Metadata Agents**: Automatic artwork, descriptions, and cast information retrieval
-- **Plugins**: Extensible architecture for additional functionality
-- **Remote Access**: Secure external access through plex.tv relay service
+1. Clone the repository:
 
-### Plex API Capabilities
+   ```bash
+   git clone https://github.com/yourusername/plex-mcp.git
+   cd plex-mcp
+   ```
 
-- **REST API**: XML-based HTTP API for all server operations
-- **Authentication**: X-Plex-Token based secure access
-- **Library Management**: Browse, search, and manage media collections
-- **Playback Control**: Remote control of Plex clients and sessions
-- **User Management**: Multi-user access control and sharing
-- **Statistics**: Detailed analytics on media consumption and server performance
+2. Install the package in development mode:
 
-Plex excels at creating Netflix-like experiences for personal media collections, supporting massive libraries (10,000+ movies/episodes) with sophisticated search, recommendation, and streaming capabilities.
+   ```bash
+   pip install -e ".[dev]"
+   ```
 
----
+### Configuration
 
-## 🚀 PlexMCP Features
+1. Copy the example config:
 
-### **Core Plex Operations (10 Tools)** ✅
+   ```bash
+   cp config/mcp_config.yaml config/local.yaml
+   ```
+
+2. Edit `config/local.yaml` with your Plex server details:
+
+   ```yaml
+   server:
+     host: "0.0.0.0"
+     port: 8000
+     debug: false
+
+   plex:
+     base_url: "http://your-plex-server:32400"
+     token: "your-plex-token"
+     timeout: 30
+   ```
+
+### Running the Server
+
+```bash
+# Using the installed script
+plex-mcp --config config/local.yaml
+
+# Or directly with Python
+python -m plex_mcp.mcp_setup --config config/local.yaml
+```
+
+The server will be available at `http://localhost:8000` by default.
+
+## 📚 API Documentation
+
+### Server Endpoints
+
+- `GET /server/status` - Get server status and information
+- `GET /libraries` - List all libraries
+- `GET /libraries/{library_id}/items` - Get items from a library
+
+### Media Endpoints
+
+- `GET /media/search` - Search for media
+- `GET /media/{media_id}` - Get detailed media information
+
+### Session Endpoints
+
+- `GET /sessions` - List active sessions
+- `GET /clients` - List available clients
+- `POST /playback/control` - Control playback on a client
+
+## 🛠 Development
+
+### Setup
+
+1. Install development dependencies:
+
+   ```bash
+   pip install -e ".[dev]"
+   ```
+
+2. Install pre-commit hooks:
+
+   ```bash
+   pre-commit install
+   ```
+
+### Testing
+
+Run the test suite:
+
+```bash
+pytest
+```
+
+### Code Style
+
+This project uses:
+
+- Black for code formatting
+- Ruff for linting
+- Mypy for type checking
+
+Format and check code:
+
+```bash
+black .
+ruff check .
+mypy .
+```
+
+## 🤝 Contributing
+
+Contributions are welcome! Please read our [Contributing Guidelines](CONTRIBUTING.md) for details.
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- [Plex](https://www.plex.tv/) for the amazing media server
+- [FastMCP](https://github.com/jlowin/fastmcp) for the MCP framework
+- All contributors who've helped improve this project
 
 1. **`get_plex_status()`** - Server status and identity information
 2. **`get_libraries()`** - All media libraries with metadata

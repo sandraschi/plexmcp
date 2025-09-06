@@ -131,4 +131,13 @@ class PlexConfig(BaseModel):
         return self.server_url
 
 
-
+def get_settings() -> PlexConfig:
+    """Get the application settings.
+    
+    This function loads settings from environment variables and returns
+    a PlexConfig instance with the current configuration.
+    
+    Returns:
+        PlexConfig: The application configuration
+    """
+    return PlexConfig.load_config()

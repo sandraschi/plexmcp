@@ -1,0 +1,1012 @@
+"""
+Plex service implementation for PlexMCP.
+
+This module contains the PlexService class which handles all interactions
+with the Plex Media Server using proper async patterns.
+"""
+
+import asyncio
+import aiohttp
+import logging
+from typing import Any, Dict, List, Optional, Union, TypeVar, Callable, Awaitable, Type, cast
+
+from plexapi.server import PlexServer
+from plexapi.exceptions import PlexApiException
+
+from ..models.server import PlexServerStatus
+from ..models.media import MediaLibrary, MediaItem
+from ..models.session import Session, SessionList, SessionState, MediaType
+from ..models.user import User, UserList, UserRole, UserPermissions
+from ..exceptions import PlexConnectionError, PlexAuthError
+
+logger = logging.getLogger(__name__)
+T = TypeVar('T')
+
+class PlexService:
+    """Production Plex service with real API integration and proper async patterns."""
+    
+    def __init__(self):
+        """Initialize the Plex service."""
+        self.settings = self._get_settings()
+        self.server: Optional[PlexServer] = None
+        self._session: Optional[aiohttp.ClientSession] = None
+        self._initialized = False
+    
+    def _get_settings(self) -> Dict[str, Any]:
+        """Get settings from environment or config."""
+        import os
+        from dotenv import load_dotenv
+        
+        load_dotenv()
+        
+        return {
+            'plex': {
+                'server_url': os.getenv('PLEX_SERVER_URL', 'http://localhost:32400'),
+                'token': os.getenv('PLEX_TOKEN', ''),
+                'timeout': int(os.getenv('PLEX_TIMEOUT', '30'))
+            }
+        }
+    
+    async def __aenter__(self):
+        """Async context manager entry."""
+        await self.connect()
+        return self
+    
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Async context manager exit."""
+        await self.disconnect()
+    
+    async def connect(self) -> None:
+        """Establish connection to Plex server."""
+        if self._initialized:
+            return
+            
+        try:
+            # Create async HTTP session
+            self._session = aiohttp.ClientSession(
+                timeout=aiohttp.ClientTimeout(total=self.settings['plex']['timeout']),
+                connector=aiohttp.TCPConnector(limit=10)
+            )
+            
+            # Connect to Plex server in thread pool
+            # PlexAPI is sync, so we run it in executor
+            loop = asyncio.get_event_loop()
+            self.server = await loop.run_in_executor(
+                None,
+                lambda: PlexServer(
+                    self.settings['plex']['server_url'],
+                    self.settings['plex']['token']
+                )
+            )
+            self._initialized = True
+            logger.info(f"Connected to Plex server: {self.server.friendlyName}")
+            
+        except PlexApiException as e:
+            error_msg = f"Plex API error: {str(e)}"
+            logger.error(error_msg)
+            if "401" in str(e):
+                raise PlexAuthError("Invalid Plex token") from e
+            raise PlexConnectionError(error_msg) from e
+            
+        except Exception as e:
+            error_msg = f"Failed to connect to Plex server: {str(e)}"
+            logger.error(error_msg)
+            raise PlexConnectionError(error_msg) from e
+    
+    async def disconnect(self) -> None:
+        """Close connections."""
+        if self._session and not self._session.closed:
+            await self._session.close()
+        self._initialized = False
+    
+    async def _run_in_executor(self, func: Callable[..., T], *args: Any, **kwargs: Any) -> T:
+        """Run sync function in executor."""
+        if not self._initialized:
+            await self.connect()
+            
+        loop = asyncio.get_event_loop()
+        try:
+            return await loop.run_in_executor(
+                None,
+                lambda: func(*args, **kwargs)
+            )
+        except PlexApiException as e:
+            logger.error(f"Plex API error in {func.__name__}: {str(e)}")
+            raise PlexConnectionError(f"Plex API error: {str(e)}") from e
+        except Exception as e:
+            logger.error(f"Error in {func.__name__}: {str(e)}")
+            raise
+    
+    async def get_server_status(self) -> PlexServerStatus:
+        """Get real server status from Plex API."""
+        if not self._initialized:
+            await self.connect()
+        
+        try:
+            server_info = await self._run_in_executor(
+                self._get_server_info_sync
+            )
+            return PlexServerStatus(**server_info)
+            
+        except PlexApiException as e:
+            raise PlexConnectionError(f"Failed to get server status: {str(e)}") from e
+    
+    def _get_server_info_sync(self) -> Dict[str, Any]:
+        """Synchronous helper to get server info."""
+        if not self.server:
+            raise PlexConnectionError("Not connected to Plex server")
+            
+        return {
+            'name': self.server.friendlyName,
+            'version': self.server.version,
+            'platform': self.server.platform,
+            'updated_at': int(self.server.updatedAt.timestamp()) if self.server.updatedAt else 0,
+            'size': getattr(self.server, 'size', 0),
+            'my_plex_username': getattr(self.server, 'myPlexUsername', ''),
+            'my_plex_mapping_state': getattr(self.server, 'myPlexMappingState', ''),
+            'connected': True
+        }
+    
+    async def get_libraries(self) -> List[MediaLibrary]:
+        """Get all libraries from the Plex server."""
+        if not self._initialized:
+            await self.connect()
+            
+        try:
+            libraries = await self._run_in_executor(
+                self._get_libraries_sync
+            )
+            return [MediaLibrary(**lib) for lib in libraries]
+            
+        except PlexApiException as e:
+            raise PlexConnectionError(f"Failed to get libraries: {str(e)}") from e
+    
+    def _get_libraries_sync(self) -> List[Dict[str, Any]]:
+        """Synchronous helper to get libraries."""
+        if not self.server:
+            raise PlexConnectionError("Not connected to Plex server")
+            
+        libraries = []
+        for section in self.server.library.sections():
+            libraries.append({
+                'id': section.key,
+                'title': section.title,
+                'type': section.type,
+                'agent': getattr(section, 'agent', ''),
+                'scanner': getattr(section, 'scanner', ''),
+                'language': getattr(section, 'language', 'en'),
+                'uuid': getattr(section, 'uuid', ''),
+                'updated_at': int(section.updatedAt.timestamp()) if hasattr(section, 'updatedAt') and section.updatedAt else 0,
+                'created_at': int(section.addedAt.timestamp()) if hasattr(section, 'addedAt') and section.addedAt else 0,
+                'scanned_at': int(section.scannedAt.timestamp()) if hasattr(section, 'scannedAt') and section.scannedAt else 0,
+                'count': len(section.all()) if hasattr(section, 'all') else 0
+            })
+        return libraries
+    async def get_library_items(self, library_id: str) -> List[MediaItem]:
+        """Get all items from a specific library."""
+        if not self._initialized:
+            await self.connect()
+            
+        try:
+            items = await self._run_in_executor(
+                self._get_library_items_sync,
+                library_id
+            )
+            return [MediaItem(**item) for item in items]
+            
+        except PlexApiException as e:
+            raise PlexConnectionError(f"Failed to get library items: {str(e)}") from e
+    
+    def _get_library_items_sync(self, library_id: str) -> List[Dict[str, Any]]:
+        """Synchronous helper to get library items."""
+        if not self.server:
+            raise PlexConnectionError("Not connected to Plex server")
+            
+        items = []
+        section = self.server.library.sectionByID(int(library_id))
+        
+        for item in section.all():
+            items.append({
+                'id': item.ratingKey,
+                'title': item.title,
+                'type': item.type,
+                'year': getattr(item, 'year', None),
+                'added_at': int(item.addedAt.timestamp()) if hasattr(item, 'addedAt') and item.addedAt else 0,
+                'updated_at': int(item.updatedAt.timestamp()) if hasattr(item, 'updatedAt') and item.updatedAt else 0,
+                'duration': getattr(item, 'duration', 0),
+                'summary': getattr(item, 'summary', ''),
+                'thumb': getattr(item, 'thumb', ''),
+                'art': getattr(item, 'art', ''),
+                'rating': getattr(item, 'rating', 0.0),
+                'view_count': getattr(item, 'viewCount', 0),
+                'last_viewed_at': int(item.lastViewedAt.timestamp()) if hasattr(item, 'lastViewedAt') and item.lastViewedAt else 0
+            })
+            
+        return items
+    
+    async def search_media(self, query: str, limit: int = 10, library_id: Optional[str] = None) -> List[MediaItem]:
+        """Search for media across all libraries or within a specific library."""
+        if not self._initialized:
+            await self.connect()
+            
+        try:
+            results = await self._run_in_executor(
+                self._search_media_sync,
+                query,
+                limit,
+                library_id
+            )
+            return [MediaItem(**item) for item in results]
+            
+        except PlexApiException as e:
+            raise PlexConnectionError(f"Search failed: {str(e)}") from e
+    
+    def _search_media_sync(self, query: str, limit: int, library_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Synchronous helper to search for media."""
+        if not self.server:
+            raise PlexConnectionError("Not connected to Plex server")
+            
+        results = []
+        
+        # If library_id is provided, search only in that library
+        if library_id:
+            try:
+                section = self.server.library.sectionByID(int(library_id))
+                search_results = section.search(query, maxresults=limit)
+            except Exception as e:
+                logger.warning(f"Failed to search in library {library_id}: {str(e)}")
+                search_results = []
+        else:
+            # Search across all libraries
+            search_results = self.server.search(query, limit=limit)
+        
+        for item in search_results:
+            results.append({
+                'id': item.ratingKey,
+                'title': item.title,
+                'type': item.type,
+                'year': getattr(item, 'year', None),
+                'library_id': getattr(item, 'librarySectionID', ''),
+                'library_title': getattr(item, 'librarySectionTitle', ''),
+                'thumb': getattr(item, 'thumb', ''),
+                'summary': getattr(item, 'summary', '')
+            })
+            
+        return results
+    
+    async def get_recently_added(self, limit: int = 10, library_id: Optional[str] = None) -> List[MediaItem]:
+        """Get recently added media items."""
+        if not self._initialized:
+            await self.connect()
+            
+        try:
+            items = await self._run_in_executor(
+                self._get_recently_added_sync,
+                limit,
+                library_id
+            )
+            return [MediaItem(**item) for item in items]
+            
+        except PlexApiException as e:
+            raise PlexConnectionError(f"Failed to get recently added items: {str(e)}") from e
+    
+    def _get_recently_added_sync(self, limit: int, library_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Synchronous helper to get recently added items."""
+        if not self.server:
+            raise PlexConnectionError("Not connected to Plex server")
+            
+        items = []
+        
+        try:
+            if library_id:
+                # Get recently added from specific library
+                section = self.server.library.sectionByID(int(library_id))
+                recent_items = section.recentlyAdded(limit=limit)
+            else:
+                # Get recently added from all libraries
+                recent_items = self.server.library.recentlyAdded(limit=limit)
+                
+            for item in recent_items:
+                items.append({
+                    'id': item.ratingKey,
+                    'title': item.title,
+                    'type': item.type,
+                    'year': getattr(item, 'year', None),
+                    'library_id': getattr(item, 'librarySectionID', ''),
+                    'library_title': getattr(item, 'librarySectionTitle', ''),
+                    'thumb': getattr(item, 'thumb', ''),
+                    'summary': getattr(item, 'summary', ''),
+                    'added_at': int(item.addedAt.timestamp()) if hasattr(item, 'addedAt') and item.addedAt else 0,
+                    'duration': getattr(item, 'duration', 0),
+                    'view_count': getattr(item, 'viewCount', 0)
+                })
+                
+        except Exception as e:
+            logger.error(f"Error getting recently added items: {str(e)}")
+            raise
+            
+        return items
+    
+    async def get_clients(self) -> List[Dict[str, Any]]:
+        """Get all available Plex clients.
+        
+        Returns:
+            List of client information dictionaries
+        """
+        if not self._initialized:
+            await self.connect()
+            
+        try:
+            clients = await self._run_in_executor(
+                self._get_clients_sync
+            )
+            return clients
+            
+        except PlexApiException as e:
+            raise PlexConnectionError(f"Failed to get clients: {str(e)}") from e
+    
+    def _get_clients_sync(self) -> List[Dict[str, Any]]:
+        """Synchronous helper to get clients."""
+        if not self.server:
+            raise PlexConnectionError("Not connected to Plex server")
+            
+        clients = []
+        for client in self.server.clients():
+            clients.append({
+                'name': client.title,
+                'product': client.product,
+                'platform': client.platform,
+                'version': client.version,
+                'address': client.address,
+                'port': client.port,
+                'protocol': client.protocol,
+                'device': client.device,
+                'device_name': client.deviceName,
+                'local': client.local,
+                'address': client.address
+            })
+            
+        return clients
+    
+    async def get_sessions(self) -> List[Dict[str, Any]]:
+        """Get current active sessions.
+        
+        Returns:
+            List of active session information
+        """
+        if not self._initialized:
+            await self.connect()
+            
+        try:
+            sessions = await self._run_in_executor(
+                self._get_sessions_sync
+            )
+            return sessions
+            
+        except PlexApiException as e:
+            raise PlexConnectionError(f"Failed to get sessions: {str(e)}") from e
+    
+    def _get_sessions_sync(self) -> List[Dict[str, Any]]:
+        """Synchronous helper to get sessions."""
+        if not self.server:
+            raise PlexConnectionError("Not connected to Plex server")
+            
+        sessions = []
+        for session in self.server.sessions():
+            sessions.append({
+                'id': session.session.id,
+                'user': session.usernames[0] if session.usernames else 'Unknown',
+                'player': session.players[0].title if session.players else 'Unknown',
+                'state': session.players[0].state if session.players else 'stopped',
+                'title': session.title,
+                'type': session.type,
+                'duration': session.duration,
+                'view_offset': session.viewOffset,
+                'library_id': getattr(session, 'librarySectionID', '')
+            })
+            
+        return sessions
+    
+    async def play_media(self, client_identifier: str, media_key: str) -> bool:
+        """Play media on a specific client.
+        
+        Args:
+            client_identifier: Identifier of the client to play on
+            media_key: Key of the media to play
+            
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        if not self._initialized:
+            await self.connect()
+            
+        try:
+            result = await self._run_in_executor(
+                self._play_media_sync,
+                client_identifier,
+                media_key
+            )
+            return result
+            
+        except PlexApiException as e:
+            logger.error(f"Failed to play media: {str(e)}")
+            return False
+    
+    def _play_media_sync(self, client_identifier: str, media_key: str) -> bool:
+        """Synchronous helper to play media on a client."""
+        if not self.server:
+            raise PlexConnectionError("Not connected to Plex server")
+            
+        try:
+            # Find the client
+            client = next((c for c in self.server.clients() 
+                         if c.machineIdentifier == client_identifier), None)
+            
+            if not client:
+                logger.error(f"Client {client_identifier} not found")
+                return False
+            
+            # Find the media
+            media = self.server.library.fetchItem(media_key)
+            if not media:
+                logger.error(f"Media {media_key} not found")
+                return False
+            
+            # Play the media
+            client.playMedia(media)
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error playing media: {str(e)}")
+            return False
+    
+    async def stop_playback(self, client_identifier: str) -> bool:
+        """Stop playback on a specific client.
+        
+        Args:
+            client_identifier: Identifier of the client to stop
+            
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        if not self._initialized:
+            await self.connect()
+            
+        try:
+            result = await self._run_in_executor(
+                self._stop_playback_sync,
+                client_identifier
+            )
+            return result
+            
+        except PlexApiException as e:
+            logger.error(f"Failed to stop playback: {str(e)}")
+            return False
+    
+    def _stop_playback_sync(self, client_identifier: str) -> bool:
+        """Synchronous helper to stop playback on a client."""
+        if not self.server:
+            raise PlexConnectionError("Not connected to Plex server")
+            
+        try:
+            # Find the client
+            client = next((c for c in self.server.clients() 
+                         if c.machineIdentifier == client_identifier), None)
+            
+            if not client:
+                logger.error(f"Client {client_identifier} not found")
+                return False
+            
+            # Stop playback
+            client.stop()
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error stopping playback: {str(e)}")
+            return False
+    
+    async def get_media_info(self, media_key: str) -> Optional[Dict[str, Any]]:
+        """Get detailed information about a media item.
+        
+        Args:
+            media_key: Key of the media item
+            
+        Returns:
+            Dict with media information or None if not found
+        """
+        if not self._initialized:
+            await self.connect()
+            
+        try:
+            media = await self._run_in_executor(
+                self.server.library.fetchItem,
+                media_key
+            )
+            
+            if not media:
+                return None
+                
+            return {
+                'id': media.ratingKey,
+                'title': media.title,
+                'type': media.type,
+                'year': getattr(media, 'year', None),
+                'summary': getattr(media, 'summary', ''),
+                'thumb': getattr(media, 'thumb', ''),
+                'art': getattr(media, 'art', ''),
+                'duration': getattr(media, 'duration', 0),
+                'added_at': int(media.addedAt.timestamp()) if hasattr(media, 'addedAt') and media.addedAt else 0,
+                'updated_at': int(media.updatedAt.timestamp()) if hasattr(media, 'updatedAt') and media.updatedAt else 0,
+                'view_count': getattr(media, 'viewCount', 0),
+                'last_viewed_at': int(media.lastViewedAt.timestamp()) if hasattr(media, 'lastViewedAt') and media.lastViewedAt else 0,
+                'library_id': getattr(media, 'librarySectionID', ''),
+                'library_title': getattr(media, 'librarySectionTitle', '')
+            }
+            
+        except PlexApiException as e:
+            logger.error(f"Failed to get media info: {str(e)}")
+            return None
+        
+    async def refresh_library(self, library_id: str) -> bool:
+        """Refresh a library.
+        
+        Args:
+            library_id: ID of the library to refresh
+            
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        if not self._initialized:
+            await self.connect()
+            
+        try:
+            result = await self._run_in_executor(
+                self._refresh_library_sync,
+                library_id
+            )
+            return result
+            
+        except PlexApiException as e:
+            logger.error(f"Failed to refresh library: {str(e)}")
+            return False
+    
+    def _refresh_library_sync(self, library_id: str) -> bool:
+        """Synchronous helper to refresh a library."""
+        if not self.server:
+            raise PlexConnectionError("Not connected to Plex server")
+            
+        try:
+            section = self.server.library.sectionByID(int(library_id))
+            section.update()
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error refreshing library: {str(e)}")
+            return False
+    
+    async def get_server_preferences(self) -> Dict[str, Any]:
+        """Get server preferences.
+        
+        Returns:
+            Dictionary with server preferences
+        """
+        if not self._initialized:
+            await self.connect()
+            
+        try:
+            prefs = await self._run_in_executor(
+                self.server.preferences
+            )
+            return {pref.id: pref.value for pref in prefs}
+            
+        except PlexApiException as e:
+            logger.error(f"Failed to get server preferences: {str(e)}")
+            return {}
+    
+    async def get_server_identity(self) -> Dict[str, Any]:
+        """Get server identity information.
+        
+        Returns:
+            Dictionary with server identity information
+        """
+        if not self._initialized:
+            await self.connect()
+            
+        try:
+            return await self._run_in_executor(
+                self._get_server_identity_sync
+            )
+            
+        except PlexApiException as e:
+            logger.error(f"Failed to get server identity: {str(e)}")
+            return {}
+    
+    def _get_server_identity_sync(self) -> Dict[str, Any]:
+        """Synchronous helper to get server identity."""
+        if not self.server:
+            raise PlexConnectionError("Not connected to Plex server")
+            
+        return {
+            'friendly_name': self.server.friendlyName,
+            'machine_identifier': self.server.machineIdentifier,
+            'version': self.server.version,
+            'platform': self.server.platform,
+            'platform_version': self.server.platformVersion,
+            'my_plex': self.server.myPlex,
+            'my_plex_username': getattr(self.server, 'myPlexUsername', ''),
+            'my_plex_signin_state': getattr(self.server, 'myPlexSigninState', '')
+        }
+    
+    async def get_play_history(self, max_items: int = 100) -> List[Dict[str, Any]]:
+        """Get play history.
+        
+        Args:
+            max_items: Maximum number of history items to return
+            
+        Returns:
+            List of play history items
+        """
+        if not self._initialized:
+            await self.connect()
+            
+        try:
+            history = await self._run_in_executor(
+                self._get_play_history_sync,
+                max_items
+            )
+            return history
+            
+        except PlexApiException as e:
+            logger.error(f"Failed to get play history: {str(e)}")
+            return []
+    
+    def _get_play_history_sync(self, max_items: int) -> List[Dict[str, Any]]:
+        """Synchronous helper to get play history."""
+        if not self.server:
+            raise PlexConnectionError("Not connected to Plex server")
+            
+        history = []
+        try:
+            # Get recently played items
+            recent_items = self.server.library.recentlyPlayed(max_items=max_items)
+            
+            for item in recent_items:
+                history.append({
+                    'id': item.ratingKey,
+                    'title': item.title,
+                    'type': item.type,
+                    'last_played': int(item.lastViewedAt.timestamp()) if hasattr(item, 'lastViewedAt') and item.lastViewedAt else 0,
+                    'view_count': getattr(item, 'viewCount', 0),
+                    'duration': getattr(item, 'duration', 0),
+                    'library_id': getattr(item, 'librarySectionID', '')
+                })
+                
+        except Exception as e:
+            logger.error(f"Error getting play history: {str(e)}")
+            
+        return history
+    
+    async def get_media_streams(self, media_key: str) -> List[Dict[str, Any]]:
+        """Get stream information for a media item.
+        
+        Args:
+            media_key: Key of the media item
+            
+        Returns:
+            List of stream information dictionaries
+        """
+        if not self._initialized:
+            await self.connect()
+            
+        try:
+            media = await self._run_in_executor(
+                self.server.library.fetchItem,
+                media_key
+            )
+            
+            if not media or not hasattr(media, 'media'):
+                return []
+                
+            streams = []
+            for media_part in media.media:
+                for part in media_part.parts:
+                    for stream in part.streams:
+                        streams.append({
+                            'type': stream.streamType,
+                            'codec': stream.codec,
+                            'language': stream.language,
+                            'language_code': stream.languageCode,
+                            'bitrate': getattr(stream, 'bitrate', 0),
+                            'channels': getattr(stream, 'channels', 0),
+                            'duration': getattr(stream, 'duration', 0),
+                            'width': getattr(stream, 'width', 0),
+                            'height': getattr(stream, 'height', 0),
+                            'bit_depth': getattr(stream, 'bitDepth', 0),
+                            'chroma_subsampling': getattr(stream, 'chromaSubsampling', ''),
+                            'color_space': getattr(stream, 'colorSpace', '')
+                        })
+            
+            return streams
+            
+        except PlexApiException as e:
+            logger.error(f"Failed to get media streams: {str(e)}")
+            return []
+    
+    async def get_media_children(self, media_key: str) -> List[Dict[str, Any]]:
+        """Get child items for a media item (e.g., episodes for a show).
+        
+        Args:
+            media_key: Key of the media item
+            
+        Returns:
+            List of child items
+        """
+        if not self._initialized:
+            await self.connect()
+            
+        try:
+            item = await self._run_in_executor(
+                self.server.library.fetchItem,
+                media_key
+            )
+            
+            if not item or not hasattr(item, 'children'):
+                return []
+                
+            children = []
+            for child in item.children():
+                children.append({
+                    'id': child.ratingKey,
+                    'title': child.title,
+                    'type': child.type,
+                    'year': getattr(child, 'year', None),
+                    'thumb': getattr(child, 'thumb', ''),
+                    'summary': getattr(child, 'summary', ''),
+                    'duration': getattr(child, 'duration', 0),
+                    'view_count': getattr(child, 'viewCount', 0)
+                })
+                
+            return children
+            
+        except PlexApiException as e:
+            logger.error(f"Failed to get media children: {str(e)}")
+            return []
+    
+    async def get_media_metadata(self, media_key: str) -> Optional[Dict[str, Any]]:
+        """Get detailed metadata for a media item.
+        
+        Args:
+            media_key: Key of the media item
+            
+        Returns:
+            Dictionary with metadata or None if not found
+        """
+        if not self._initialized:
+            await self.connect()
+            
+        try:
+            media = await self._run_in_executor(
+                self.server.library.fetchItem,
+                media_key
+            )
+            
+            if not media:
+                return None
+            
+            # Get basic media info
+            metadata = {
+                'id': media.ratingKey,
+                'title': media.title,
+                'type': media.type,
+                'year': getattr(media, 'year', None),
+                'summary': getattr(media, 'summary', ''),
+                'thumb': getattr(media, 'thumb', ''),
+                'art': getattr(media, 'art', ''),
+                'banner': getattr(media, 'banner', ''),
+                'theme': getattr(media, 'theme', ''),
+                'duration': getattr(media, 'duration', 0),
+                'added_at': int(media.addedAt.timestamp()) if hasattr(media, 'addedAt') and media.addedAt else 0,
+                'updated_at': int(media.updatedAt.timestamp()) if hasattr(media, 'updatedAt') and media.updatedAt else 0,
+                'view_count': getattr(media, 'viewCount', 0),
+                'last_viewed_at': int(media.lastViewedAt.timestamp()) if hasattr(media, 'lastViewedAt') and media.lastViewedAt else 0,
+                'library_id': getattr(media, 'librarySectionID', ''),
+                'library_title': getattr(media, 'librarySectionTitle', ''),
+                'genres': [tag.tag for tag in getattr(media, 'genres', [])],
+                'collections': [tag.tag for tag in getattr(media, 'collections', [])],
+                'directors': [tag.tag for tag in getattr(media, 'directors', [])],
+                'writers': [tag.tag for tag in getattr(media, 'writers', [])],
+                'actors': [{'name': actor.tag, 'role': actor.role} for actor in getattr(media, 'actors', [])],
+                'media_info': []
+            }
+            
+            # Add media part and stream information
+            if hasattr(media, 'media'):
+                for media_part in media.media:
+                    media_info = {
+                        'container': media_part.container,
+                        'video_resolution': media_part.videoResolution,
+                        'video_codec': media_part.videoCodec,
+                        'audio_codec': media_part.audioCodec,
+                        'audio_channels': media_part.audioChannels,
+                        'parts': []
+                    }
+                    
+                    for part in media_part.parts:
+                        part_info = {
+                            'file': part.file,
+                            'size': part.size,
+                            'duration': part.duration,
+                            'streams': []
+                        }
+                        
+                        for stream in part.streams:
+                            stream_info = {
+                                'type': stream.streamType,
+                                'codec': stream.codec,
+                                'language': stream.language,
+                                'language_code': stream.languageCode,
+                                'bitrate': getattr(stream, 'bitrate', 0),
+                                'channels': getattr(stream, 'channels', 0),
+                                'width': getattr(stream, 'width', 0),
+                                'height': getattr(stream, 'height', 0)
+                            }
+                            part_info['streams'].append(stream_info)
+                            
+                        media_info['parts'].append(part_info)
+                        
+                    metadata['media_info'].append(media_info)
+            
+            return metadata
+            
+        except PlexApiException as e:
+            logger.error(f"Failed to get media metadata: {str(e)}")
+            return None
+        
+    async def close(self) -> None:
+        """Close the Plex service and release resources."""
+        if hasattr(self, '_session') and self._session:
+            await self._session.close()
+            self._session = None
+        self.server = None
+        self._initialized = False
+        logger.info("Plex service closed")
+
+    # Context manager support
+    async def __aenter__(self):
+        await self.connect()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.close()
+    
+    async def control_playback(self, client_identifier: str, action: str, media_key: Optional[str] = None, **kwargs) -> bool:
+        """Control playback on a client.
+        
+        Args:
+            client_identifier: Identifier of the client to control
+            action: Action to perform (play, pause, stop, skip_next, skip_previous, step_forward, step_back, seek_to)
+            media_key: Optional media key to play
+            **kwargs: Additional arguments for the action
+                - seek_to: Position in milliseconds to seek to
+                - offset: Time offset in seconds for step actions
+                
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        if not self._initialized:
+            await self.connect()
+            
+        try:
+            return await self._run_in_executor(
+                self._control_playback_sync,
+                client_identifier,
+                action,
+                media_key,
+                **kwargs
+            )
+            
+        except PlexApiException as e:
+            logger.error(f"Failed to control playback: {str(e)}")
+            return False
+    
+    def _control_playback_sync(self, client_identifier: str, action: str, media_key: Optional[str] = None, **kwargs) -> bool:
+        """Synchronous helper to control playback."""
+        if not self.server:
+            raise PlexConnectionError("Not connected to Plex server")
+            
+        try:
+            # Find the client
+            client = next((c for c in self.server.clients() 
+                         if c.machineIdentifier == client_identifier), None)
+            
+            if not client:
+                logger.error(f"Client {client_identifier} not found")
+                return False
+            
+            # Execute the requested action
+            if action == "play":
+                if media_key:
+                    media = self.server.library.fetchItem(media_key)
+                    client.playMedia(media)
+                else:
+                    client.play()
+            elif action == "pause":
+                client.pause()
+            elif action == "stop":
+                client.stop()
+            elif action == "skip_next":
+                client.skipNext()
+            elif action == "skip_previous":
+                client.skipPrevious()
+            elif action == "step_forward":
+                offset = kwargs.get('offset', 30)  # Default 30 seconds
+                client.stepForward(offset=offset)
+            elif action == "step_back":
+                offset = kwargs.get('offset', 30)  # Default 30 seconds
+                client.stepBack(offset=offset)
+            elif action == "seek_to":
+                position = kwargs.get('seek_to', 0)
+                client.seekTo(position)
+            else:
+                logger.error(f"Unknown playback action: {action}")
+                return False
+                
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error controlling playback: {str(e)}")
+            return False
+            elif request.action == "stop":
+                client.stop()
+            elif request.action == "seek" and request.seek_offset is not None:
+                client.seekTo(request.seek_offset)
+            elif request.action == "volume" and request.volume_level is not None:
+                client.setVolume(request.volume_level)
+            elif request.action == "stepForward":
+                client.stepForward()
+            elif request.action == "stepBack":
+                client.stepBack()
+            elif request.action == "skipNext":
+                client.skipNext()
+            elif request.action == "skipPrevious":
+                client.skipPrevious()
+            else:
+                raise ServiceError(f"Unsupported action: {request.action}", code="unsupported_action")
+            
+            return PlaybackControlResult(
+                status="success",
+                client_id=request.client_id,
+                action=request.action,
+                current_state=client.state,
+                position=client.viewOffset,
+                duration=client.duration,
+                volume=client.volume,
+                message=f"Successfully executed {request.action} on {client.title}"
+            )
+            
+        except Exception as e:
+            error_msg = f"Failed to control playback: {str(e)}"
+            logger.error(error_msg)
+            raise ServiceError(error_msg, code="playback_control_failed") from e
+    
+    # Helper methods
+    def _convert_to_media_item(self, item) -> MediaItem:
+        """Convert a Plex API media item to our MediaItem model."""
+        return MediaItem(
+            key=item.ratingKey,
+            title=item.title,
+            type=item.type,
+            year=item.year if hasattr(item, 'year') else None,
+            summary=item.summary if hasattr(item, 'summary') else None,
+            rating=item.rating if hasattr(item, 'rating') else None,
+            thumb=item.thumb if hasattr(item, 'thumb') else None,
+            art=item.art if hasattr(item, 'art') else None,
+            duration=item.duration if hasattr(item, 'duration') else None,
+            added_at=int(item.addedAt.timestamp()) if hasattr(item, 'addedAt') else 0,
+            updated_at=int(item.updatedAt.timestamp()) if hasattr(item, 'updatedAt') else 0
+        )
+    
+    async def _close(self) -> None:
+        """Clean up resources."""
+        # PlexAPI doesn't have an explicit close method
+        self.plex = None

@@ -5,10 +5,12 @@ This module provides functions for validating various types of data.
 """
 
 import re
+import os
 import ipaddress
 from typing import Any, Dict, List, Optional, Union, Pattern, Callable, TypeVar, Type
 from datetime import datetime
 from pathlib import Path
+from urllib.parse import urlparse
 
 import pytz
 from pydantic import BaseModel, ValidationError, validator
@@ -498,3 +500,196 @@ def validate_condition(
     """
     if not condition:
         raise ValidationError(message, field=field, code=code)
+
+def validate_plex_url(value: str, field: str = "url") -> None:
+    """
+    Validate a Plex server URL.
+    
+    Args:
+        value: The URL to validate.
+        field: The name of the field being validated.
+        
+    Raises:
+        ValidationError: If the URL is invalid.
+    """
+    validate_required(value, field)
+    validate_type(value, str, field)
+    
+    try:
+        parsed = urlparse(value)
+    except Exception:
+        raise ValidationError(
+            f"{field} is not a valid URL",
+            field=field,
+            code="invalid_url"
+        )
+    
+    # Check if scheme is provided
+    if not parsed.scheme:
+        raise ValidationError(
+            f"{field} must include a scheme (http:// or https://)",
+            field=field,
+            code="missing_scheme"
+        )
+    
+    # Check if scheme is valid
+    if parsed.scheme not in ['http', 'https']:
+        raise ValidationError(
+            f"{field} must use http:// or https:// scheme",
+            field=field,
+            code="invalid_scheme"
+        )
+    
+    # Check if hostname is provided
+    if not parsed.hostname:
+        raise ValidationError(
+            f"{field} must include a hostname",
+            field=field,
+            code="missing_hostname"
+        )
+    
+    # Check if port is valid (if provided)
+    if parsed.port is not None and (parsed.port < 1 or parsed.port > 65535):
+        raise ValidationError(
+            f"{field} port must be between 1 and 65535",
+            field=field,
+            code="invalid_port"
+        )
+
+def validate_media_item(data: Dict[str, Any], field: str = "media_item") -> None:
+    """
+    Validate a Plex media item data structure.
+    
+    Args:
+        data: The media item data to validate.
+        field: The name of the field being validated.
+        
+    Raises:
+        ValidationError: If the media item data is invalid.
+    """
+    validate_required(data, field)
+    validate_type(data, dict, field)
+    
+    # Required fields for media items
+    required_fields = ['key', 'title']
+    for req_field in required_fields:
+        if req_field not in data:
+            raise ValidationError(
+                f"{field} must contain '{req_field}' field",
+                field=f"{field}.{req_field}",
+                code="missing_required_field"
+            )
+    
+    # Validate key (should be a string starting with /)
+    key = data.get('key')
+    if not isinstance(key, str) or not key.startswith('/'):
+        raise ValidationError(
+            f"{field} key must be a string starting with '/'",
+            field=f"{field}.key",
+            code="invalid_key_format"
+        )
+    
+    # Validate title
+    title = data.get('title')
+    if not isinstance(title, str) or not title.strip():
+        raise ValidationError(
+            f"{field} title must be a non-empty string",
+            field=f"{field}.title",
+            code="invalid_title"
+        )
+    
+    # Optional validation for common fields
+    if 'ratingKey' in data:
+        rating_key = data['ratingKey']
+        if not isinstance(rating_key, (str, int)):
+            raise ValidationError(
+                f"{field} ratingKey must be a string or integer",
+                field=f"{field}.ratingKey",
+                code="invalid_rating_key"
+            )
+    
+    if 'type' in data:
+        media_type = data['type']
+        valid_types = ['movie', 'show', 'season', 'episode', 'artist', 'album', 'track', 'photo']
+        if media_type not in valid_types:
+            raise ValidationError(
+                f"{field} type must be one of: {', '.join(valid_types)}",
+                field=f"{field}.type",
+                code="invalid_media_type"
+            )
+
+def validate_playlist(data: Dict[str, Any], field: str = "playlist") -> None:
+    """
+    Validate a Plex playlist data structure.
+    
+    Args:
+        data: The playlist data to validate.
+        field: The name of the field being validated.
+        
+    Raises:
+        ValidationError: If the playlist data is invalid.
+    """
+    validate_required(data, field)
+    validate_type(data, dict, field)
+    
+    # Required fields for playlists
+    required_fields = ['title']
+    for req_field in required_fields:
+        if req_field not in data:
+            raise ValidationError(
+                f"{field} must contain '{req_field}' field",
+                field=f"{field}.{req_field}",
+                code="missing_required_field"
+            )
+    
+    # Validate title
+    title = data.get('title')
+    if not isinstance(title, str) or not title.strip():
+        raise ValidationError(
+            f"{field} title must be a non-empty string",
+            field=f"{field}.title",
+            code="invalid_title"
+        )
+    
+    # Optional validation for description
+    if 'description' in data:
+        description = data['description']
+        if description is not None and not isinstance(description, str):
+            raise ValidationError(
+                f"{field} description must be a string or None",
+                field=f"{field}.description",
+                code="invalid_description"
+            )
+    
+    # Optional validation for items list
+    if 'items' in data:
+        items = data['items']
+        if not isinstance(items, list):
+            raise ValidationError(
+                f"{field} items must be a list",
+                field=f"{field}.items",
+                code="invalid_items_type"
+            )
+        
+        # Validate each item in the playlist
+        for i, item in enumerate(items):
+            try:
+                validate_media_item(item, f"{field}.items[{i}]")
+            except ValidationError as e:
+                # Re-raise with more context
+                raise ValidationError(
+                    f"{field} item {i}: {e.message}",
+                    field=e.field,
+                    code=e.code
+                ) from e
+    
+    # Optional validation for playlist type
+    if 'playlistType' in data:
+        playlist_type = data['playlistType']
+        valid_types = ['audio', 'video', 'photo']
+        if playlist_type not in valid_types:
+            raise ValidationError(
+                f"{field} playlistType must be one of: {', '.join(valid_types)}",
+                field=f"{field}.playlistType",
+                code="invalid_playlist_type"
+            )

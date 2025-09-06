@@ -47,10 +47,10 @@ from .config import (
 
 # Import and re-export from network.py
 from .network import (
-    check_plex_server_connection,
-    get_local_ip_address,
-    is_port_in_use,
-    wait_for_port
+    is_plex_server_reachable as check_plex_server_connection,
+    get_local_ip as get_local_ip_address,
+    is_port_open as is_port_in_use,
+    async_is_port_open as wait_for_port
 )
 
 __all__ = [

@@ -1,69 +1,86 @@
 """
-PlexMCP - FastMCP 2.1 Server for Plex Media Server Management
+PlexMCP - FastMCP 2.10+ Server for Plex Media Server Management
 
 Austrian efficiency for Sandra's media streaming needs.
 """
 
 import sys
-from fastmcp import FastMCP
 
-# Import all API modules to register their tools
-from .api import core, playback, playlists, admin, vienna
+# Import the shared FastMCP instance
+from .app import mcp
 
 # Set up logger
 from .utils import get_logger
 logger = get_logger(__name__)
 
-# Create the main FastMCP instance
-mcp = FastMCP(
-    name="PlexMCP",
-    version="2.1.0",
-    description="Comprehensive Plex Media Server management with Austrian efficiency"
-)
-
-# Mount all API modules
-mcp.mount("/core", core.app)
-mcp.mount("/playback", playback.app)
-mcp.mount("/playlists", playlists.app)
-mcp.mount("/admin", admin.app)
-mcp.mount("/vienna", vienna.app)
+# Import all API modules to register their tools with the shared mcp instance
+from .api import core, playback, playlists, admin, vienna
 
 def main():
     """
     Main entry point for PlexMCP server with FastMCP 2.10+ compatibility.
     
     Supports both HTTP and STDIO (JSON-RPC) modes based on command line arguments.
-    When run without arguments, defaults to HTTP mode for backward compatibility.
+    When run without arguments, defaults to STDIO mode (FastMCP 2.10+ default).
     
-    For STDIO mode (recommended for FastMCP 2.10+), use: python -m plex_mcp.server --stdio
+    For STDIO mode (default in FastMCP 2.10+): python -m plex_mcp.server
+    For HTTP mode: python -m plex_mcp.server --http
     """
     import argparse
-    from fastmcp.transports import HTTPTransport, StdioTransport
     
     # Set up argument parser
     parser = argparse.ArgumentParser(description='PlexMCP - Austrian efficiency for media streaming')
-    parser.add_argument('--stdio', action='store_true', help='Run in STDIO (JSON-RPC) mode')
-    parser.add_argument('--host', default='127.0.0.1', help='Host to bind to (HTTP mode only)')
-    parser.add_argument('--port', type=int, default=8000, help='Port to listen on (HTTP mode only)')
+    parser.add_argument('--stdio', action='store_true', help='Run in STDIO (JSON-RPC) mode (default)')
+    parser.add_argument('--http', action='store_true', help='Run in HTTP mode')
+    parser.add_argument('--sse', action='store_true', help='Run in SSE mode (deprecated)')
+    parser.add_argument('--host', default='127.0.0.1', help='Host to bind to (HTTP/SSE mode only)')
+    parser.add_argument('--port', type=int, default=8000, help='Port to listen on (HTTP/SSE mode only)')
+    parser.add_argument('--path', default='/mcp', help='Path for HTTP mode')
     parser.add_argument('--debug', action='store_true', help='Enable debug mode')
     
     args = parser.parse_args()
     
-    # Log startup to stderr
-    print(f"[PlexMCP] Starting FastMCP 2.10+ Server - Austrian efficiency for media streaming!", file=sys.stderr)
-    print(f"[PlexMCP] Mode: {'STDIO' if args.stdio else 'HTTP'}", file=sys.stderr)
-    
-    # Run in the appropriate mode
-    if args.stdio:
-        # STDIO mode (JSON-RPC over stdin/stdout)
-        print("[PlexMCP] Running in STDIO (JSON-RPC) mode. Ready to accept requests...", file=sys.stderr)
-        transport = StdioTransport()
-        mcp.run(transport=transport, debug=args.debug)
+    # Determine transport mode - default to stdio if no transport specified
+    if args.http:
+        transport_mode = "http"
+    elif args.sse:
+        transport_mode = "sse"
     else:
-        # HTTP mode (legacy)
-        print(f"[PlexMCP] Running in HTTP mode on http://{args.host}:{args.port}", file=sys.stderr)
-        transport = HTTPTransport(host=args.host, port=args.port)
-        mcp.run(transport=transport, debug=args.debug)
+        transport_mode = "stdio"  # Default in FastMCP 2.10+
+    
+    # Log startup to stderr for visibility
+    print(f"[PlexMCP] Starting FastMCP 2.10+ Server - Austrian efficiency for media streaming! 🚀", file=sys.stderr)
+    print(f"[PlexMCP] Transport: {transport_mode.upper()}", file=sys.stderr)
+    
+    # Run server with FastMCP 2.10+ syntax
+    try:
+        if transport_mode == "stdio":
+            # STDIO mode (default) - no additional parameters needed
+            print("[PlexMCP] Running in STDIO mode - Ready for Claude Desktop! ✅", file=sys.stderr)
+            mcp.run()  # stdio is default in FastMCP 2.10+
+            
+        elif transport_mode == "http":
+            # HTTP mode (streamable HTTP)
+            print(f"[PlexMCP] Running in HTTP mode on http://{args.host}:{args.port}{args.path}", file=sys.stderr)
+            mcp.run(
+                transport="http",
+                host=args.host,
+                port=args.port,
+                path=args.path
+            )
+            
+        elif transport_mode == "sse":
+            # SSE mode (deprecated but still supported)
+            print(f"[PlexMCP] Running in SSE mode on http://{args.host}:{args.port} (deprecated)", file=sys.stderr)
+            mcp.run(
+                transport="sse",
+                host=args.host,
+                port=args.port
+            )
+            
+    except Exception as e:
+        print(f"[PlexMCP] ERROR: Failed to start server: {e}", file=sys.stderr)
+        raise
 
 
 if __name__ == "__main__":

@@ -226,3 +226,56 @@ def get_config_dir() -> Path:
         Path to the configuration directory.
     """
     return CONFIG_DIR
+
+def get_config_value(key: str, default: Any = None, config_file: Union[str, Path] = None) -> Any:
+    """Get a specific configuration value.
+    
+    Args:
+        key: Dot-notation key path (e.g., 'server.port').
+        default: Default value if key not found.
+        config_file: Path to configuration file.
+        
+    Returns:
+        The configuration value or default.
+    """
+    config = load_config(config_file)
+    
+    # Navigate the nested dictionary using dot notation
+    keys = key.split('.')
+    value = config
+    
+    try:
+        for k in keys:
+            value = value[k]
+        return value
+    except (KeyError, TypeError):
+        return default
+
+def set_config_value(key: str, value: Any, config_file: Union[str, Path] = None) -> bool:
+    """Set a specific configuration value.
+    
+    Args:
+        key: Dot-notation key path (e.g., 'server.port').
+        value: Value to set.
+        config_file: Path to configuration file.
+        
+    Returns:
+        True if successfully saved, False otherwise.
+    """
+    config = load_config(config_file)
+    
+    # Navigate and set the nested dictionary using dot notation
+    keys = key.split('.')
+    current = config
+    
+    # Navigate to the parent of the target key
+    for k in keys[:-1]:
+        if k not in current:
+            current[k] = {}
+        current = current[k]
+    
+    # Set the final key
+    current[keys[-1]] = value
+    
+    # Save the updated configuration
+    return save_config(config, config_file)
