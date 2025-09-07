@@ -25,13 +25,18 @@ async def create_user(plex: PlexService, request: CreateUserRequest) -> User:
     Returns:
         The created user information
     """
-    return await plex.create_user(
-        username=request.username,
-        email=request.email,
-        password=request.password,
-        role=request.role,
-        restricted=request.restricted
-    )
+    try:
+        user_data = await plex.create_user(
+            username=request.username,
+            email=request.email,
+            password=request.password,
+            role=request.role.value,  # Convert enum to string
+            restricted=request.restricted
+        )
+        return User(**user_data)
+    except Exception as e:
+        logger.error(f"Failed to create user {request.username}: {e}")
+        raise
 
 class UpdateUserRequest(BaseModel):
     """Request model for updating a user."""
@@ -50,16 +55,29 @@ async def update_user(plex: PlexService, request: UpdateUserRequest) -> User:
         request: User update parameters
         
     Returns:
-        The updated user information
+        Updated user information
     """
-    return await plex.update_user(
-        user_id=request.user_id,
-        username=request.username,
-        email=request.email,
-        password=request.password,
-        role=request.role,
-        restricted=request.restricted
-    )
+    try:
+        update_data = {}
+        if request.username is not None:
+            update_data['username'] = request.username
+        if request.email is not None:
+            update_data['email'] = request.email
+        if request.password is not None:
+            update_data['password'] = request.password
+        if request.role is not None:
+            update_data['role'] = request.role.value  # Convert enum to string
+        if request.restricted is not None:
+            update_data['restricted'] = request.restricted
+            
+        user_data = await plex.update_user(
+            user_id=request.user_id,
+            **update_data
+        )
+        return User(**user_data)
+    except Exception as e:
+        logger.error(f"Failed to update user {request.user_id}: {e}")
+        raise
 
 class DeleteUserRequest(BaseModel):
     """Request model for deleting a user."""
@@ -75,7 +93,16 @@ async def delete_user(plex: PlexService, request: DeleteUserRequest) -> bool:
     Returns:
         True if deletion was successful, False otherwise
     """
-    return await plex.delete_user(user_id=request.user_id)
+    try:
+        success = await plex.delete_user(user_id=request.user_id)
+        if success:
+            logger.info(f"Successfully deleted user {request.user_id}")
+        else:
+            logger.warning(f"Failed to delete user {request.user_id}")
+        return success
+    except Exception as e:
+        logger.error(f"Error deleting user {request.user_id}: {e}")
+        return False
 
 @mcp_tool("plex.users.list")
 async def list_users(plex: PlexService) -> UserList:
@@ -84,7 +111,13 @@ async def list_users(plex: PlexService) -> UserList:
     Returns:
         List of all users with their information
     """
-    return await plex.list_users()
+    try:
+        users_data = await plex.list_users()
+        users = [User(**user_data) for user_data in users_data]
+        return UserList(users=users)
+    except Exception as e:
+        logger.error(f"Error listing users: {e}")
+        return UserList(users=[])
 
 class GetUserRequest(BaseModel):
     """Request model for getting a specific user."""
@@ -100,7 +133,14 @@ async def get_user(plex: PlexService, request: GetUserRequest) -> Optional[User]
     Returns:
         User information if found, None otherwise
     """
-    return await plex.get_user(user_id=request.user_id)
+    try:
+        user_data = await plex.get_user(user_id=request.user_id)
+        if user_data:
+            return User(**user_data)
+        return None
+    except Exception as e:
+        logger.error(f"Error getting user {request.user_id}: {e}")
+        return None
 
 class UpdateUserPermissionsRequest(BaseModel):
     """Request model for updating user permissions."""
@@ -117,7 +157,16 @@ async def update_user_permissions(plex: PlexService, request: UpdateUserPermissi
     Returns:
         Updated user information with new permissions
     """
-    return await plex.update_user_permissions(
-        user_id=request.user_id,
-        permissions=request.permissions
-    )
+    try:
+        result = await plex.update_user_permissions(
+            user_id=request.user_id,
+            permissions=request.permissions
+        )
+        # Get the updated user data
+        user_data = await plex.get_user(user_id=request.user_id)
+        if not user_data:
+            raise ValueError(f"User {request.user_id} not found after updating permissions")
+        return User(**user_data)
+    except Exception as e:
+        logger.error(f"Error updating permissions for user {request.user_id}: {e}")
+        raise

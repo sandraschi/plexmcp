@@ -22,10 +22,16 @@ async def scan_library(plex: PlexService, request: ScanLibraryRequest) -> Dict[s
     Returns:
         Dictionary with scan results
     """
-    return await plex.scan_library(
-        library_id=request.library_id,
-        force=request.force
-    )
+    try:
+        result = await plex.scan_library(
+            library_id=request.library_id,
+            force=request.force
+        )
+        logger.info(f"Successfully scanned library {request.library_id} (force={request.force})")
+        return result
+    except Exception as e:
+        logger.error(f"Error scanning library {request.library_id}: {e}")
+        raise
 
 class RefreshLibraryRequest(BaseModel):
     """Request model for refreshing a library."""
@@ -41,7 +47,16 @@ async def refresh_library(plex: PlexService, request: RefreshLibraryRequest) -> 
     Returns:
         True if refresh was successful, False otherwise
     """
-    return await plex.refresh_library_metadata(library_id=request.library_id)
+    try:
+        success = await plex.refresh_library_metadata(library_id=request.library_id)
+        if success:
+            logger.info(f"Successfully refreshed metadata for library {request.library_id}")
+        else:
+            logger.warning(f"Failed to refresh metadata for library {request.library_id}")
+        return success
+    except Exception as e:
+        logger.error(f"Error refreshing library {request.library_id}: {e}")
+        return False
 
 class OptimizeLibraryRequest(BaseModel):
     """Request model for optimizing a library."""
@@ -57,7 +72,16 @@ async def optimize_library(plex: PlexService, request: OptimizeLibraryRequest) -
     Returns:
         True if optimization was successful, False otherwise
     """
-    return await plex.optimize_library(library_id=request.library_id)
+    try:
+        success = await plex.optimize_library(library_id=request.library_id)
+        if success:
+            logger.info(f"Successfully optimized library {request.library_id}")
+        else:
+            logger.warning(f"Failed to optimize library {request.library_id}")
+        return success
+    except Exception as e:
+        logger.error(f"Error optimizing library {request.library_id}: {e}")
+        return False
 
 class GetLibraryRequest(BaseModel):
     """Request model for getting library information."""
@@ -73,7 +97,15 @@ async def get_library(plex: PlexService, request: GetLibraryRequest) -> Optional
     Returns:
         Library information if found, None otherwise
     """
-    return await plex.get_library(library_id=request.library_id)
+    try:
+        library = await plex.get_library(library_id=request.library_id)
+        if not library:
+            logger.warning(f"Library {request.library_id} not found")
+            return None
+        return LibrarySection(**library)
+    except Exception as e:
+        logger.error(f"Error getting library {request.library_id}: {e}")
+        return None
 
 @mcp_tool("plex.library.list")
 async def list_libraries(plex: PlexService) -> List[LibrarySection]:
@@ -82,7 +114,12 @@ async def list_libraries(plex: PlexService) -> List[LibrarySection]:
     Returns:
         List of all libraries
     """
-    return await plex.list_libraries()
+    try:
+        libraries = await plex.list_libraries()
+        return [LibrarySection(**lib) for lib in libraries]
+    except Exception as e:
+        logger.error(f"Error listing libraries: {e}")
+        return []
 
 class AddLibraryRequest(BaseModel):
     """Request model for adding a new library."""
