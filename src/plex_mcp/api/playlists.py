@@ -36,34 +36,46 @@ async def create_playlist(
         Manual: create_playlist("Movie Night", items=["12345", "67890"])
         Smart: create_playlist("Top Action", smart_rules={"genre": "action", "rating": ">8"})
     """
-    # TODO: Implement actual Plex service call
-    print(f"Creating playlist: {request.name}")
-    
-    if request.summary:
-        print(f"Description: {request.summary}")
-    
-    if request.items:
-        print(f"Adding {len(request.items)} items to playlist")
-    
-    if request.smart_rules:
-        print(f"Smart playlist rules: {request.smart_rules}")
-    
-    if request.library_id:
-        print(f"Library ID: {request.library_id}")
-    
-    # Return a mock response
-    return PlexPlaylist(
-        key="playlist123",
-        title=request.name,
-        type="video",
-        summary=request.summary or "",
-        duration=7200,  # 2 hours
-        item_count=len(request.items) if request.items else 10,
-        smart=bool(request.smart_rules),
-        created_at=1625097600,
-        updated_at=1625097600,
-        owner="current_user"
-    )
+    from ..services.plex_service import PlexService
+    try:
+        plex = PlexService()
+        
+        # Create the playlist using PlexService
+        playlist = await plex.create_playlist(
+            name=request.name,
+            items=request.items or [],
+            smart_rules=request.smart_rules,
+            library_id=request.library_id,
+            summary=request.summary
+        )
+        
+        if not playlist:
+            raise RuntimeError("Failed to create playlist")
+            
+        # Get timestamps safely
+        updated_at = 0
+        if hasattr(playlist, 'updatedAt') and playlist.updatedAt:
+            updated_at = int(playlist.updatedAt.timestamp())
+            
+        created_at = 0
+        if hasattr(playlist, 'addedAt') and playlist.addedAt:
+            created_at = int(playlist.addedAt.timestamp())
+        
+        return PlexPlaylist(
+            key=getattr(playlist, 'ratingKey', ''),
+            title=getattr(playlist, 'title', request.name),
+            type=getattr(playlist, 'playlistType', 'video'),
+            summary=getattr(playlist, 'summary', request.summary or ''),
+            duration=getattr(playlist, 'duration', 0),
+            item_count=getattr(playlist, 'leafCount', len(request.items) if request.items else 0),
+            smart=bool(request.smart_rules),
+            created_at=created_at,
+            updated_at=updated_at,
+            owner=getattr(playlist, 'username', 'current_user')
+        )
+        
+    except Exception as e:
+        raise RuntimeError(f"Error creating playlist: {str(e)}") from e
 
 @mcp.tool()
 async def get_playlists(
@@ -79,32 +91,52 @@ async def get_playlists(
         
     Returns:
         List of playlists with metadata
+        
+    Raises:
+        RuntimeError: If there's an error fetching playlists
     """
-    # TODO: Implement actual Plex service call
-    # For now, return a mock response
-    playlists = [
-        PlexPlaylist(
-            key=f"playlist{i}",
-            title=f"Sample Playlist {i}",
-            type="video",
-            summary=f"Sample playlist {i} description",
-            duration=3600 * (i + 1),
-            item_count=(i + 1) * 5,
-            smart=i % 2 == 0,
-            created_at=1625097600,
-            updated_at=1625184000,
-            owner="current_user" if i < 3 else "other_user"
-        )
-        for i in range(1, 6)
-    ]
-    
-    if playlist_type:
-        playlists = [p for p in playlists if p.type == playlist_type]
-    
-    if not user_playlists:
-        playlists = [p for p in playlists if p.owner != "current_user"]
-    
-    return playlists
+    from ..services.plex_service import PlexService
+    try:
+        plex = PlexService()
+        playlists = await plex.get_playlists()
+        
+        result = []
+        for playlist in playlists:
+            # Skip non-user playlists if requested
+            if not user_playlists and not getattr(playlist, 'user_created', False):
+                continue
+                
+            # Filter by type if specified
+            playlist_type_attr = getattr(playlist, 'playlistType', 'video')
+            if playlist_type and playlist_type_attr.lower() != playlist_type.lower():
+                continue
+            
+            # Get the timestamp safely
+            updated_at = 0
+            if hasattr(playlist, 'updatedAt') and playlist.updatedAt:
+                updated_at = int(playlist.updatedAt.timestamp())
+                
+            created_at = 0
+            if hasattr(playlist, 'addedAt') and playlist.addedAt:
+                created_at = int(playlist.addedAt.timestamp())
+                
+            result.append(PlexPlaylist(
+                key=getattr(playlist, 'ratingKey', ''),
+                title=getattr(playlist, 'title', 'Untitled Playlist'),
+                type=playlist_type_attr,
+                summary=getattr(playlist, 'summary', ''),
+                duration=getattr(playlist, 'duration', 0),
+                item_count=getattr(playlist, 'leafCount', 0),
+                smart=getattr(playlist, 'smart', False),
+                updated_at=updated_at,
+                created_at=created_at,
+                owner=getattr(playlist, 'username', 'system')
+            ))
+            
+        return result
+        
+    except Exception as e:
+        raise RuntimeError(f"Error fetching playlists: {str(e)}") from e
 
 @mcp.tool()
 async def get_playlist(
@@ -118,21 +150,42 @@ async def get_playlist(
         
     Returns:
         Playlist details including items
+        
+    Raises:
+        RuntimeError: If there's an error fetching the playlist
     """
-    # TODO: Implement actual Plex service call
-    # For now, return a mock response
-    return PlexPlaylist(
-        key=playlist_id,
-        title=f"Sample Playlist {playlist_id[-1]}",
-        type="video",
-        summary=f"Detailed information for playlist {playlist_id}",
-        duration=7200,
-        item_count=10,
-        smart=False,
-        created_at=1625097600,
-        updated_at=1625184000,
-        owner="current_user"
-    )
+    from ..services.plex_service import PlexService
+    try:
+        plex = PlexService()
+        playlist = await plex.get_playlist(playlist_id)
+        
+        if not playlist:
+            raise RuntimeError(f"Playlist {playlist_id} not found")
+            
+        # Get timestamps safely
+        updated_at = 0
+        if hasattr(playlist, 'updatedAt') and playlist.updatedAt:
+            updated_at = int(playlist.updatedAt.timestamp())
+            
+        created_at = 0
+        if hasattr(playlist, 'addedAt') and playlist.addedAt:
+            created_at = int(playlist.addedAt.timestamp())
+            
+        return PlexPlaylist(
+            key=getattr(playlist, 'ratingKey', ''),
+            title=getattr(playlist, 'title', 'Untitled Playlist'),
+            type=getattr(playlist, 'playlistType', 'video'),
+            summary=getattr(playlist, 'summary', ''),
+            duration=getattr(playlist, 'duration', 0),
+            item_count=getattr(playlist, 'leafCount', 0),
+            smart=getattr(playlist, 'smart', False),
+            created_at=created_at,
+            updated_at=updated_at,
+            owner=getattr(playlist, 'username', 'system')
+        )
+        
+    except Exception as e:
+        raise RuntimeError(f"Error fetching playlist: {str(e)}") from e
 
 @mcp.tool()
 async def get_playlist_items(
@@ -146,25 +199,67 @@ async def get_playlist_items(
         
     Returns:
         List of media items in the playlist
+        
+    Raises:
+        RuntimeError: If there's an error fetching playlist items
     """
-    # TODO: Implement actual Plex service call
-    # For now, return a mock response
-    return [
-        MediaItem(
-            key=f"item{i}",
-            title=f"Playlist Item {i}",
-            type="movie",
-            year=2023 - i,
-            summary=f"This is item {i} in the playlist",
-            rating=8.0 + (i * 0.1),
-            thumb=f"https://example.com/thumb{i}.jpg",
-            art=f"https://example.com/art{i}.jpg",
-            duration=3600000,  # 1 hour in milliseconds
-            added_at=1625097600,
-            updated_at=1625184000
-        )
-        for i in range(1, 6)
-    ]
+    from ..services.plex_service import PlexService
+    try:
+        plex = PlexService()
+        items = await plex.get_playlist_items(playlist_id)
+        
+        media_items = []
+        for item in items:
+            # Handle different media types
+            if hasattr(item, 'type'):
+                if item.type == 'movie':
+                    media_items.append(MediaItem(
+                        key=item.ratingKey,
+                        title=item.title,
+                        type=item.type,
+                        year=getattr(item, 'year', None),
+                        summary=getattr(item, 'summary', ''),
+                        rating=getattr(item, 'audienceRating', None),
+                        thumb=item.thumbUrl if hasattr(item, 'thumbUrl') else '',
+                        art=item.artUrl if hasattr(item, 'artUrl') else '',
+                        duration=getattr(item, 'duration', 0),
+                        added_at=item.addedAt.timestamp() if hasattr(item, 'addedAt') and item.addedAt else 0,
+                        updated_at=item.updatedAt.timestamp() if hasattr(item, 'updatedAt') and item.updatedAt else 0
+                    ))
+                elif item.type == 'episode':
+                    media_items.append(MediaItem(
+                        key=item.ratingKey,
+                        title=f"{getattr(item, 'grandparentTitle', '')} - S{getattr(item, 'seasonNumber', 0):02d}E{getattr(item, 'episodeNumber', 0):02d} - {getattr(item, 'title', '')}",
+                        type=item.type,
+                        year=getattr(item, 'year', None),
+                        summary=getattr(item, 'summary', ''),
+                        rating=getattr(item, 'audienceRating', None),
+                        thumb=item.thumbUrl if hasattr(item, 'thumbUrl') else '',
+                        art=item.grandparentThumb if hasattr(item, 'grandparentThumb') else '',
+                        duration=getattr(item, 'duration', 0),
+                        added_at=item.addedAt.timestamp() if hasattr(item, 'addedAt') and item.addedAt else 0,
+                        updated_at=item.updatedAt.timestamp() if hasattr(item, 'updatedAt') and item.updatedAt else 0
+                    ))
+                else:
+                    # Fallback for other media types
+                    media_items.append(MediaItem(
+                        key=getattr(item, 'ratingKey', ''),
+                        title=getattr(item, 'title', 'Unknown Item'),
+                        type=getattr(item, 'type', ''),
+                        year=getattr(item, 'year', None),
+                        summary=getattr(item, 'summary', ''),
+                        rating=getattr(item, 'audienceRating', None),
+                        thumb=getattr(item, 'thumbUrl', ''),
+                        art=getattr(item, 'artUrl', ''),
+                        duration=getattr(item, 'duration', 0),
+                        added_at=getattr(item, 'addedAt', 0).timestamp() if hasattr(item, 'addedAt') and item.addedAt else 0,
+                        updated_at=getattr(item, 'updatedAt', 0).timestamp() if hasattr(item, 'updatedAt') and item.updatedAt else 0
+                    ))
+        
+        return media_items
+        
+    except Exception as e:
+        raise RuntimeError(f"Error fetching playlist items: {str(e)}") from e
 
 @mcp.tool()
 async def analyze_playlist(

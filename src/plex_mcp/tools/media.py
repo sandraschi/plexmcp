@@ -1,5 +1,5 @@
 """Plex media tools for FastMCP 2.10.1."""
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Literal, Union
 
 from fastmcp import MCPTool, mcp_tool
 from pydantic import BaseModel, Field

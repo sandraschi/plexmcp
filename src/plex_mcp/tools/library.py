@@ -113,13 +113,19 @@ async def list_libraries(plex: PlexService) -> List[LibrarySection]:
     
     Returns:
         List of all libraries
+        
+    Raises:
+        RuntimeError: If there's an error fetching libraries from Plex server
     """
     try:
         libraries = await plex.list_libraries()
+        if not libraries:
+            raise RuntimeError("No libraries found on Plex server")
         return [LibrarySection(**lib) for lib in libraries]
     except Exception as e:
-        logger.error(f"Error listing libraries: {e}")
-        return []
+        error_msg = f"Failed to list libraries: {str(e)}"
+        logger.error(error_msg)
+        raise RuntimeError(error_msg) from e
 
 class AddLibraryRequest(BaseModel):
     """Request model for adding a new library."""

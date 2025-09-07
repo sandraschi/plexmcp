@@ -1,6 +1,7 @@
 """Plex service implementation for FastMCP 2.10."""
+import asyncio
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union, Literal
 
 from plexapi.exceptions import PlexApiException
 from plexapi.server import PlexServer
@@ -28,7 +29,6 @@ class PlexService:
         self.token = token
         self.timeout = timeout
         self.server: Optional[PlexServer] = None
-        self._session: Optional[aiohttp.ClientSession] = None
         self._initialized = False
     
     async def connect(self) -> None:
@@ -36,14 +36,12 @@ class PlexService:
         if self._initialized:
             return
             
-        self._session = aiohttp.ClientSession()
-        
         try:
+            # PlexAPI handles its own session management, don't pass aiohttp session
             self.server = await self._run_in_executor(
                 PlexServer,
                 self.base_url,
                 self.token,
-                session=self._session,
                 timeout=self.timeout
             )
             self._initialized = True
@@ -92,8 +90,12 @@ class PlexService:
             'updated_at': self.server.updated_at.timestamp() if hasattr(self.server, 'updated_at') else 0
         }
     
-    async def get_libraries(self) -> List[Dict[str, Any]]:
-        """Get list of libraries from Plex server."""
+    async def list_libraries(self) -> List[Dict[str, Any]]:
+        """Get list of all libraries from Plex server.
+        
+        Returns:
+            List of dictionaries containing library information
+        """
         if not self._initialized:
             await self.connect()
             
@@ -104,22 +106,47 @@ class PlexService:
             return libraries
             
         except PlexApiException as e:
-            logger.error(f"Failed to get libraries: {str(e)}")
+            logger.error(f"Failed to list libraries: {str(e)}")
             raise
+            
+    async def get_libraries(self) -> List[Dict[str, Any]]:
+        """Alias for list_libraries for backward compatibility."""
+        return await self.list_libraries()
     
     def _get_libraries_sync(self) -> List[Dict[str, Any]]:
-        """Synchronous helper to get libraries."""
+        """Synchronous helper to get libraries with complete section information."""
         if not self.server:
             raise RuntimeError("Not connected to Plex server")
             
-        return [{
-            'id': section.key,
-            'title': section.title,
-            'type': section.type,
-            'agent': section.agent,
-            'updated_at': section.updatedAt.timestamp() if hasattr(section, 'updatedAt') else 0,
-            'count': section.totalSize if hasattr(section, 'totalSize') else 0
-        } for section in self.server.library.sections()]
+        libraries = []
+        for section in self.server.library.sections():
+            try:
+                # Get the section details
+                section_info = {
+                    'id': section.key,
+                    'title': section.title,
+                    'type': section.type,
+                    'agent': getattr(section, 'agent', ''),
+                    'scanner': getattr(section, 'scanner', ''),
+                    'language': getattr(section, 'language', 'en'),
+                    'updated_at': section.updatedAt.timestamp() if hasattr(section, 'updatedAt') else 0,
+                    'created_at': section.addedAt.timestamp() if hasattr(section, 'addedAt') else 0,
+                    'scanned_at': section.scannedAt.timestamp() if hasattr(section, 'scannedAt') else 0,
+                    'content': getattr(section, 'content', None),
+                    'count': section.totalSize if hasattr(section, 'totalSize') else 0
+                }
+                
+                # Get additional metadata if available
+                if hasattr(section, 'contentChangedAt'):
+                    section_info['content_changed_at'] = section.contentChangedAt.timestamp()
+                
+                libraries.append(section_info)
+                
+            except Exception as e:
+                logger.error(f"Error processing library section {getattr(section, 'title', 'unknown')}: {str(e)}")
+                continue
+                
+        return libraries
     
     async def search_media(self, query: str, limit: int = 10, library_id: Optional[str] = None) -> List[MediaItem]:
         """Search for media across all libraries or within a specific library."""
@@ -1518,9 +1545,7 @@ class PlexService:
     
     async def close(self) -> None:
         """Close the Plex service connection."""
-        if self._session:
-            await self._session.close()
-            self._session = None
+        if self._initialized:
             self._initialized = False
         logger.info("Plex service closed")
     

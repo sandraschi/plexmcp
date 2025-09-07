@@ -27,29 +27,30 @@ async def get_clients() -> List[PlexClient]:
     
     Returns:
         List of available Plex client devices
+        
+    Raises:
+        RuntimeError: If there's an error fetching client information
     """
-    # TODO: Implement actual Plex service call
-    # For now, return a mock response
-    return [
-        PlexClient(
-            name="Living Room TV",
-            host="192.168.1.100",
-            machine_identifier="client123",
-            product="Plex for Android (TV)",
-            platform="Android",
-            platform_version="11",
-            device="Sony Bravia"
-        ),
-        PlexClient(
-            name="Bedroom",
-            host="192.168.1.101",
-            machine_identifier="client456",
-            product="Plex Web",
-            platform="Chrome",
-            platform_version="96.0",
-            device="Desktop"
-        )
-    ]
+    from ..services.plex_service import PlexService
+    try:
+        plex = PlexService()
+        clients = await plex.get_clients()
+        
+        return [
+            PlexClient(
+                name=client.get('name', 'Unknown Client'),
+                host=client.get('host', ''),
+                machine_identifier=client.get('machineIdentifier', ''),
+                product=client.get('product', ''),
+                platform=client.get('platform', ''),
+                platform_version=client.get('platformVersion', ''),
+                device=client.get('device', '')
+            )
+            for client in clients
+        ]
+        
+    except Exception as e:
+        raise RuntimeError(f"Error fetching clients: {str(e)}") from e
 
 @mcp.tool()
 async def get_sessions() -> List[PlexSession]:
@@ -61,20 +62,30 @@ async def get_sessions() -> List[PlexSession]:
     
     Returns:
         List of active playback sessions
+        
+    Raises:
+        RuntimeError: If there's an error fetching active sessions
     """
-    # TODO: Implement actual Plex service call
-    # For now, return a mock response
-    return [
-        PlexSession(
-            session_key="session123",
-            user="user1",
-            player="Living Room TV",
-            state="playing",
-            title="Sample Movie",
-            progress=3600,  # 1 hour in seconds
-            duration=7200   # 2 hours in seconds
-        )
-    ]
+    from ..services.plex_service import PlexService
+    try:
+        plex = PlexService()
+        sessions = await plex.get_sessions()
+        
+        return [
+            PlexSession(
+                session_key=str(session.get('session_key', '')),
+                user=session.get('user', 'Unknown User'),
+                player=session.get('player', 'Unknown Player'),
+                state=session.get('state', 'unknown'),
+                title=session.get('title', 'Unknown Title'),
+                progress=int(session.get('view_offset', 0) / 1000),  # Convert ms to seconds
+                duration=int(session.get('duration', 0) / 1000)  # Convert ms to seconds
+            )
+            for session in sessions
+        ]
+        
+    except Exception as e:
+        raise RuntimeError(f"Error fetching active sessions: {str(e)}") from e
 
 @mcp.tool()
 async def control_playback(request: RemotePlaybackRequest) -> PlaybackControlResult:

@@ -38,18 +38,29 @@ async def list_libraries(plex: PlexService) -> List[LibraryInfo]:
     
     Returns:
         List of libraries with their basic information.
+        
+    Raises:
+        RuntimeError: If there's an error fetching libraries from Plex server
     """
-    libraries = await plex.get_libraries()
-    return [
-        LibraryInfo(
-            id=lib['id'],
-            title=lib['title'],
-            type=lib['type'],
-            count=lib.get('count', 0),
-            updated_at=lib['updated_at']
-        )
-        for lib in libraries
-    ]
+    try:
+        libraries = await plex.list_libraries()
+        if not libraries:
+            raise RuntimeError("No libraries found on Plex server")
+            
+        return [
+            LibraryInfo(
+                id=lib.get('id', ''),
+                title=lib.get('title', 'Unknown'),
+                type=lib.get('type', 'unknown'),
+                count=lib.get('count', 0),
+                updated_at=lib.get('updated_at', 0)
+            )
+            for lib in libraries
+        ]
+    except Exception as e:
+        error_msg = f"Failed to list libraries: {str(e)}"
+        logger.error(error_msg)
+        raise RuntimeError(error_msg) from e
 
 class ServerInfoResponse(BaseModel):
     """Comprehensive server information response."""
