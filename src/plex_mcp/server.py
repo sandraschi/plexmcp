@@ -49,19 +49,19 @@ def main():
         transport_mode = "stdio"  # Default in FastMCP 2.10+
     
     # Log startup to stderr for visibility
-    print(f"[PlexMCP] Starting FastMCP 2.10+ Server - Austrian efficiency for media streaming! 🚀", file=sys.stderr)
-    print(f"[PlexMCP] Transport: {transport_mode.upper()}", file=sys.stderr)
+    logger.info("Starting FastMCP 2.10+ Server - Austrian efficiency for media streaming! 🚀")
+    logger.info(f"Transport: {transport_mode.upper()}")
     
     # Run server with FastMCP 2.10+ syntax
     try:
         if transport_mode == "stdio":
             # STDIO mode (default) - no additional parameters needed
-            print("[PlexMCP] Running in STDIO mode - Ready for Claude Desktop! ✅", file=sys.stderr)
+            logger.info("Running in STDIO mode - Ready for Claude Desktop! ✅")
             mcp.run()  # stdio is default in FastMCP 2.10+
             
         elif transport_mode == "http":
             # HTTP mode (streamable HTTP)
-            print(f"[PlexMCP] Running in HTTP mode on http://{args.host}:{args.port}{args.path}", file=sys.stderr)
+            logger.info(f"Running in HTTP mode on http://{args.host}:{args.port}{args.path}")
             mcp.run(
                 transport="http",
                 host=args.host,
@@ -71,7 +71,7 @@ def main():
             
         elif transport_mode == "sse":
             # SSE mode (deprecated but still supported)
-            print(f"[PlexMCP] Running in SSE mode on http://{args.host}:{args.port} (deprecated)", file=sys.stderr)
+            logger.info(f"Running in SSE mode on http://{args.host}:{args.port} (deprecated)")
             mcp.run(
                 transport="sse",
                 host=args.host,
@@ -79,7 +79,7 @@ def main():
             )
             
     except Exception as e:
-        print(f"[PlexMCP] ERROR: Failed to start server: {e}", file=sys.stderr)
+        logger.error(f"Failed to start server: {e}")
         raise
 
 

@@ -1,254 +1,138 @@
 {
-  "dxt_version": "0.1",
+  "manifest_version": "0.2",
   "name": "plex-mcp",
-  "version": "1.0.0",
-  "description": "FastMCP 2.10 server for Plex Media Server management with Austrian efficiency",
+  "version": "2.0.0",
+  "description": "Comprehensive Plex Media Server MCP integration with 20+ powerful tools for media management, playback control, and server administration",
   "author": {
-    "name": "Sandra",
-    "email": "sandra@example.com"
+    "name": "Sandra Schipal",
+    "email": "sandra@sandraschi.dev"
   },
   "server": {
     "type": "python",
-    "entry_point": "src/plex_mcp/server.py",
+    "entry_point": "src/plex_mcp/main.py",
     "mcp_config": {
       "command": "python",
-      "args": ["-m", "plex_mcp.server"],
+      "args": ["-m", "plex_mcp.main"],
       "env": {
-        "PYTHONPATH": "${__dirname}/src"
+        "PYTHONPATH": "${PWD}",
+        "PLEX_URL": "${user_config.plex_url}",
+        "PLEX_TOKEN": "${user_config.plex_token}",
+        "PYTHONUNBUFFERED": "1"
       }
     }
   },
-  "tools": [
-    {"name": "search_media", "description": "Search for media across all libraries"},
-    {"name": "search_movies", "description": "Search specifically for movies"},
-    {"name": "search_tv_shows", "description": "Search specifically for TV shows"},
-    {"name": "search_music", "description": "Search specifically for music"},
-    {"name": "search_photos", "description": "Search specifically for photos"},
-    {"name": "browse_library", "description": "Browse library contents by section"},
-    {"name": "get_recently_added", "description": "Get recently added media"},
-    {"name": "get_on_deck", "description": "Get media currently on deck"},
-    {"name": "get_recommendations", "description": "Get recommended media"},
-    {"name": "get_continue_watching", "description": "Get media in progress"},
-    
-    {"name": "play_media", "description": "Play media on a client"},
-    {"name": "pause_playback", "description": "Pause current playback"},
-    {"name": "stop_playback", "description": "Stop current playback"},
-    {"name": "next_item", "description": "Skip to next item in queue"},
-    {"name": "previous_item", "description": "Go to previous item in queue"},
-    {"name": "seek_position", "description": "Seek to specific position"},
-    {"name": "set_volume", "description": "Set volume level"},
-    {"name": "toggle_subtitles", "description": "Toggle subtitles on/off"},
-    {"name": "change_audio_track", "description": "Change audio track"},
-    {"name": "change_subtitle_track", "description": "Change subtitle track"},
-    
-    {"name": "scan_library", "description": "Scan library for new files"},
-    {"name": "refresh_metadata", "description": "Refresh media metadata"},
-    {"name": "analyze_media", "description": "Analyze media files"},
-    {"name": "empty_trash", "description": "Empty library trash"},
-    {"name": "clean_bundles", "description": "Clean old bundles"},
-    {"name": "optimize_database", "description": "Optimize Plex database"},
-    {"name": "backup_database", "description": "Backup Plex database"},
-    
-    {"name": "create_playlist", "description": "Create a new playlist"},
-    {"name": "delete_playlist", "description": "Delete a playlist"},
-    {"name": "add_to_playlist", "description": "Add items to a playlist"},
-    {"name": "remove_from_playlist", "description": "Remove items from a playlist"},
-    {"name": "get_playlists", "description": "Get all playlists"},
-    {"name": "play_playlist", "description": "Play a playlist"},
-    
-    {"name": "get_server_status", "description": "Get server status"},
-    {"name": "get_active_sessions", "description": "Get active streaming sessions"},
-    {"name": "get_recent_plays", "description": "Get recently played media"},
-    {"name": "get_server_stats", "description": "Get server statistics"},
-    {"name": "get_server_activity", "description": "Get current server activity"},
-    {"name": "get_server_resources", "description": "Get server resource usage"},
-    {"name": "check_for_updates", "description": "Check for Plex updates"},
-    
-    {"name": "get_users", "description": "Get all users"},
-    {"name": "get_user_watch_history", "description": "Get user watch history"},
-    {"name": "get_user_watchlist", "description": "Get user watchlist"},
-    {"name": "get_user_ratings", "description": "Get user ratings"},
-    {"name": "set_user_permissions", "description": "Set user permissions"},
-    
-    {"name": "get_clients", "description": "Get available clients"},
-    {"name": "get_client_status", "description": "Get client status"},
-    {"name": "send_message_to_client", "description": "Send message to client"},
-    {"name": "get_client_capabilities", "description": "Get client capabilities"},
-    
-    {"name": "rate_media", "description": "Rate media item"},
-    {"name": "mark_as_watched", "description": "Mark media as watched"},
-    {"name": "mark_as_unwatched", "description": "Mark media as unwatched"},
-    {"name": "get_media_info", "description": "Get detailed media info"},
-    {"name": "get_related_media", "description": "Get related media"},
-    
-    {"name": "transcode_media", "description": "Transcode media to different format"},
-    {"name": "download_media", "description": "Download media file"},
-    {"name": "get_transcode_sessions", "description": "Get active transcode sessions"},
-    {"name": "cancel_transcode", "description": "Cancel active transcode"},
-    
-    {"name": "create_collection", "description": "Create a media collection"},
-    {"name": "add_to_collection", "description": "Add items to collection"},
-    {"name": "remove_from_collection", "description": "Remove items from collection"},
-    {"name": "get_collections", "description": "Get all collections"},
-    
-    {"name": "get_scheduled_tasks", "description": "Get scheduled tasks"},
-    {"name": "run_scheduled_task", "description": "Run a scheduled task"},
-    
-    {"name": "list_webhooks", "description": "List all webhooks"},
-    {"name": "add_webhook", "description": "Add a new webhook"},
-    {"name": "remove_webhook", "description": "Remove a webhook"},
-    
-    {"name": "get_plugins", "description": "Get installed plugins"},
-    {"name": "install_plugin", "description": "Install a plugin"},
-    {"name": "uninstall_plugin", "description": "Uninstall a plugin"},
-    {"name": "enable_plugin", "description": "Enable a plugin"},
-    {"name": "disable_plugin", "description": "Disable a plugin"},
-    
-    {"name": "get_server_preferences", "description": "Get server preferences"},
-    {"name": "set_server_preference", "description": "Set server preference"},
-    
-    {"name": "get_library_sections", "description": "Get all library sections"},
-    {"name": "refresh_library_section", "description": "Refresh a library section"},
-    {"name": "analyze_library_section", "description": "Analyze a library section"},
-    
-    {"name": "analyze_media_files", "description": "Analyze media files"},
-    {"name": "refresh_media_analysis", "description": "Refresh media analysis"},
-    
-    {"name": "get_server_logs", "description": "Get server logs"},
-    {"name": "get_plex_logs", "description": "Get Plex logs"},
-    
-    {"name": "clean_old_bundles", "description": "Clean old bundles"},
-    {"name": "optimize_database", "description": "Optimize database"},
-    {"name": "repair_database", "description": "Repair database"},
-    
-    {"name": "convert_media", "description": "Convert media format"},
-    {"name": "get_available_conversion_profiles", "description": "Get conversion profiles"},
-    
-    {"name": "enable_remote_access", "description": "Enable remote access"},
-    {"name": "disable_remote_access", "description": "Disable remote access"},
-    {"name": "get_remote_access_status", "description": "Get remote access status"},
-    
-    {"name": "get_shared_servers", "description": "Get shared servers"},
-    {"name": "share_server", "description": "Share server with user"},
-    {"name": "unshare_server", "description": "Unshare server from user"},
-    
-    {"name": "upload_media", "description": "Upload media to library"},
-    {"name": "get_upload_status", "description": "Get upload status"},
-    
-    {"name": "get_notifications", "description": "Get server notifications"},
-    {"name": "dismiss_notification", "description": "Dismiss notification"},
-    
-    {"name": "get_security_logs", "description": "Get security logs"},
-    {"name": "block_ip_address", "description": "Block IP address"},
-    {"name": "unblock_ip_address", "description": "Unblock IP address"},
-    
-    {"name": "get_network_status", "description": "Get network status"},
-    {"name": "test_network_speed", "description": "Test network speed"},
-    
-    {"name": "get_storage_usage", "description": "Get storage usage"},
-    {"name": "get_available_storage", "description": "Get available storage"},
-    
-    {"name": "get_performance_metrics", "description": "Get performance metrics"},
-    {"name": "optimize_server_performance", "description": "Optimize server performance"},
-    
-    {"name": "create_server_backup", "description": "Create server backup"},
-    {"name": "restore_server_backup", "description": "Restore server from backup"},
-    
-    {"name": "check_for_server_updates", "description": "Check for server updates"},
-    {"name": "install_server_update", "description": "Install server update"},
-    
-    {"name": "get_system_logs", "description": "Get system logs"},
-    {"name": "get_application_logs", "description": "Get application logs"},
-    
-    {"name": "get_server_health", "description": "Get server health status"},
-    {"name": "get_resource_usage", "description": "Get resource usage"},
-    
-    {"name": "get_server_configuration", "description": "Get server configuration"},
-    {"name": "update_server_configuration", "description": "Update server configuration"},
-    
-    {"name": "authenticate_user", "description": "Authenticate user"},
-    {"name": "validate_token", "description": "Validate authentication token"},
-    
-    {"name": "discover_servers", "description": "Discover Plex servers"},
-    {"name": "connect_to_server", "description": "Connect to Plex server"},
-    
-    {"name": "run_diagnostics", "description": "Run server diagnostics"},
-    {"name": "get_diagnostic_report", "description": "Get diagnostic report"}
-  ],
-  "prompts": [
-    {"name": "search_media_prompt", "text": "Search Plex for '{query}' in {section}. Filter by type: {libtype}. Show {limit} results.", "description": "Search for media in Plex library"},
-    {"name": "search_movies_prompt", "text": "Find movies matching '{query}' in {section}. Sort by {sort}. Show {limit} results.", "description": "Search for movies"},
-    {"name": "search_tv_shows_prompt", "text": "Find TV shows matching '{query}' in {section}. Filter by year: {year}. Show {limit} results.", "description": "Search for TV shows"},
-    {"name": "search_music_prompt", "text": "Find music matching '{query}'. Filter by artist: {artist}, album: {album}. Show {limit} results.", "description": "Search for music"},
-    {"name": "search_photos_prompt", "text": "Find photos matching '{query}' in {section}. Filter by date: {date}. Show {limit} results.", "description": "Search for photos"},
-    
-    {"name": "browse_library_prompt", "text": "Show {content_type} in {section}. Sort by {sort}. Limit to {limit} items.", "description": "Browse library contents"},
-    {"name": "recently_added_prompt", "text": "Show recently added {media_type} in {section}. Limit to {limit} items.", "description": "Get recently added media"},
-    {"name": "on_deck_prompt", "text": "Show on deck items for {user}. Limit to {limit} items.", "description": "Get on deck items"},
-    {"name": "continue_watching_prompt", "text": "Show continue watching for {user}. Limit to {limit} items.", "description": "Get continue watching items"},
-    {"name": "recommendations_prompt", "text": "Get {media_type} recommendations for {user}. Limit to {limit} items.", "description": "Get media recommendations"},
-    
-    {"name": "play_media_prompt", "text": "Play {media_type} with ID {media_id} on {client_name}. Start at {offset} seconds.", "description": "Play media on client"},
-    {"name": "pause_playback_prompt", "text": "Pause playback on {client_name}.", "description": "Pause current playback"},
-    {"name": "stop_playback_prompt", "text": "Stop playback on {client_name}.", "description": "Stop current playback"},
-    {"name": "next_item_prompt", "text": "Skip to next item on {client_name}.", "description": "Play next item"},
-    {"name": "previous_item_prompt", "text": "Go to previous item on {client_name}.", "description": "Play previous item"},
-    
-    {"name": "scan_library_prompt", "text": "Scan {section} library for new files.", "description": "Scan library section"},
-    {"name": "refresh_metadata_prompt", "text": "Refresh metadata for {media_type} with ID {media_id}.", "description": "Refresh media metadata"},
-    {"name": "analyze_media_prompt", "text": "Analyze {media_type} with ID {media_id}.", "description": "Analyze media files"},
-    {"name": "empty_trash_prompt", "text": "Empty trash in {section} library.", "description": "Empty library trash"},
-    
-    {"name": "create_playlist_prompt", "text": "Create a new playlist named '{name}' with description: {description}.", "description": "Create playlist"},
-    {"name": "delete_playlist_prompt", "text": "Delete the playlist with ID {playlist_id}.", "description": "Delete playlist"},
-    {"name": "add_to_playlist_prompt", "text": "Add {media_type} with ID {media_id} to playlist {playlist_id}.", "description": "Add to playlist"},
-    
-    {"name": "server_status_prompt", "text": "Show {aspect} status for the Plex server.", "description": "Check server status"},
-    {"name": "active_sessions_prompt", "text": "Show active streaming sessions. Filter by user: {user}.", "description": "View active sessions"},
-    {"name": "recent_plays_prompt", "text": "Show recently played media. Filter by user: {user}, type: {media_type}.", "description": "View recent plays"},
-    
-    {"name": "list_users_prompt", "text": "List all users with {role} role. Include: {include}.", "description": "List users"},
-    {"name": "user_watch_history_prompt", "text": "Show watch history for user {user_id}. Filter by date: {date_range}.", "description": "View user history"},
-    
-    {"name": "list_clients_prompt", "text": "List all available Plex clients. Filter by platform: {platform}.", "description": "List clients"},
-    {"name": "client_status_prompt", "text": "Show status of client {client_id}.", "description": "View client status"},
-    
-    {"name": "rate_media_prompt", "text": "Rate {media_type} with ID {media_id} as {rating} stars.", "description": "Rate media"},
-    {"name": "mark_watched_prompt", "text": "Mark {media_type} with ID {media_id} as watched.", "description": "Mark as watched"},
-    
-    {"name": "transcode_media_prompt", "text": "Transcode {media_type} with ID {media_id} to {profile} profile. Quality: {quality}.", "description": "Transcode media"},
-    
-    {"name": "create_collection_prompt", "text": "Create collection named '{name}' in {section}. Summary: {summary}.", "description": "Create collection"},
-    
-    {"name": "list_webhooks_prompt", "text": "List all configured webhooks.", "description": "List webhooks"},
-    
-    {"name": "list_plugins_prompt", "text": "List all installed plugins. Filter by status: {status}.", "description": "List plugins"},
-    
-    {"name": "get_preferences_prompt", "text": "Get server preferences. Filter by category: {category}.", "description": "Get preferences"},
-    
-    {"name": "list_library_sections_prompt", "text": "List all library sections. Filter by type: {section_type}.", "description": "List library sections"},
-    
-    {"name": "get_server_logs_prompt", "text": "Get server logs. Filter by type: {log_type}, level: {level}.", "description": "Get server logs"},
-    
-    {"name": "enable_remote_access_prompt", "text": "Enable remote access with port {port}.", "description": "Enable remote access"},
-    
-    {"name": "share_server_prompt", "text": "Share server with user {user_email}. Libraries: {libraries}.", "description": "Share server"},
-    
-    {"name": "upload_media_prompt", "text": "Upload {file_path} to library {library_id}.", "description": "Upload media"},
-    
-    {"name": "block_ip_prompt", "text": "Block IP address {ip_address}. Reason: {reason}.", "description": "Block IP"},
-    
-    {"name": "create_backup_prompt", "text": "Create server backup at {backup_path}.", "description": "Create backup"},
-    
-    {"name": "check_updates_prompt", "text": "Check for server updates. Channel: {channel}.", "description": "Check for updates"},
-    
-    {"name": "run_diagnostics_prompt", "text": "Run server diagnostics. Include: {tests}.", "description": "Run diagnostics"}
-  ],
-  "license": "MIT",
-  "keywords": ["plex", "media", "mcp", "automation", "media-server"],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/sandra/plex-mcp"
+  "user_config": {
+    "plex_url": {
+      "type": "string",
+      "title": "Plex Server URL",
+      "description": "URL of your Plex Media Server (e.g., http://localhost:32400)",
+      "required": false,
+      "default": "http://localhost:32400"
+    },
+    "plex_token": {
+      "type": "string",
+      "title": "Plex Authentication Token",
+      "description": "Your Plex authentication token (get from https://plex.tv/pms/servers)",
+      "required": true
+    }
   },
-  "homepage": "https://github.com/sandra/plex-mcp#readme"
+  "tools": [
+    {
+      "name": "get_plex_status",
+      "description": "Get Plex server status and identity information"
+    },
+    {
+      "name": "get_libraries",
+      "description": "Get all media libraries from the Plex server"
+    },
+    {
+      "name": "search_media",
+      "description": "Search for media across all libraries"
+    },
+    {
+      "name": "get_recently_added",
+      "description": "Get recently added media items"
+    },
+    {
+      "name": "get_media_info",
+      "description": "Get detailed information about a specific media item"
+    },
+    {
+      "name": "scan_library",
+      "description": "Scan a library for new or changed media"
+    },
+    {
+      "name": "help",
+      "description": "Get help and documentation for available tools"
+    },
+    {
+      "name": "get_users",
+      "description": "Get information about Plex server users"
+    },
+    {
+      "name": "update_user_permissions",
+      "description": "Update permissions for a Plex user"
+    },
+    {
+      "name": "run_server_maintenance",
+      "description": "Run maintenance tasks on the Plex server"
+    },
+    {
+      "name": "get_server_health",
+      "description": "Get detailed server health and diagnostics"
+    },
+    {
+      "name": "create_playlist",
+      "description": "Create a new playlist"
+    },
+    {
+      "name": "get_playlists",
+      "description": "Get all playlists from the server"
+    },
+    {
+      "name": "get_playlist",
+      "description": "Get detailed information about a specific playlist"
+    },
+    {
+      "name": "get_playlist_items",
+      "description": "Get all items in a playlist"
+    },
+    {
+      "name": "analyze_playlist",
+      "description": "Analyze playlist contents and statistics"
+    },
+    {
+      "name": "get_clients",
+      "description": "Get information about connected Plex clients"
+    },
+    {
+      "name": "get_sessions",
+      "description": "Get information about active playback sessions"
+    },
+    {
+      "name": "control_playback",
+      "description": "Control media playback on clients"
+    },
+    {
+      "name": "cast_media",
+      "description": "Cast media to a specific client"
+    },
+    {
+      "name": "vienna.get_recommendations",
+      "description": "Get personalized media recommendations"
+    },
+    {
+      "name": "vienna.get_european_content",
+      "description": "Discover European content and media"
+    },
+    {
+      "name": "vienna.get_anime_season_info",
+      "description": "Get detailed anime season information"
+    }
+  ],
+  "compatibility": {
+    "platforms": ["win32", "linux", "darwin"],
+    "python_version": ">=3.10",
+    "mcp_version": ">=2.10.0"
+  }
 }

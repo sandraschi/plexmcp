@@ -6,12 +6,47 @@ for Plex server connection settings.
 """
 
 import json
+import logging
 import os
+import sys
 from typing import Optional
 from pathlib import Path
 
 from pydantic import BaseModel, Field, field_validator
 from dotenv import load_dotenv
+
+
+def setup_logging(level: str = "INFO", format_string: Optional[str] = None) -> None:
+    """
+    Configure logging for the entire application.
+
+    Args:
+        level: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+        format_string: Custom format string for log messages
+    """
+    if format_string is None:
+        format_string = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+    # Create formatter
+    formatter = logging.Formatter(format_string)
+
+    # Get or create root logger
+    logger = logging.getLogger()
+    logger.setLevel(getattr(logging, level.upper(), logging.INFO))
+
+    # Remove any existing handlers to avoid duplicates
+    for handler in logger.handlers[:]:
+        logger.removeHandler(handler)
+
+    # Create console handler
+    console_handler = logging.StreamHandler(sys.stderr)
+    console_handler.setFormatter(formatter)
+    logger.addHandler(console_handler)
+
+    # Set specific loggers to reduce noise
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("urllib3").setLevel(logging.WARNING)
+    logging.getLogger("plexapi").setLevel(logging.WARNING)
 
 
 class PlexConfig(BaseModel):

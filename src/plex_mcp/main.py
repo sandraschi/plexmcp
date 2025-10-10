@@ -5,6 +5,7 @@ Proper MCP stdio protocol implementation
 """
 
 import asyncio
+import logging
 import sys
 from typing import Any, Sequence
 from fastmcp import FastMCP
@@ -12,7 +13,11 @@ from mcp.server.stdio import stdio_server
 
 # Import all tool modules
 from .api import core, playlists, playback, admin
-from .config import get_settings
+from .config import get_settings, setup_logging
+
+# Setup logging
+setup_logging()
+logger = logging.getLogger(__name__)
 
 async def main() -> None:
     """Main entry point for MCP stdio server."""

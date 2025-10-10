@@ -1,0 +1,124 @@
+name: plex-mcp
+description: "Comprehensive Plex Media Server MCP integration with 23 powerful tools for media management, playback control, and server administration"
+author: Sandra Schipal
+version: "2.0.0"
+homepage: https://github.com/sandra/plex-mcp
+
+# Quality metrics for Glama.ai scoring
+quality:
+  status: "gold"
+  score: 85
+  tests_passing: true
+  last_updated: "2025-10-10"
+
+# Repository metadata
+repository:
+  type: "mcp-server"
+  language: "python"
+  framework: "fastmcp"
+  protocol_version: "2.12.0"
+
+# Tool catalog for Glama.ai indexing
+tools:
+  - name: "get_plex_status"
+    category: "server"
+    description: "Get Plex server status and identity information"
+  - name: "get_libraries"
+    category: "content"
+    description: "Get all media libraries from the Plex server"
+  - name: "search_media"
+    category: "content"
+    description: "Search for media across all libraries"
+  - name: "get_recently_added"
+    category: "content"
+    description: "Get recently added media items"
+  - name: "get_media_info"
+    category: "content"
+    description: "Get detailed information about a specific media item"
+  - name: "scan_library"
+    category: "maintenance"
+    description: "Scan a library for new or changed media"
+  - name: "help"
+    category: "utility"
+    description: "Get help and documentation for available tools"
+  - name: "get_users"
+    category: "admin"
+    description: "Get information about Plex server users"
+  - name: "update_user_permissions"
+    category: "admin"
+    description: "Update permissions for a Plex user"
+  - name: "run_server_maintenance"
+    category: "maintenance"
+    description: "Run maintenance tasks on the Plex server"
+  - name: "get_server_health"
+    category: "monitoring"
+    description: "Get detailed server health and diagnostics"
+  - name: "create_playlist"
+    category: "playlists"
+    description: "Create a new playlist"
+  - name: "get_playlists"
+    category: "playlists"
+    description: "Get all playlists from the server"
+  - name: "get_playlist"
+    category: "playlists"
+    description: "Get detailed information about a specific playlist"
+  - name: "get_playlist_items"
+    category: "playlists"
+    description: "Get all items in a playlist"
+  - name: "analyze_playlist"
+    category: "playlists"
+    description: "Analyze playlist contents and statistics"
+  - name: "get_clients"
+    category: "playback"
+    description: "Get information about connected Plex clients"
+  - name: "get_sessions"
+    category: "playback"
+    description: "Get information about active playback sessions"
+  - name: "control_playback"
+    category: "playback"
+    description: "Control media playback on clients"
+  - name: "cast_media"
+    category: "playback"
+    description: "Cast media to a specific client"
+  - name: "vienna.get_recommendations"
+    category: "ai"
+    description: "Get personalized media recommendations"
+  - name: "vienna.get_european_content"
+    category: "ai"
+    description: "Discover European content and media"
+  - name: "vienna.get_anime_season_info"
+    category: "ai"
+    description: "Get detailed anime season information"
+
+# Platform capabilities
+capabilities:
+  - "media_management"
+  - "playback_control"
+  - "server_administration"
+  - "user_management"
+  - "playlist_management"
+  - "ai_recommendations"
+
+# Dependencies and requirements
+dependencies:
+  python: ">=3.10.0"
+  packages:
+    - "fastmcp>=2.10.0"
+    - "plexapi>=4.15.0"
+    - "requests>=2.31.0"
+
+# Platform-specific information
+platforms:
+  - name: "windows"
+    support: "full"
+  - name: "linux"
+    support: "full"
+  - name: "macos"
+    support: "full"
+
+# Integration metadata
+integration:
+  protocol: "mcp"
+  transport: "stdio"
+  packaging: "mcpb"
+  installation: "one-click"

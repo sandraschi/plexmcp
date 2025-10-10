@@ -8,7 +8,7 @@ setup(
     version="1.0.0",
     author="Sandra",
     author_email="sandra@example.com",
-    description="FastMCP 2.1 & DXT package for Plex Media Server management",
+    description="FastMCP 2.12 & MCPB package for Plex Media Server management",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/sandra/plex-mcp",

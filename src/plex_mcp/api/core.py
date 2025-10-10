@@ -7,7 +7,7 @@ Fixed to properly read environment variables for PlexService initialization.
 
 import asyncio
 import os
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Union
 from fastmcp import FastMCP
 
 # Import models
@@ -259,26 +259,36 @@ async def search_media(
                 media_type = str(getattr(item, 'type', ''))
                 key = str(getattr(item, 'ratingKey', ''))
                 
+                def safe_get_attr(obj, attr, default=''):
+                    """Safely get attribute, handling both direct attributes and methods."""
+                    value = getattr(obj, attr, default)
+                    if callable(value) and not isinstance(value, (str, bytes, bytearray)):
+                        try:
+                            return value()
+                        except:
+                            return default
+                    return value or default
+
                 # Handle title based on media type
                 if media_type == 'movie':
-                    title = str(getattr(item, 'title', 'Unknown Movie'))
-                    summary = str(getattr(item, 'summary', ''))
-                    thumb = str(getattr(item, 'thumbUrl', ''))
-                    art = str(getattr(item, 'artUrl', ''))
+                    title = str(safe_get_attr(item, 'title', 'Unknown Movie'))
+                    summary = str(safe_get_attr(item, 'summary', ''))
+                    thumb = str(safe_get_attr(item, 'thumbUrl', ''))
+                    art = str(safe_get_attr(item, 'artUrl', ''))
                 elif media_type == 'episode':
-                    show = str(getattr(item, 'grandparentTitle', 'Unknown Show'))
-                    season = str(getattr(item, 'seasonNumber', '0')).zfill(2)
-                    episode = str(getattr(item, 'episodeNumber', '0')).zfill(2)
-                    ep_title = str(getattr(item, 'title', 'Unknown Episode'))
+                    show = str(safe_get_attr(item, 'grandparentTitle', 'Unknown Show'))
+                    season = str(safe_get_attr(item, 'seasonNumber', '0')).zfill(2)
+                    episode = str(safe_get_attr(item, 'episodeNumber', '0')).zfill(2)
+                    ep_title = str(safe_get_attr(item, 'title', 'Unknown Episode'))
                     title = f"{show} - S{season}E{episode} - {ep_title}"
-                    summary = str(getattr(item, 'summary', ''))
-                    thumb = str(getattr(item, 'thumbUrl', ''))
-                    art = str(getattr(item, 'grandparentThumb', ''))
+                    summary = str(safe_get_attr(item, 'summary', ''))
+                    thumb = str(safe_get_attr(item, 'thumbUrl', ''))
+                    art = str(safe_get_attr(item, 'grandparentThumb', ''))
                 else:
-                    title = str(getattr(item, 'title', 'Unknown'))
-                    summary = str(getattr(item, 'summary', ''))
-                    thumb = str(getattr(item, 'thumbUrl', ''))
-                    art = str(getattr(item, 'artUrl', ''))
+                    title = str(safe_get_attr(item, 'title', 'Unknown'))
+                    summary = str(safe_get_attr(item, 'summary', ''))
+                    thumb = str(safe_get_attr(item, 'thumbUrl', ''))
+                    art = str(safe_get_attr(item, 'artUrl', ''))
                 
                 # Get numeric values with proper type handling
                 year = int(getattr(item, 'year', 0)) or None
@@ -507,7 +517,7 @@ async def help(level: str = "beginner", section: str = "all") -> Dict[str, Any]:
         Dictionary containing help documentation organized by category
     """
     from inspect import getdoc, signature, Parameter
-    from .. import mcp
+    # Use the global mcp instance that's already imported
     from textwrap import dedent
     
     # General Plex information

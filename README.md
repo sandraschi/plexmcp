@@ -176,7 +176,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-## 🚀 DXT Package Features
+## 🚀 MCPB Package Features
 
 ### **Natural Language Interface**
 
@@ -188,34 +188,34 @@ Control your Plex server using natural language with Claude Desktop:
 - **Playlist Operations**: "Create a workout playlist with high-BPM songs"
 - **Server Management**: "Check server status and active streams"
 
-### **Key DXT Features**
+### **Key MCPB Features**
 
-- **8 Comprehensive Prompt Templates** covering all Plex operations
+- **23 Powerful Tools** for comprehensive Plex management
 - **Type-Safe Parameters** with validation and defaults
 - **Context-Aware** responses based on your media library
 - **Seamless Integration** with Claude Desktop
 - **Privacy-Focused** - Your media library stays private
+- **Professional Packaging** - One-click installation
 
 ## 📦 Installation & Setup
 
-### **DXT Package Installation**
+### **MCPB Package Installation**
 
-1. **Install DXT CLI** (if not already installed):
+1. **Install MCPB CLI** (if not already installed):
    ```bash
-   pip install dxt-cli
+   npm install -g @anthropic-ai/mcpb
    ```
 
-2. **Build the DXT package**:
-   ```bash
-   dxt build
+2. **Build the MCPB package**:
+   ```powershell
+   .\scripts\build-mcpb-package.ps1 -NoSign
    ```
 
 3. **Install the package in Claude Desktop**:
-   ```bash
-   dxt install dist/plex-mcp-1.0.0.dxt
-   ```
+   - Drag `dist/plex-mcp.mcpb` to Claude Desktop
+   - Configure Plex URL and authentication token when prompted
 
-4. **Configure your Plex server** in Claude Desktop settings
+4. **Start using PlexMCP** with natural language commands
 
 ### **Traditional Installation (Manual Setup)
 

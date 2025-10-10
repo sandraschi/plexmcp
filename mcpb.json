@@ -1,0 +1,24 @@
+{
+  "name": "plex-mcp",
+  "version": "2.0.0",
+  "description": "Comprehensive Plex Media Server MCP integration with 50+ tools",
+  "author": "Sandra Schipal",
+  "license": "MIT",
+  "mcp": {
+    "version": "2.12.0",
+    "server": {
+      "command": "python",
+      "args": ["-m", "plex_mcp.main"],
+      "transport": "stdio"
+    },
+    "capabilities": {
+      "tools": true
+    }
+  },
+  "dependencies": {
+    "python": ">=3.10.0",
+    "fastmcp": ">=2.10.0",
+    "plexapi": ">=4.15.0",
+    "requests": ">=2.31.0"
+  }
+}

@@ -7,41 +7,83 @@ on:
     branches: [ main, develop ]
 
 jobs:
-  test:
-    name: Test with Python ${{ matrix.python-version }}
-    runs-on: windows-latest
-    strategy:
-      matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
-
+  quality:
+    name: Code Quality Checks
+    runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Set up Python ${{ matrix.python-version }}
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: ${{ matrix.python-version }}
-        
+        python-version: '3.10'
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -e .[dev]
-        
-    - name: Lint with flake8
+        pip install flake8 black isort mypy bandit safety
+
+    - name: Check for print statements (GLAMA requirement)
       run: |
-        pip install flake8
-        flake8 src/plex_mcp tests/
-        
+        # Find any print() statements in source code (excluding tests and __pycache__)
+        PRINT_STATEMENTS=$(find src/plex_mcp -name "*.py" -not -path "*/__pycache__/*" -exec grep -l "print(" {} \; || true)
+        if [ -n "$PRINT_STATEMENTS" ]; then
+          echo "❌ Found print() statements in source code (GLAMA Gold requirement violation):"
+          echo "$PRINT_STATEMENTS"
+          exit 1
+        else
+          echo "✅ No print() statements found in source code"
+        fi
+
+    - name: Check code formatting with black
+      run: black --check --diff src/plex_mcp tests/
+
+    - name: Check import sorting with isort
+      run: isort --check-only --diff src/plex_mcp tests/
+
+    - name: Lint with flake8
+      run: flake8 src/plex_mcp tests/ --max-line-length=88 --extend-ignore=E203,W503
+
+    - name: Type check with mypy
+      run: mypy src/plex_mcp --ignore-missing-imports
+
+    - name: Security scan with bandit
+      run: bandit -r src/plex_mcp -f json -o bandit-report.json || true
+
+    - name: Check for security vulnerabilities
+      run: safety check
+
+  test:
+    name: Test with Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .[dev]
+        pip install pytest-cov pytest-asyncio
+
     - name: Run tests
       run: |
-        pip install pytest pytest-cov
-        pytest --cov=src/plex_mcp --cov-report=xml
-        
+        pytest --cov=src/plex_mcp --cov-report=xml --cov-report=term-missing --cov-fail-under=80
+
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       with:
         file: ./coverage.xml
-        fail_ci_if_error: false
+        fail_ci_if_error: true
 
   build:
     name: Build package
