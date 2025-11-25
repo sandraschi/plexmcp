@@ -5,27 +5,16 @@ Austrian efficiency for Sandra's media streaming needs.
 Provides 22 tools: 10 core + 3 playlist + 2 remote + 2 performance + 2 admin + 3 Austrian efficiency
 """
 
-import asyncio
-import sys
 import os
-from typing import Optional, List, Dict, Any
-from datetime import datetime, timedelta
+import sys
+from typing import Dict, Optional
 
-import requests
-from fastmcp import FastMCP
-from pydantic import BaseModel, Field
-from rich.console import Console
 from dotenv import load_dotenv
+from fastmcp import FastMCP
+from rich.console import Console
 
 # Import our utility modules
-from .utils import (
-    get_logger,
-    async_retry,
-    run_in_executor,
-    validate_plex_url,
-    validate_plex_token,
-    ValidationError
-)
+from .utils import get_logger
 
 # Set up logger
 logger = get_logger(__name__)
@@ -35,24 +24,26 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 try:
     # Try relative imports first (when run as package)
-    from .plex_manager import PlexManager, PlexAPIError
     from .config import PlexConfig
+    from .plex_manager import PlexAPIError, PlexManager
 except ImportError:
     try:
         # Try absolute imports (when run directly)
-        from plex_mcp.plex_manager import PlexManager, PlexAPIError
-        from plex_mcp.config import PlexConfig
+        from plex_mcp.config import PlexConfig  # noqa: F401
+        from plex_mcp.plex_manager import PlexAPIError, PlexManager  # noqa: F401
     except ImportError:
         # Final fallback - direct imports from same directory
-        from plex_manager import PlexManager, PlexAPIError
+        from plex_manager import PlexManager
+
         from config import PlexConfig
 
 # Load environment variables from multiple possible paths
-import pathlib
+import pathlib  # noqa: E402
+
 possible_env_paths = [
-    pathlib.Path(__file__).parent.parent.parent / '.env',  # repo root
-    pathlib.Path.cwd() / '.env',  # current working directory  
-    pathlib.Path('D:/Dev/repos/plexmcp/.env')  # absolute path fallback
+    pathlib.Path(__file__).parent.parent.parent / ".env",  # repo root
+    pathlib.Path.cwd() / ".env",  # current working directory
+    pathlib.Path("D:/Dev/repos/plexmcp/.env"),  # absolute path fallback
 ]
 
 for env_path in possible_env_paths:
@@ -71,36 +62,38 @@ mcp = FastMCP("PlexMCP 🎬")
 # Global Plex manager (initialized on startup)
 plex_manager: Optional[PlexManager] = None
 
+
 async def get_plex_manager() -> PlexManager:
     """Get initialized Plex manager, creating if needed"""
     global plex_manager
     if plex_manager is None:
         # Manually set environment variables as fallback
         import os
-        if not os.getenv('PLEX_TOKEN'):
-            os.environ['PLEX_TOKEN'] = 'WmZfx6fkvYxksyVB4NhW'
-            os.environ['PLEX_SERVER_URL'] = 'http://localhost:32400'
-            
+
+        if not os.getenv("PLEX_TOKEN"):
+            os.environ["PLEX_TOKEN"] = "WmZfx6fkvYxksyVB4NhW"
+            os.environ["PLEX_SERVER_URL"] = "http://localhost:32400"
+
         # Create config directly with known values
-        config = PlexConfig(
-            server_url='http://localhost:32400',
-            plex_token='WmZfx6fkvYxksyVB4NhW'
-        )
+        config = PlexConfig(server_url="http://localhost:32400", plex_token="WmZfx6fkvYxksyVB4NhW")
         plex_manager = PlexManager(config)
     return plex_manager
+
 
 @mcp.tool()
 async def test_connection() -> Dict[str, str]:
     """Test basic Plex connection and return server info"""
     try:
-        manager = await get_plex_manager()
+        await get_plex_manager()
         return {"status": "connected", "message": "PlexMCP is working!"}
     except Exception as e:
         return {"status": "error", "message": f"Connection failed: {e}"}
 
+
 def main():
     """Run the PlexMCP server"""
     mcp.run()
+
 
 if __name__ == "__main__":
     main()

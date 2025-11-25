@@ -4,11 +4,14 @@ Core Pydantic models for PlexMCP.
 This module contains the core data models used throughout the PlexMCP application.
 """
 
-from typing import Optional, List, Dict, Any
+from typing import Optional
+
 from pydantic import BaseModel, Field
+
 
 class PlexServerStatus(BaseModel):
     """Plex server status information"""
+
     name: str = Field(description="Server name")
     version: str = Field(description="Plex server version")
     platform: str = Field(description="Platform (Linux, Windows, etc)")
@@ -21,6 +24,7 @@ class PlexServerStatus(BaseModel):
 
 class MediaLibrary(BaseModel):
     """Plex media library information"""
+
     key: str = Field(description="Library key/ID")
     title: str = Field(description="Library name")
     type: str = Field(description="Library type (movie, show, music, etc)")
@@ -35,6 +39,7 @@ class MediaLibrary(BaseModel):
 
 class MediaItem(BaseModel):
     """Individual media item (movie, episode, etc)"""
+
     key: str = Field(description="Media key/ID")
     title: str = Field(description="Media title")
     type: str = Field(description="Media type")

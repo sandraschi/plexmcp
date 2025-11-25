@@ -5,7 +5,7 @@ __author__ = "Sandra Schipal"
 
 # Single source of truth for imports
 from .config import get_settings
-from .services.plex_service import PlexService
 from .main import main
+from .services.plex_service import PlexService
 
 __all__ = ["get_settings", "PlexService", "main"]

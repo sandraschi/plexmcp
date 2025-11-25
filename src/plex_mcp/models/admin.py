@@ -4,11 +4,14 @@ Admin and user management Pydantic models for PlexMCP.
 This module contains models related to user permissions and server maintenance.
 """
 
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field
+
 
 class UserPermissions(BaseModel):
     """User permission settings for Plex server access"""
+
     user_id: str = Field(description="User identifier")
     username: str = Field(description="Display username")
     email: Optional[str] = Field(description="User email address")
@@ -26,16 +29,13 @@ class UserPermissions(BaseModel):
 
 class ServerMaintenanceResult(BaseModel):
     """Result of server maintenance operations"""
+
     operation: str = Field(description="Maintenance operation performed")
     status: str = Field(description="Operation status (success, error, partial)")
     details: Dict[str, Any] = Field(description="Detailed operation results")
     space_freed_gb: Optional[float] = Field(description="Disk space freed in GB")
     items_processed: int = Field(description="Number of items processed")
     duration_seconds: float = Field(description="Operation duration")
-    recommendations: List[str] = Field(
-        description="Post-maintenance recommendations"
-    )
-    next_recommended: Optional[str] = Field(
-        description="Next recommended maintenance"
-    )
+    recommendations: List[str] = Field(description="Post-maintenance recommendations")
+    next_recommended: Optional[str] = Field(description="Next recommended maintenance")
     warnings: List[str] = Field(description="Warnings or issues encountered")

@@ -4,16 +4,17 @@ Austrian dev efficiency for media library operations
 """
 
 import logging
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 
 logger = logging.getLogger(__name__)
 
+
 class LibraryOperations:
     """Plex library management operations"""
-    
+
     def __init__(self, plex_manager):
         self.plex = plex_manager
-    
+
     def get_libraries(self) -> List[Dict[str, Any]]:
         """Get all Plex libraries"""
         try:
@@ -23,7 +24,7 @@ class LibraryOperations:
         except Exception as e:
             logger.error(f"Failed to get libraries: {e}")
             return []
-    
+
     def scan_library(self, library_id: str) -> bool:
         """Scan specific library for new content"""
         try:

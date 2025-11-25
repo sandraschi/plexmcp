@@ -7,12 +7,13 @@ from typing import Dict, Any, List
 
 logger = logging.getLogger(__name__)
 
+
 class UserManager:
     """Plex user management"""
-    
+
     def __init__(self, plex_manager):
         self.plex = plex_manager
-    
+
     def get_users(self) -> List[Dict[str, Any]]:
         """Get all Plex users"""
         try:

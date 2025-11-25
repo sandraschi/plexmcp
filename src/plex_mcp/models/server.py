@@ -1,11 +1,11 @@
 """Pydantic models for Plex server status and information."""
 
-from datetime import datetime
-from typing import Optional
 from pydantic import BaseModel, Field
+
 
 class PlexServerStatus(BaseModel):
     """Model representing Plex server status and information."""
+
     name: str = Field(..., description="Friendly name of the Plex server")
     version: str = Field(..., description="Plex server version")
     platform: str = Field(..., description="Platform the server is running on")
@@ -25,6 +25,6 @@ class PlexServerStatus(BaseModel):
                 "size": 2147483648,
                 "my_plex_username": "user@example.com",
                 "my_plex_mapping_state": "mapped",
-                "connected": True
+                "connected": True,
             }
         }

@@ -12,28 +12,19 @@ class TestPlexConfig:
 
     def test_valid_config(self):
         """Test configuration with valid values."""
-        config = PlexConfig(
-            server_url="http://localhost:32400",
-            plex_token="test_token_123"
-        )
+        config = PlexConfig(server_url="http://localhost:32400", plex_token="test_token_123")
         assert config.server_url == "http://localhost:32400"
         assert config.plex_token == "test_token_123"
         assert config.timeout == 30
 
     def test_server_url_normalization(self):
         """Test that server URL is normalized."""
-        config = PlexConfig(
-            server_url="localhost:32400",
-            plex_token="test_token"
-        )
+        config = PlexConfig(server_url="localhost:32400", plex_token="test_token")
         assert config.server_url == "http://localhost:32400"
 
     def test_server_url_with_trailing_slash(self):
         """Test that trailing slashes are removed."""
-        config = PlexConfig(
-            server_url="http://localhost:32400/",
-            plex_token="test_token"
-        )
+        config = PlexConfig(server_url="http://localhost:32400/", plex_token="test_token")
         assert config.server_url == "http://localhost:32400"
 
     def test_timeout_validation(self):
@@ -60,17 +51,17 @@ class TestPlexConfig:
         with pytest.raises(ValueError, match="PLEX_TOKEN is required"):
             PlexConfig(server_url="http://localhost:32400", plex_token="")
 
-    @patch.dict(os.environ, {
-        'PLEX_URL': 'http://plex.example.com:32400',
-        'PLEX_TOKEN': 'env_token_123'
-    })
+    @patch.dict(
+        os.environ, {"PLEX_SERVER_URL": "http://plex.example.com:32400", "PLEX_TOKEN": "env_token_123"}, clear=False
+    )
     def test_from_environment(self):
         """Test loading configuration from environment variables."""
-        from plex_mcp.config import get_settings
+        from plex_mcp.config import PlexConfig
 
-        # This test assumes get_settings() loads from environment
-        # Adjust based on actual implementation
-        pass  # Placeholder for now
+        # Clear any cached config and reload
+        config = PlexConfig.load_config()
+        assert config.server_url == "http://plex.example.com:32400"
+        assert config.plex_token == "env_token_123"
 
 
 class TestLoggingSetup:

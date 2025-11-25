@@ -9,10 +9,6 @@ API modules import it from there to register their tools.
 """
 
 # Re-export API modules for convenience
-from . import core
-from . import playback
-from . import playlists
-from . import admin
-from . import vienna
+from . import admin, core, playback, playlists, vienna
 
-__all__ = ['core', 'playback', 'playlists', 'admin', 'vienna']
+__all__ = ["core", "playback", "playlists", "admin", "vienna"]

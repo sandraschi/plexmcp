@@ -8,7 +8,4 @@ Separating it prevents circular import issues.
 from fastmcp import FastMCP
 
 # Create the main FastMCP instance
-mcp = FastMCP(
-    name="PlexMCP",
-    version="2.1.0"
-)
+mcp = FastMCP(name="PlexMCP", version="2.1.0")

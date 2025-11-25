@@ -1,39 +1,46 @@
 # Usage Guide
 
-This guide provides examples of how to use Plex MCP for common tasks.
+This guide provides examples of how to use PlexMCP portmanteau tools for common tasks.
+
+## Portmanteau Tool Architecture
+
+PlexMCP uses **15 portmanteau tools** that consolidate related operations. Each tool uses an `operation` parameter to specify the action.
+
+### Tool Structure
+
+All portmanteau tools follow this pattern:
+```python
+tool_name(operation="operation_name", ...other_parameters)
+```
 
 ## Basic Usage
 
 ### Starting the Server
 
 ```powershell
-# Start the server with default settings
-plexmcp run
+# Start the server with default settings (STDIO mode for Claude Desktop)
+python -m plex_mcp.server
 
-# Start with custom host and port
-plexmcp run --host 0.0.0.0 --port 8000
+# Start with HTTP mode
+python -m plex_mcp.server --http --host 0.0.0.0 --port 8000
 
 # Enable debug mode
-plexmcp run --debug
+python -m plex_mcp.server --debug
 ```
 
-### Using the Python Client
+### Using Portmanteau Tools
+
+All tools are accessed through Claude Desktop or MCP clients. Examples show the tool call format:
 
 ```python
-from plexmcp import PlexMCPClient
-
-# Initialize client
-client = PlexMCPClient(base_url="http://localhost:8000")
-
 # Get all libraries
-libraries = client.get_libraries()
-for lib in libraries:
-    print(f"Library: {lib.title}")
+plex_library(operation="list")
 
 # Search for media
-results = client.search_media("The Matrix")
-for item in results:
-    print(f"Found: {item.title} ({item.year})")
+plex_media(operation="search", query="The Matrix")
+
+# Get library details
+plex_library(operation="get", library_id="1")
 ```
 
 ## Common Tasks
@@ -41,60 +48,83 @@ for item in results:
 ### 1. Play Media on a Client
 
 ```python
+# List available clients
+plex_streaming(operation="list_clients")
+
 # Play a specific media item on a client
-client.play_media(
-    client_name="Living Room TV",
-    media_id="12345"
+plex_streaming(
+    operation="play",
+    client_id="abc123",
+    media_key="12345"
 )
 
-# Play a specific media URL
-client.play_media(
-    client_name="Living Room TV",
-    media_url="plex://movie/12345"
-)
+# Pause playback
+plex_streaming(operation="pause", client_id="abc123")
+
+# Seek to specific time (in milliseconds)
+plex_streaming(operation="seek", client_id="abc123", seek_to=60000)
 ```
 
 ### 2. Create a Playlist
 
 ```python
 # Create a new playlist
-playlist = client.create_playlist(
+plex_playlist(
+    operation="create",
     title="My Favorites",
     items=["12345", "67890"],  # List of media IDs
     description="My favorite movies"
 )
 
 # Add items to an existing playlist
-client.add_to_playlist(
-    playlist_id=playlist.id,
+plex_playlist(
+    operation="add_items",
+    playlist_id="playlist123",
     items=["54321"]
 )
+
+# Get playlist analytics
+plex_playlist(operation="get_analytics", playlist_id="playlist123")
 ```
 
 ### 3. Control Playback
 
 ```python
+# List active sessions
+plex_streaming(operation="list_sessions")
+
 # Pause playback
-client.pause_playback("Living Room TV")
+plex_streaming(operation="pause", client_id="abc123")
 
 # Skip to next item
-client.next("Living Room TV")
+plex_streaming(operation="skip_next", client_id="abc123")
 
-# Set volume (0-100)
-client.set_volume("Living Room TV", 50)
+# Generic control with action
+plex_streaming(
+    operation="control",
+    client_id="abc123",
+    action="play",
+    media_key="12345"
+)
 ```
 
 ### 4. Library Management
 
 ```python
+# List all libraries
+plex_library(operation="list")
+
+# Get library details
+plex_library(operation="get", library_id="1")
+
 # Refresh a library
-client.refresh_library(library_id=1)
+plex_library(operation="refresh", library_id="1")
 
 # Scan for new files
-client.scan_library(library_id=1)
+plex_library(operation="scan", library_id="1", force=True)
 
 # Get recently added items
-recent = client.get_recently_added(library_id=1, limit=10)
+plex_media(operation="get_recent", library_id="1", limit=10)
 ```
 
 ## Advanced Usage

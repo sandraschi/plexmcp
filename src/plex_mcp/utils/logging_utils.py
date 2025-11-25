@@ -1,267 +1,212 @@
-"""
-Logging utilities for PlexMCP.
+"""Logging utilities for PlexMCP.
 
-This module provides functions for setting up and managing application logging.
+Provides standardized logging configuration and helper functions for
+consistent logging across all PlexMCP tools and services.
 """
 
 import logging
-import logging.handlers
-import os
 import sys
 from pathlib import Path
-from typing import Optional, Dict, Any, Union
+from typing import Any, Optional
 
-# Default log format
-DEFAULT_LOG_FORMAT = (
-    '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    ' [%(filename)s:%(lineno)d] [%(threadName)s]'
-)
+# Global logger configuration
+LOGGING_CONFIGURED = False
+LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+LOG_DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 
-# Default date format
-DEFAULT_DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
 
-# Log level mapping
-LOG_LEVELS = {
-    'DEBUG': logging.DEBUG,
-    'INFO': logging.INFO,
-    'WARNING': logging.WARNING,
-    'ERROR': logging.ERROR,
-    'CRITICAL': logging.CRITICAL
-}
-
-class ColoredFormatter(logging.Formatter):
-    """Custom formatter that adds colors to log levels."""
-    
-    # ANSI color codes
-    COLORS = {
-        'DEBUG': '\033[36m',     # Cyan
-        'INFO': '\033[32m',      # Green
-        'WARNING': '\033[33m',   # Yellow
-        'ERROR': '\033[31m',     # Red
-        'CRITICAL': '\033[41m',  # Red background
-        'RESET': '\033[0m'       # Reset
-    }
-    
-    def format(self, record):
-        """Format the log record with colors."""
-        levelname = record.levelname
-        if levelname in self.COLORS:
-            record.levelname = f"{self.COLORS[levelname]}{levelname}{self.COLORS['RESET']}"
-            record.msg = f"{self.COLORS[levelname]}{record.msg}{self.COLORS['RESET']}"
-        return super().format(record)
-
-def setup_logging(
-    level: str = 'INFO',
-    log_file: Optional[Union[str, Path]] = None,
-    log_format: Optional[str] = None,
-    date_format: Optional[str] = None,
-    max_size_mb: int = 10,
-    backup_count: int = 5,
-    colorize: bool = True
+def configure_logging(
+    level: str = "INFO",
+    log_file: Optional[str] = None,
+    log_to_console: bool = True,
 ) -> None:
-    """Set up logging configuration.
+    """Configure global logging settings for PlexMCP.
     
     Args:
         level: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-        log_file: Path to the log file. If None, logs to stderr.
-        log_format: Log message format string.
-        date_format: Date format string.
-        max_size_mb: Maximum log file size in MB before rotation.
-        backup_count: Number of backup log files to keep.
-        colorize: Whether to use colored output in console.
+        log_file: Optional path to log file
+        log_to_console: Whether to log to console (default: True)
     """
-    # Convert level to uppercase and validate
-    level = level.upper()
-    if level not in LOG_LEVELS:
-        level = 'INFO'
+    global LOGGING_CONFIGURED
     
-    # Set up formatter
-    log_format = log_format or DEFAULT_LOG_FORMAT
-    date_format = date_format or DEFAULT_DATE_FORMAT
+    if LOGGING_CONFIGURED:
+        return
     
-    if colorize and not log_file:
-        formatter = ColoredFormatter(log_format, datefmt=date_format)
-    else:
-        formatter = logging.Formatter(log_format, datefmt=date_format)
-    
-    # Configure root logger
+    # Set root logger level
     root_logger = logging.getLogger()
-    root_logger.setLevel(LOG_LEVELS[level])
+    root_logger.setLevel(getattr(logging, level.upper(), logging.INFO))
     
-    # Remove all existing handlers
-    for handler in root_logger.handlers[:]:
-        root_logger.removeHandler(handler)
+    # Clear existing handlers
+    root_logger.handlers.clear()
     
-    # Add console handler
-    console_handler = logging.StreamHandler(sys.stderr)
-    console_handler.setFormatter(formatter)
-    root_logger.addHandler(console_handler)
+    # Create formatter
+    formatter = logging.Formatter(LOG_FORMAT, datefmt=LOG_DATE_FORMAT)
     
-    # Add file handler if log_file is specified
+    # Console handler - use stderr for MCP stdio compatibility
+    # In stdio mode, stdout must only contain JSON-RPC protocol messages
+    if log_to_console:
+        console_handler = logging.StreamHandler(sys.stderr)
+        console_handler.setLevel(getattr(logging, level.upper(), logging.INFO))
+        console_handler.setFormatter(formatter)
+        root_logger.addHandler(console_handler)
+    
+    # File handler (if specified)
     if log_file:
-        log_file = Path(log_file)
-        log_file.parent.mkdir(parents=True, exist_ok=True)
+        log_path = Path(log_file)
+        log_path.parent.mkdir(parents=True, exist_ok=True)
         
-        file_handler = logging.handlers.RotatingFileHandler(
-            filename=log_file,
-            maxBytes=max_size_mb * 1024 * 1024,  # Convert MB to bytes
-            backupCount=backup_count,
-            encoding='utf-8'
-        )
-        
-        # Use non-colored formatter for file output
-        file_formatter = logging.Formatter(log_format, datefmt=date_format)
-        file_handler.setFormatter(file_formatter)
+        file_handler = logging.FileHandler(log_file)
+        file_handler.setLevel(getattr(logging, level.upper(), logging.INFO))
+        file_handler.setFormatter(formatter)
         root_logger.addHandler(file_handler)
+    
+    LOGGING_CONFIGURED = True
 
-def get_logger(name: Optional[str] = None) -> logging.Logger:
-    """Get a logger instance with the specified name.
+
+def get_logger(name: str) -> logging.Logger:
+    """Get a configured logger instance.
     
     Args:
-        name: Logger name. If None, returns the root logger.
+        name: Logger name (typically module path like "plexmcp.tools.media")
         
     Returns:
-        Configured logger instance.
+        Configured logger instance
+        
+    Examples:
+        logger = get_logger("plexmcp.tools.media")
+        logger.info("Processing media item")
     """
+    # Ensure logging is configured
+    if not LOGGING_CONFIGURED:
+        configure_logging()
+    
     return logging.getLogger(name)
 
-def log_execution_time(logger: logging.Logger = None):
-    """Decorator to log the execution time of a function.
-    
-    Args:
-        logger: Logger instance to use. If None, creates a new logger.
-    """
-    import time
-    from functools import wraps
-    
-    if logger is None:
-        logger = get_logger(__name__)
-    
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            start_time = time.perf_counter()
-            try:
-                result = func(*args, **kwargs)
-                return result
-            finally:
-                end_time = time.perf_counter()
-                execution_time = end_time - start_time
-                logger.debug(
-                    f"Function {func.__name__} executed in {execution_time:.4f} seconds"
-                )
-        return wrapper
-    return decorator
 
-def log_exceptions(logger: logging.Logger = None, reraise: bool = True):
-    """Decorator to log exceptions raised by a function.
-    
-    Args:
-        logger: Logger instance to use. If None, creates a new logger.
-        reraise: Whether to re-raise the exception after logging it.
-    """
-    from functools import wraps
-    
-    if logger is None:
-        logger = get_logger(__name__)
-    
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            try:
-                return func(*args, **kwargs)
-            except Exception as e:
-                logger.exception(
-                    f"Exception in {func.__name__}: {str(e)}",
-                    exc_info=True,
-                    extra={
-                        'function': func.__name__,
-                        'args': args,
-                        'kwargs': kwargs
-                    }
-                )
-                if reraise:
-                    raise
-        return wrapper
-    return decorator
-
-class LoggingContext:
-    """Context manager for temporary logging configuration."""
-    
-    def __init__(
-        self,
-        logger: logging.Logger,
-        level: Optional[int] = None,
-        handler: Optional[logging.Handler] = None,
-        close: bool = True
-    ):
-        self.logger = logger
-        self.level = level
-        self.handler = handler
-        self.close = close
-        self.old_level = None
-    
-    def __enter__(self):
-        if self.level is not None:
-            self.old_level = self.logger.level
-            self.logger.setLevel(self.level)
-        
-        if self.handler:
-            self.logger.addHandler(self.handler)
-        
-        return self.logger
-    
-    def __exit__(self, et, ev, tb):
-        if self.level is not None and self.old_level is not None:
-            self.logger.setLevel(self.old_level)
-        
-        if self.handler:
-            self.logger.removeHandler(self.handler)
-        
-        if self.handler and self.close:
-            self.handler.close()
-        
-        # Don't suppress exceptions
-        return False
-
-def log_to_file(
-    message: str,
-    level: str = 'INFO',
-    log_file: Optional[Union[str, Path]] = None,
-    **kwargs
+def log_operation(
+    logger: logging.Logger,
+    operation: str,
+    level: str = "INFO",
+    **kwargs: Any
 ) -> None:
-    """Log a message to a file with the specified level.
+    """Log an operation with structured context.
     
     Args:
-        message: The message to log.
-        level: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL).
-        log_file: Path to the log file. If None, logs to the default logger.
-        **kwargs: Additional fields to include in the log record.
+        logger: Logger instance to use
+        operation: Operation name/identifier
+        level: Log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+        **kwargs: Additional context to include in log message
+        
+    Examples:
+        log_operation(logger, "media_search", level="INFO", query="action movies")
+        log_operation(logger, "library_scan", level="DEBUG", library_id=1)
     """
-    level = level.upper()
-    if level not in LOG_LEVELS:
-        level = 'INFO'
+    log_level = getattr(logging, level.upper(), logging.INFO)
     
-    if log_file is None:
-        logger = logging.getLogger()
-    else:
-        logger = logging.getLogger('file_logger')
-        if not logger.handlers:
-            log_file = Path(log_file)
-            log_file.parent.mkdir(parents=True, exist_ok=True)
-            
-            file_handler = logging.FileHandler(
-                filename=log_file,
-                encoding='utf-8'
-            )
-            
-            formatter = logging.Formatter(
-                '%(asctime)s - %(levelname)s - %(message)s',
-                datefmt='%Y-%m-%d %H:%M:%S'
-            )
-            
-            file_handler.setFormatter(formatter)
-            logger.addHandler(file_handler)
+    # Format context
+    context_str = ", ".join(f"{k}={v}" for k, v in kwargs.items())
+    message = f"[{operation}]"
+    if context_str:
+        message += f" {context_str}"
     
-    log_method = getattr(logger, level.lower(), logger.info)
-    log_method(message, extra=kwargs)
+    logger.log(log_level, message)
+
+
+def log_error(
+    logger: logging.Logger,
+    operation: str,
+    exception: Exception,
+    **kwargs: Any
+) -> None:
+    """Log an error with exception details and context.
+    
+    Args:
+        logger: Logger instance to use
+        operation: Operation name/identifier where error occurred
+        exception: The exception that was raised
+        **kwargs: Additional context to include in log message
+        
+    Examples:
+        try:
+            result = await do_something()
+        except Exception as e:
+            log_error(logger, "do_something_failed", e, param1=value1)
+    """
+    # Format context
+    context_str = ", ".join(f"{k}={v}" for k, v in kwargs.items())
+    
+    # Build error message
+    message = f"[{operation}] ERROR: {type(exception).__name__}: {str(exception)}"
+    if context_str:
+        message += f" | Context: {context_str}"
+    
+    # Log with full exception info
+    logger.error(message, exc_info=True)
+
+
+def log_success(
+    logger: logging.Logger,
+    operation: str,
+    **kwargs: Any
+) -> None:
+    """Log successful operation completion with context.
+    
+    Args:
+        logger: Logger instance to use
+        operation: Operation name/identifier
+        **kwargs: Additional context to include in log message
+        
+    Examples:
+        log_success(logger, "media_search_complete", results_found=25)
+        log_success(logger, "library_scan_complete", items_added=10)
+    """
+    log_operation(logger, f"{operation}_SUCCESS", level="INFO", **kwargs)
+
+
+def log_debug(
+    logger: logging.Logger,
+    operation: str,
+    **kwargs: Any
+) -> None:
+    """Log debug information with context.
+    
+    Args:
+        logger: Logger instance to use
+        operation: Operation name/identifier
+        **kwargs: Additional context to include in log message
+        
+    Examples:
+        log_debug(logger, "cache_check", cache_hit=True, key="media_123")
+        log_debug(logger, "api_call", endpoint="/library/sections", method="GET")
+    """
+    log_operation(logger, operation, level="DEBUG", **kwargs)
+
+
+def log_warning(
+    logger: logging.Logger,
+    operation: str,
+    message: str,
+    **kwargs: Any
+) -> None:
+    """Log warning with message and context.
+    
+    Args:
+        logger: Logger instance to use
+        operation: Operation name/identifier
+        message: Warning message
+        **kwargs: Additional context to include in log message
+        
+    Examples:
+        log_warning(logger, "media_metadata_incomplete", "Missing poster image", media_id=123)
+        log_warning(logger, "library_scan_slow", "Scan taking longer than expected", elapsed=300)
+    """
+    context_str = ", ".join(f"{k}={v}" for k, v in kwargs.items())
+    full_message = f"[{operation}] WARNING: {message}"
+    if context_str:
+        full_message += f" | {context_str}"
+    
+    logger.warning(full_message)
+
+
+# Alias for backward compatibility
+setup_logging = configure_logging

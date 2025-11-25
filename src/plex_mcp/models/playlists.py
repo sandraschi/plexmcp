@@ -4,11 +4,14 @@ Playlist-related Pydantic models for PlexMCP.
 This module contains models related to Plex playlists and their analytics.
 """
 
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field
+
 
 class PlexPlaylist(BaseModel):
     """Plex playlist information"""
+
     key: str = Field(description="Playlist key/ID")
     title: str = Field(description="Playlist name")
     type: str = Field(description="Playlist type (video, audio, photo)")
@@ -23,6 +26,7 @@ class PlexPlaylist(BaseModel):
 
 class PlaylistCreateRequest(BaseModel):
     """Request model for creating playlists"""
+
     name: str = Field(description="Playlist name")
     summary: Optional[str] = Field(description="Playlist description")
     items: Optional[List[str]] = Field(description="List of media keys to add")
@@ -34,6 +38,7 @@ class PlaylistCreateRequest(BaseModel):
 
 class PlaylistAnalytics(BaseModel):
     """Playlist usage analytics and recommendations"""
+
     playlist_id: str = Field(description="Playlist key")
     name: str = Field(description="Playlist name")
     total_plays: int = Field(description="Total play count")

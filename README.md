@@ -1,11 +1,11 @@
 # PlexMCP 🎬
 
-[![FastMCP](https://img.shields.io/badge/FastMCP-2.10+-blue)](https://github.com/jlowin/fastmcp)
+[![FastMCP](https://img.shields.io/badge/FastMCP-2.13+-blue)](https://github.com/jlowin/fastmcp)
 [![Python](https://img.shields.io/badge/Python-3.11+-green)](https://python.org)
 [![Plex](https://img.shields.io/badge/Plex-Media%20Server-orange)](https://plex.tv)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A FastMCP 2.10+ server implementation for managing Plex Media Server with a clean, type-safe API.
+A FastMCP 2.13+ server implementation for managing Plex Media Server with a clean, type-safe API.
 
 ## ✨ Features
 
@@ -146,33 +146,78 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [FastMCP](https://github.com/jlowin/fastmcp) for the MCP framework
 - All contributors who've helped improve this project
 
-1. **`get_plex_status()`** - Server status and identity information
-2. **`get_libraries()`** - All media libraries with metadata
-3. **`search_media(query, library_id?)`** - Search across libraries
-4. **`get_recently_added(library_id?, limit)`** - Recent additions
-5. **`get_media_info(media_key)`** - Detailed media information  
-6. **`get_library_content(library_id, limit)`** - Library contents
-7. **`get_clients()`** - Available Plex client devices
-8. **`get_sessions()`** - Active playback sessions
-9. **`scan_library(library_id)`** - Trigger library refresh
-10. **`get_users()`** - Server users (admin function)
+## 🛠️ Available Tools
 
-### **Austrian Efficiency Tools (3 Tools)** 🎯
+PlexMCP provides **15 comprehensive portmanteau tools** that consolidate related operations into unified interfaces:
 
-11. **`anime_season_lowdown()`** - **Sandra's weeb needs fulfilled** 🎌
-    - Current and recent anime from TV libraries
-    - Season context and airing status
-    - Filters out analysis paralysis with top 20 results
+1. **`plex_library`** - Library Management
+   - Complete library lifecycle management
+   - Operations: `list`, `get`, `create`, `update`, `delete`, `scan`, `refresh`, `optimize`, `empty_trash`, `add_location`, `remove_location`, `clean_bundles`
 
-12. **`movie_night_suggestions(genre?)`** - **3 picks, no decision fatigue**
-    - Exactly 3 movie recommendations
-    - Genre filtering available
-    - Focus on highly rated recent additions
+2. **`plex_media`** - Media Operations
+   - Browse, search, and manage media content
+   - Operations: `browse`, `search`, `get_details`, `get_recent`, `update_metadata`
 
-13. **`binge_ready_shows()`** - **Complete series finder**
-    - Shows with all episodes available
-    - No ongoing series that leave you hanging
-    - Perfect for weekend binge sessions
+3. **`plex_user`** - User Management
+   - Manage Plex users and permissions
+   - Operations: `list`, `get`, `create`, `update`, `delete`, `update_permissions`
+
+4. **`plex_playlist`** - Playlist Management
+   - Full playlist lifecycle management
+   - Operations: `list`, `get`, `create`, `update`, `delete`, `add_items`, `remove_items`, `get_analytics`
+
+5. **`plex_streaming`** - Playback Control
+   - Control playback on connected clients
+   - Operations: `list_sessions`, `list_clients`, `play`, `pause`, `stop`, `seek`, `skip_next`, `skip_previous`, `control`
+
+6. **`plex_performance`** - Performance & Quality
+   - Transcoding, bandwidth, and quality management
+   - Operations: `get_transcode_settings`, `update_transcode_settings`, `get_transcoding_status`, `get_bandwidth`, `set_quality`, `get_throttling`, `set_throttling`, `list_profiles`, `create_profile`, `delete_profile`, `get_server_status`, `get_server_info`, `get_health`
+
+7. **`plex_metadata`** - Metadata Management
+   - Refresh and fix media metadata
+   - Operations: `refresh`, `refresh_all`, `fix_match`, `update`, `analyze`, `match`, `organize`
+
+8. **`plex_organization`** - Library Organization
+   - Organize and optimize libraries
+   - Operations: `organize`, `analyze`, `clean_bundles`, `optimize_database`, `fix_issues`
+
+9. **`plex_server`** - Server Management
+   - Server status, health, and maintenance
+   - Operations: `status`, `info`, `health`, `maintenance`, `restart`, `update`
+
+10. **`plex_integration`** - Third-party Integrations
+    - Vienna-specific and external integrations
+    - Operations: `list_integrations`, `vienna_recommendations`, `european_content`, `anime_season_info`, `configure`, `sync`
+
+11. **`plex_search`** - Advanced Search
+    - Powerful search capabilities with suggestions
+    - Operations: `search`, `advanced_search`, `suggest`, `recent_searches`, `save_search`
+
+12. **`plex_reporting`** - Analytics & Reports
+    - Library statistics and usage analytics
+    - Operations: `library_stats`, `usage_report`, `content_report`, `user_activity`, `performance_report`, `export_report`
+
+13. **`plex_collections`** - Collections Management
+    - Manage media collections
+    - Operations: `list`, `get`, `create`, `update`, `delete`, `add_items`, `remove_items`
+
+14. **`plex_quality`** - Quality Profiles
+    - Manage streaming quality profiles
+    - Operations: `list_profiles`, `get_profile`, `create_profile`, `update_profile`, `delete_profile`, `set_default`
+
+15. **`plex_help`** - Help & Discovery
+    - Tool discovery and usage examples
+    - Operations: `help`, `list_tools`, `tool_info`, `examples`
+
+### **Portmanteau Pattern Benefits** 🎯
+
+- **Reduced Tool Count**: 52+ individual tools → 15 logical categories (71% reduction)
+- **Better UX**: Single interface for related operations
+- **Easier Discovery**: Find tools by category, not individual function
+- **Maintainability**: Related operations grouped together
+- **FastMCP 2.13+ Compliant**: Uses Literal types for operation parameters
+- **AI-Friendly**: Comprehensive docstrings with structured error responses
 
 ---
 
@@ -190,7 +235,7 @@ Control your Plex server using natural language with Claude Desktop:
 
 ### **Key MCPB Features**
 
-- **23 Powerful Tools** for comprehensive Plex management
+- **15 Portmanteau Tools** for comprehensive Plex management
 - **Type-Safe Parameters** with validation and defaults
 - **Context-Aware** responses based on your media library
 - **Seamless Integration** with Claude Desktop
