@@ -65,6 +65,9 @@ from .server import get_server_info, get_server_status
 # Session tools
 from .sessions import control_playback, list_clients, list_sessions
 
+# Audio management tools
+from .portmanteau.audio_mgr import plex_audio_mgr
+
 # User management tools
 from .users import (
     create_user,
@@ -86,6 +89,7 @@ __all__ = [
     "list_sessions",
     "list_clients",
     "control_playback",
+    "plex_audio_mgr",
     # User management
     "create_user",
     "update_user",

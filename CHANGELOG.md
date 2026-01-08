@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - ALPHA
+
+### Status
+- **Project Status**: ALPHA - Active development, some features incomplete
+- **Known Issues**: Playback control (`plex play`, `plex pause`) is non-functional for ALL clients
+  - GDM clients (PlexAmp): Discoverable but playback commands fail
+  - Non-GDM clients (Plex Web, Plex for Windows): Not controllable via tested API endpoints
+- **See**: [STATUS_2026-01-08.md](STATUS_2026-01-08.md) for detailed status
+
+### Changed
+- Updated project status to ALPHA in README
+- Added alpha status badge and warning notice
+
+### Fixed
+- Client discovery now finds all client types (PlexAmp, Plex Web, Plex for Windows)
+- Multi-source client discovery implementation
+
+### Known Limitations
+- Playback control (`plex play`, `plex pause`) fails for ALL clients
+- GDM clients (PlexAmp): Discoverable via GDM but `plexapi_client.playMedia()` calls fail
+- Non-GDM clients (Plex Web, Plex for Windows): Not controllable via tested API endpoints
+- Server API endpoints tested don't work for any client type
+- Root cause may be API endpoint parameters, authentication, or client state requirements
+
 ## [2.1.0] - 2025-11-22
 
 ### Added

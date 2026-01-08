@@ -18,7 +18,9 @@ def _get_plex_service():
     """Get PlexService instance with proper environment variable handling."""
     from ...services.plex_service import PlexService
 
-    base_url = os.getenv("PLEX_URL") or os.getenv("PLEX_SERVER_URL", "http://localhost:32400")
+    base_url = os.getenv("PLEX_URL") or os.getenv(
+        "PLEX_SERVER_URL", "http://localhost:32400"
+    )
     token = os.getenv("PLEX_TOKEN")
 
     if not token:
@@ -107,19 +109,10 @@ async def plex_server(
         - Valid PLEX_TOKEN environment variable set
         - Admin/owner permissions for maintenance/restart/update operations
 
-    Parameters:
-        operation: The server operation to perform (required)
-            - Must be one of: status, info, health, maintenance, restart, update
-
-        maintenance_operation: Type of maintenance to perform
-            - Required for: maintenance
-            - Valid values: optimize, clean_bundles, empty_trash, etc.
-            - Not used for: other operations
-
-        options: Additional options for maintenance
-            - Optional for: maintenance
-            - Dictionary with operation-specific options
-            - Not used for: other operations
+    Args:
+        operation (str): The server operation to perform. Required. Must be one of: "status", "info", "health", "maintenance", "restart", "update"
+        maintenance_operation (str | None): Type of maintenance to perform (required for maintenance).
+        options (dict | None): Additional options for maintenance.
 
     Returns:
         Dictionary containing:
@@ -224,7 +217,9 @@ async def plex_server(
         # Operation: restart
         elif operation == "restart":
             # Note: Plex API may not support programmatic restart
-            logger.warning("Server restart operation may not be fully supported by Plex API")
+            logger.warning(
+                "Server restart operation may not be fully supported by Plex API"
+            )
             return {
                 "success": False,
                 "error": "Server restart is not yet fully implemented",
@@ -238,7 +233,9 @@ async def plex_server(
         # Operation: update
         elif operation == "update":
             # Note: Plex API may not support programmatic updates
-            logger.warning("Server update operation may not be fully supported by Plex API")
+            logger.warning(
+                "Server update operation may not be fully supported by Plex API"
+            )
             return {
                 "success": False,
                 "error": "Server update is not yet fully implemented",
@@ -280,7 +277,10 @@ async def plex_server(
         }
 
     except Exception as e:
-        logger.error(f"Unexpected error in plex_server operation '{operation}': {e}", exc_info=True)
+        logger.error(
+            f"Unexpected error in plex_server operation '{operation}': {e}",
+            exc_info=True,
+        )
         return {
             "success": False,
             "error": f"Unexpected error during {operation}: {str(e)}",
@@ -292,4 +292,3 @@ async def plex_server(
                 "Try the operation again with valid parameters",
             ],
         }
-

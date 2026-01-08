@@ -18,7 +18,9 @@ def _get_plex_service():
     """Get PlexService instance with proper environment variable handling."""
     from ...services.plex_service import PlexService
 
-    base_url = os.getenv("PLEX_URL") or os.getenv("PLEX_SERVER_URL", "http://localhost:32400")
+    base_url = os.getenv("PLEX_URL") or os.getenv(
+        "PLEX_SERVER_URL", "http://localhost:32400"
+    )
     token = os.getenv("PLEX_TOKEN")
 
     if not token:
@@ -46,7 +48,11 @@ async def plex_metadata(
     item_id: Optional[str] = None,
     library_id: Optional[str] = None,
     match_id: Optional[str] = None,
-    media_type: Optional[Literal["movie", "show", "season", "episode", "artist", "album", "track", "photo"]] = None,
+    media_type: Optional[
+        Literal[
+            "movie", "show", "season", "episode", "artist", "album", "track", "photo"
+        ]
+    ] = None,
     metadata: Optional[Dict[str, Any]] = None,
     force: bool = False,
     patterns: Optional[Dict[str, str]] = None,
@@ -121,44 +127,15 @@ async def plex_metadata(
         - Valid PLEX_TOKEN environment variable set
         - Media items must exist for item-specific operations
 
-    Parameters:
-        operation: The metadata operation to perform (required)
-            - Must be one of: refresh, refresh_all, fix_match, update, analyze, match, organize
-
-        item_id: Media item identifier
-            - Required for: fix_match, update, match
-            - Optional for: refresh, analyze
-            - Not used for: refresh_all, organize
-
-        library_id: Library identifier
-            - Required for: organize
-            - Optional for: refresh, analyze
-            - Not used for: refresh_all, fix_match, update, match
-
-        match_id: Correct match identifier
-            - Required for: fix_match
-            - Optional for: match
-            - Not used for: other operations
-
-        media_type: Type of media
-            - Required for: fix_match
-            - Valid values: movie, show, season, episode, artist, album, track, photo
-            - Not used for: other operations
-
-        metadata: Metadata dictionary
-            - Required for: update
-            - Dictionary with fields to update
-            - Not used for: other operations
-
-        force: Force refresh even if not needed
-            - Optional for: refresh, refresh_all
-            - Default: False
-            - Not used for: other operations
-
-        patterns: Custom organization patterns
-            - Optional for: organize
-            - Dictionary with pattern configurations
-            - Not used for: other operations
+    Args:
+        operation (str): The metadata operation to perform. Required. Must be one of: "refresh", "refresh_all", "fix_match", "update", "analyze", "match", "organize"
+        item_id (str | None): Media item identifier. Required for: fix_match, update, match. Optional for: refresh, analyze.
+        library_id (str | None): Library identifier. Required for: organize. Optional for: refresh, analyze.
+        match_id (str | None): Correct match identifier. Required for: fix_match. Optional for: match.
+        media_type (str | None): Type of media. Required for: fix_match. Valid: "movie", "show", "season", "episode", "artist", "album", "track", "photo".
+        metadata (dict | None): Metadata dictionary. Required for: update.
+        force (bool): Force refresh even if not needed. Default: False. Optional for: refresh, refresh_all.
+        patterns (dict | None): Custom organization patterns. Optional for: organize.
 
     Returns:
         Dictionary containing:
@@ -244,10 +221,14 @@ async def plex_metadata(
                 lib_id = lib.get("id") or str(lib.get("key", ""))
                 try:
                     result = await plex.refresh_metadata(library_id=lib_id, force=force)
-                    results.append({"library_id": lib_id, "success": True, "result": result})
+                    results.append(
+                        {"library_id": lib_id, "success": True, "result": result}
+                    )
                 except Exception as e:
                     logger.error(f"Error refreshing library {lib_id}: {e}")
-                    results.append({"library_id": lib_id, "success": False, "error": str(e)})
+                    results.append(
+                        {"library_id": lib_id, "success": False, "error": str(e)}
+                    )
 
             return {
                 "success": True,
@@ -272,7 +253,9 @@ async def plex_metadata(
                     "success": False,
                     "error": "match_id is required for fix_match operation",
                     "error_code": "MISSING_MATCH_ID",
-                    "suggestions": ["Provide match_id parameter with correct match identifier"],
+                    "suggestions": [
+                        "Provide match_id parameter with correct match identifier"
+                    ],
                 }
             if not media_type:
                 return {
@@ -429,7 +412,10 @@ async def plex_metadata(
         }
 
     except Exception as e:
-        logger.error(f"Unexpected error in plex_metadata operation '{operation}': {e}", exc_info=True)
+        logger.error(
+            f"Unexpected error in plex_metadata operation '{operation}': {e}",
+            exc_info=True,
+        )
         return {
             "success": False,
             "error": f"Unexpected error during {operation}: {str(e)}",
@@ -441,4 +427,3 @@ async def plex_metadata(
                 "Try the operation again with valid parameters",
             ],
         }
-

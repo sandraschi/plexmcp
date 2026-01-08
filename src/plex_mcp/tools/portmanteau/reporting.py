@@ -18,7 +18,9 @@ def _get_plex_service():
     """Get PlexService instance with proper environment variable handling."""
     from ...services.plex_service import PlexService
 
-    base_url = os.getenv("PLEX_URL") or os.getenv("PLEX_SERVER_URL", "http://localhost:32400")
+    base_url = os.getenv("PLEX_URL") or os.getenv(
+        "PLEX_SERVER_URL", "http://localhost:32400"
+    )
     token = os.getenv("PLEX_TOKEN")
 
     if not token:
@@ -99,18 +101,16 @@ async def plex_reporting(
     - Use when: Saving reports for external analysis or sharing
 
     Prerequisites:
-    - Plex Media Server running and accessible
-    - Valid PLEX_TOKEN environment variable set
-    - PLEX_SERVER_URL configured (or defaults to http://localhost:32400)
+        - Plex Media Server running and accessible
+        - Valid PLEX_TOKEN environment variable set
+        - PLEX_SERVER_URL configured (or defaults to http://localhost:32400)
 
     Args:
-        operation: The reporting operation to perform. Required. Must be one of:
-            "library_stats", "usage_report", "content_report", "user_activity",
-            "performance_report", "export_report"
-        library_id: Optional library ID to generate report for
-        time_range: Time range for reports (e.g., "7d", "30d", "1y", "all")
-        format: Export format (json, csv, html) - used for export_report
-        output_path: Optional file path for exported reports
+        operation (str): The reporting operation to perform. Required. Must be one of: "library_stats", "usage_report", "content_report", "user_activity", "performance_report", "export_report"
+        library_id (str | None): Optional library ID to generate report for.
+        time_range (str | None): Time range for reports (e.g., "7d", "30d", "1y", "all").
+        format (str | None): Export format (json, csv, html) - used for export_report.
+        output_path (str | None): Optional file path for exported reports.
 
     Returns:
         Operation-specific result with report data
@@ -142,7 +142,10 @@ async def plex_reporting(
                         "success": False,
                         "error": f"Library with ID '{library_id}' not found",
                         "error_code": "LIBRARY_NOT_FOUND",
-                        "suggestions": ["Verify library_id is correct", "List libraries to see available IDs"],
+                        "suggestions": [
+                            "Verify library_id is correct",
+                            "List libraries to see available IDs",
+                        ],
                     }
                 libraries = [libraries]
             else:
@@ -195,13 +198,21 @@ async def plex_reporting(
             reports = []
             for lib in libraries:
                 lib_id = lib.get("key") or lib.get("id")
-                items_result = await plex.get_library_items(library_id=lib_id, limit=1000, offset=0)
-                items = items_result.get("items", []) if isinstance(items_result, dict) else items_result
+                items_result = await plex.get_library_items(
+                    library_id=lib_id, limit=1000, offset=0
+                )
+                items = (
+                    items_result.get("items", [])
+                    if isinstance(items_result, dict)
+                    else items_result
+                )
                 reports.append(
                     {
                         "library_id": lib_id,
                         "library_name": lib.get("title") or lib.get("name"),
-                        "total_items": len(items) if isinstance(items, list) else items_result.get("total", 0),
+                        "total_items": len(items)
+                        if isinstance(items, list)
+                        else items_result.get("total", 0),
                         "content_types": {},
                     }
                 )
@@ -260,7 +271,9 @@ async def plex_reporting(
             }
 
     except Exception as e:
-        logger.error(f"Error in plex_reporting operation '{operation}': {e}", exc_info=True)
+        logger.error(
+            f"Error in plex_reporting operation '{operation}': {e}", exc_info=True
+        )
         return {
             "success": False,
             "error": str(e),
@@ -271,4 +284,3 @@ async def plex_reporting(
                 "Verify library_id is valid if provided",
             ],
         }
-

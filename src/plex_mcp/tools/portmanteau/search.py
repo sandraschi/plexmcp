@@ -22,7 +22,9 @@ def _get_plex_service():
     """Get PlexService instance with proper environment variable handling."""
     from ...services.plex_service import PlexService
 
-    base_url = os.getenv("PLEX_URL") or os.getenv("PLEX_SERVER_URL", "http://localhost:32400")
+    base_url = os.getenv("PLEX_URL") or os.getenv(
+        "PLEX_SERVER_URL", "http://localhost:32400"
+    )
     token = os.getenv("PLEX_TOKEN")
 
     if not token:
@@ -38,7 +40,9 @@ def _get_plex_service():
 
 @mcp.tool()
 async def plex_search(
-    operation: Literal["search", "advanced_search", "suggest", "recent_searches", "save_search"],
+    operation: Literal[
+        "search", "advanced_search", "suggest", "recent_searches", "save_search"
+    ],
     query: Optional[str] = None,
     library_id: Optional[str] = None,
     media_type: Optional[str] = None,
@@ -117,36 +121,33 @@ async def plex_search(
     - PLEX_SERVER_URL configured (or defaults to http://localhost:32400)
 
     Args:
-        operation: The search operation to perform. Required. Must be one of:
-            "search", "advanced_search", "suggest", "recent_searches", "save_search"
-        query: Search query text (required for search, advanced_search, suggest, save_search)
-        library_id: Optional library ID to search within
-        media_type: Filter by media type (movie, show, season, episode, artist, album, track, photo)
-        limit: Maximum number of results (default: 100, range: 1-1000)
-        offset: Pagination offset (default: 0)
-        title: Filter by title (supports wildcards with *)
-        year: Filter by specific year or list of years
-        decade: Filter by decade (e.g., 2020 for 2020s)
-        genre: Filter by genre (single or list)
-        actor: Filter by actor (single or list)
-        director: Filter by director (single or list)
-        content_rating: Filter by content rating (e.g., 'PG', 'R', 'TV-MA')
-        studio: Filter by studio
-        country: Filter by country
-        language: Filter by language code (e.g., 'en', 'ja')
-        collection: Filter by collection
-        min_rating: Minimum user rating (0-10)
-        max_rating: Maximum user rating (0-10)
-        min_year: Minimum release year
-        max_year: Maximum release year
-        unwatched: Only show unwatched items
-        sort_by: Field to sort by (default: 'titleSort')
-        sort_dir: Sort direction ('asc' or 'desc', default: 'asc')
-        search_name: Name for saved search (required for save_search)
-        max_recent: Maximum number of recent searches to return (default: 10)
-        summary_contains: Search within plot summaries/descriptions (case-insensitive).
-            Use this to find media by character names, plot elements, or themes
-            that appear in summaries but not titles. Example: "holly martins" to find The Third Man.
+        operation (str): The search operation to perform. Required. Must be one of: "search", "advanced_search", "suggest", "recent_searches", "save_search"
+        query (str | None): Search query text (required for search, advanced_search, suggest, save_search).
+        library_id (str | None): Optional library ID to search within.
+        media_type (str | None): Filter by media type (movie, show, season, episode, artist, album, track, photo).
+        limit (int): Maximum number of results (default: 100, range: 1-1000).
+        offset (int): Pagination offset (default: 0).
+        title (str | None): Filter by title (supports wildcards with *).
+        year (int | list[int] | str | None): Filter by specific year or list of years.
+        decade (int | None): Filter by decade (e.g., 2020 for 2020s).
+        genre (str | list[str] | None): Filter by genre (single or list).
+        actor (str | list[str] | None): Filter by actor (single or list).
+        director (str | list[str] | None): Filter by director (single or list).
+        content_rating (str | list[str] | None): Filter by content rating (e.g., 'PG', 'R', 'TV-MA').
+        studio (str | list[str] | None): Filter by studio.
+        country (str | list[str] | None): Filter by country.
+        language (str | list[str] | None): Filter by language code (e.g., 'en', 'ja').
+        collection (str | list[str] | None): Filter by collection.
+        min_rating (float | None): Minimum user rating (0-10).
+        max_rating (float | None): Maximum user rating (0-10).
+        min_year (int | None): Minimum release year.
+        max_year (int | None): Maximum release year.
+        unwatched (bool | None): Only show unwatched items.
+        sort_by (str): Field to sort by (default: 'titleSort').
+        sort_dir (str): Sort direction ('asc' or 'desc', default: 'asc').
+        search_name (str | None): Name for saved search (required for save_search).
+        max_recent (int): Maximum number of recent searches to return (default: 10).
+        summary_contains (str | None): Search within plot summaries/descriptions (case-insensitive).
 
     Returns:
         Operation-specific result with search details and results
@@ -206,13 +207,20 @@ async def plex_search(
                     "error_code": "MISSING_PARAMETER",
                     "suggestions": [
                         "Provide a search query string",
-                        "Or use summary_contains to search within plot summaries"
+                        "Or use summary_contains to search within plot summaries",
                     ],
                 }
 
             # Track recent search
             _recent_searches.insert(
-                0, {"query": query, "library_id": library_id, "media_type": media_type, "summary_contains": summary_contains, "timestamp": None}
+                0,
+                {
+                    "query": query,
+                    "library_id": library_id,
+                    "media_type": media_type,
+                    "summary_contains": summary_contains,
+                    "timestamp": None,
+                },
             )
             if len(_recent_searches) > 100:
                 _recent_searches.pop()
@@ -221,10 +229,12 @@ async def plex_search(
             if summary_contains and not query:
                 search_term = summary_contains.lower()
                 all_items = []
-                
+
                 if library_id:
                     # Get all items from specific library
-                    result = await plex.get_library_items(library_id=library_id, limit=1000)
+                    result = await plex.get_library_items(
+                        library_id=library_id, limit=1000
+                    )
                     all_items = result.get("items", [])
                 else:
                     # Search across all movie/show libraries
@@ -240,23 +250,28 @@ async def plex_search(
                                 all_items.extend(result.get("items", []))
                             except Exception:
                                 continue  # Skip libraries that fail
-                
+
                 # Filter by summary - items are dicts from get_library_items
                 results = [
-                    item for item in all_items
-                    if item.get("summary") and search_term in item.get("summary", "").lower()
+                    item
+                    for item in all_items
+                    if item.get("summary")
+                    and search_term in item.get("summary", "").lower()
                 ][:limit]
             else:
-                results = await plex.search_media(query=query, limit=limit, library_id=library_id)
-                
+                results = await plex.search_media(
+                    query=query, limit=limit, library_id=library_id
+                )
+
                 # Filter by summary if specified
                 if summary_contains and isinstance(results, list):
                     search_term = summary_contains.lower()
                     results = [
-                        item for item in results
+                        item
+                        for item in results
                         if item.summary and search_term in item.summary.lower()
                     ]
-            
+
             return {
                 "success": True,
                 "operation": "search",
@@ -333,12 +348,16 @@ async def plex_search(
                 }
 
             # Use search with limit=1 to get suggestions
-            suggestions = await plex.search_media(query=query, limit=min(limit, 10), library_id=library_id)
+            suggestions = await plex.search_media(
+                query=query, limit=min(limit, 10), library_id=library_id
+            )
             return {
                 "success": True,
                 "operation": "suggest",
                 "query": query,
-                "suggestions": suggestions[:10] if isinstance(suggestions, list) else [],
+                "suggestions": suggestions[:10]
+                if isinstance(suggestions, list)
+                else [],
                 "count": len(suggestions) if isinstance(suggestions, list) else 0,
             }
 
@@ -400,11 +419,15 @@ async def plex_search(
                 "success": False,
                 "error": f"Unknown operation: {operation}",
                 "error_code": "INVALID_OPERATION",
-                "suggestions": ["Use one of: search, advanced_search, suggest, recent_searches, save_search"],
+                "suggestions": [
+                    "Use one of: search, advanced_search, suggest, recent_searches, save_search"
+                ],
             }
 
     except Exception as e:
-        logger.error(f"Error in plex_search operation '{operation}': {e}", exc_info=True)
+        logger.error(
+            f"Error in plex_search operation '{operation}': {e}", exc_info=True
+        )
         return {
             "success": False,
             "error": str(e),
@@ -415,4 +438,3 @@ async def plex_search(
                 "Verify library_id is valid if provided",
             ],
         }
-

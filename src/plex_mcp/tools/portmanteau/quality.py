@@ -18,7 +18,9 @@ def _get_plex_service():
     """Get PlexService instance with proper environment variable handling."""
     from ...services.plex_service import PlexService
 
-    base_url = os.getenv("PLEX_URL") or os.getenv("PLEX_SERVER_URL", "http://localhost:32400")
+    base_url = os.getenv("PLEX_URL") or os.getenv(
+        "PLEX_SERVER_URL", "http://localhost:32400"
+    )
     token = os.getenv("PLEX_TOKEN")
 
     if not token:
@@ -34,7 +36,14 @@ def _get_plex_service():
 
 @mcp.tool()
 async def plex_quality(
-    operation: Literal["list_profiles", "get_profile", "create_profile", "update_profile", "delete_profile", "set_default"],
+    operation: Literal[
+        "list_profiles",
+        "get_profile",
+        "create_profile",
+        "update_profile",
+        "delete_profile",
+        "set_default",
+    ],
     profile_name: Optional[str] = None,
     settings: Optional[Dict[str, Any]] = None,
     is_default: bool = False,
@@ -91,17 +100,16 @@ async def plex_quality(
     - Use when: Setting the default quality profile
 
     Prerequisites:
-    - Plex Media Server running and accessible
-    - Valid PLEX_TOKEN environment variable set
-    - PLEX_SERVER_URL configured (or defaults to http://localhost:32400)
-    - Admin/owner permissions for create/update/delete operations
+        - Plex Media Server running and accessible
+        - Valid PLEX_TOKEN environment variable set
+        - PLEX_SERVER_URL configured (or defaults to http://localhost:32400)
+        - Admin/owner permissions for create/update/delete operations
 
     Args:
-        operation: The quality profile operation to perform. Required. Must be one of:
-            "list_profiles", "get_profile", "create_profile", "update_profile", "delete_profile", "set_default"
-        profile_name: Name of the quality profile (required for get, create, update, delete, set_default)
-        settings: Profile settings dictionary (required for create, update)
-        is_default: Whether to set as default profile (used for create_profile)
+        operation (str): The quality profile operation to perform. Required. Must be one of: "list_profiles", "get_profile", "create_profile", "update_profile", "delete_profile", "set_default"
+        profile_name (str | None): Name of the quality profile. Required for: get_profile, create_profile, update_profile, delete_profile, set_default.
+        settings (dict[str, Any] | None): Profile settings dictionary. Required for: create_profile, update_profile.
+        is_default (bool): Whether to set as default profile (used for create_profile). Default: False.
 
     Returns:
         Operation-specific result with profile data
@@ -195,7 +203,9 @@ async def plex_quality(
                     "error_code": "MISSING_PARAMETER",
                 }
 
-            result = await plex.update_transcode_settings(profile_name=profile_name, settings=settings)
+            result = await plex.update_transcode_settings(
+                profile_name=profile_name, settings=settings
+            )
             return {
                 "success": True,
                 "operation": "update_profile",
@@ -249,7 +259,9 @@ async def plex_quality(
             }
 
     except Exception as e:
-        logger.error(f"Error in plex_quality operation '{operation}': {e}", exc_info=True)
+        logger.error(
+            f"Error in plex_quality operation '{operation}': {e}", exc_info=True
+        )
         return {
             "success": False,
             "error": str(e),
@@ -261,4 +273,3 @@ async def plex_quality(
                 "Ensure you have admin permissions for create/update/delete operations",
             ],
         }
-

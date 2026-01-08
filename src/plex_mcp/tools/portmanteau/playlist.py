@@ -18,7 +18,9 @@ def _get_plex_service():
     """Get PlexService instance with proper environment variable handling."""
     from ...services.plex_service import PlexService
 
-    base_url = os.getenv("PLEX_URL") or os.getenv("PLEX_SERVER_URL", "http://localhost:32400")
+    base_url = os.getenv("PLEX_URL") or os.getenv(
+        "PLEX_SERVER_URL", "http://localhost:32400"
+    )
     token = os.getenv("PLEX_TOKEN")
 
     if not token:
@@ -146,38 +148,14 @@ async def plex_playlist(
         - Valid PLEX_TOKEN environment variable set
         - Media items must exist for create/add_items operations
 
-    Parameters:
-        operation: The playlist operation to perform (required)
-            - Must be one of: list, get, create, update, delete, add_items, remove_items, get_analytics
-
-        playlist_id: Playlist identifier
-            - Required for: get, update, delete, add_items, remove_items, get_analytics
-            - Not used for: list, create
-
-        title: Playlist title
-            - Required for: create
-            - Optional for: update
-            - Min length: 1, Max length: 255
-            - Not used for: other operations
-
-        items: List of media item IDs
-            - Required for: create, add_items, remove_items
-            - Not used for: other operations
-
-        description: Playlist description
-            - Optional for: create, update
-            - Not used for: other operations
-
-        public: Whether playlist is publicly visible
-            - Optional for: create, update
-            - Default: False
-            - Note: Plex API has limited support for this
-            - Not used for: other operations
-
-        sort: Sort order for playlist items
-            - Optional for: create, update
-            - Note: Plex API has limited sorting capabilities
-            - Not used for: other operations
+    Args:
+        operation (str): The playlist operation to perform. Required. Must be one of: "list", "get", "create", "update", "delete", "add_items", "remove_items", "get_analytics"
+        playlist_id (str | None): Playlist identifier. Required for: get, update, delete, add_items, remove_items, get_analytics.
+        title (str | None): Playlist title (min 1, max 255). Required for: create. Optional for: update.
+        items (list[str] | None): List of media item IDs. Required for: create, add_items, remove_items.
+        description (str | None): Playlist description. Optional for: create, update.
+        public (bool | None): Whether playlist is publicly visible (limited support). Optional for: create, update.
+        sort (str | None): Sort order (limited support). Optional for: create, update.
 
     Returns:
         Dictionary containing:
@@ -253,7 +231,9 @@ async def plex_playlist(
                     "success": False,
                     "error": "playlist_id is required for get operation",
                     "error_code": "MISSING_PLAYLIST_ID",
-                    "suggestions": ["Use plex_playlist(operation='list') to find available playlist IDs"],
+                    "suggestions": [
+                        "Use plex_playlist(operation='list') to find available playlist IDs"
+                    ],
                 }
 
             try:
@@ -282,14 +262,18 @@ async def plex_playlist(
                     "success": False,
                     "error": "title is required for create operation",
                     "error_code": "MISSING_TITLE",
-                    "suggestions": ["Provide title parameter (min 1 character, max 255)"],
+                    "suggestions": [
+                        "Provide title parameter (min 1 character, max 255)"
+                    ],
                 }
             if not items:
                 return {
                     "success": False,
                     "error": "items list is required for create operation",
                     "error_code": "MISSING_ITEMS",
-                    "suggestions": ["Provide items parameter with list of media item IDs"],
+                    "suggestions": [
+                        "Provide items parameter with list of media item IDs"
+                    ],
                 }
 
             # Get the media items from Plex
@@ -412,7 +396,9 @@ async def plex_playlist(
                     "success": False,
                     "error": "items list is required for add_items operation",
                     "error_code": "MISSING_ITEMS",
-                    "suggestions": ["Provide items parameter with list of media item IDs"],
+                    "suggestions": [
+                        "Provide items parameter with list of media item IDs"
+                    ],
                 }
 
             try:
@@ -474,7 +460,9 @@ async def plex_playlist(
                     "success": False,
                     "error": "items list is required for remove_items operation",
                     "error_code": "MISSING_ITEMS",
-                    "suggestions": ["Provide items parameter with list of media item IDs to remove"],
+                    "suggestions": [
+                        "Provide items parameter with list of media item IDs to remove"
+                    ],
                 }
 
             try:
@@ -490,7 +478,9 @@ async def plex_playlist(
                         items_to_remove.append(item)
 
                 if not items_to_remove:
-                    logger.warning(f"No matching items found to remove from playlist {playlist_id}")
+                    logger.warning(
+                        f"No matching items found to remove from playlist {playlist_id}"
+                    )
                     return {
                         "success": True,
                         "operation": "remove_items",
@@ -532,12 +522,13 @@ async def plex_playlist(
                 }
 
             try:
-
                 playlist = await plex.server.playlist(playlist_id)
                 playlist_items = playlist.items()
 
                 # Get view counts and other metrics
-                total_plays = sum(getattr(item, "viewCount", 0) for item in playlist_items)
+                total_plays = sum(
+                    getattr(item, "viewCount", 0) for item in playlist_items
+                )
                 unique_users = len(
                     set(
                         item.lastViewedAt
@@ -633,7 +624,10 @@ async def plex_playlist(
         }
 
     except Exception as e:
-        logger.error(f"Unexpected error in plex_playlist operation '{operation}': {e}", exc_info=True)
+        logger.error(
+            f"Unexpected error in plex_playlist operation '{operation}': {e}",
+            exc_info=True,
+        )
         return {
             "success": False,
             "error": f"Unexpected error during {operation}: {str(e)}",
@@ -645,4 +639,3 @@ async def plex_playlist(
                 "Try the operation again with valid parameters",
             ],
         }
-

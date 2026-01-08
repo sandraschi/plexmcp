@@ -19,7 +19,9 @@ def _get_plex_service():
     """Get PlexService instance with proper environment variable handling."""
     from ...services.plex_service import PlexService
 
-    base_url = os.getenv("PLEX_URL") or os.getenv("PLEX_SERVER_URL", "http://localhost:32400")
+    base_url = os.getenv("PLEX_URL") or os.getenv(
+        "PLEX_SERVER_URL", "http://localhost:32400"
+    )
     token = os.getenv("PLEX_TOKEN")
 
     if not token:
@@ -35,7 +37,9 @@ def _get_plex_service():
 
 @mcp.tool()
 async def plex_user(
-    operation: Literal["list", "get", "create", "update", "delete", "update_permissions"],
+    operation: Literal[
+        "list", "get", "create", "update", "delete", "update_permissions"
+    ],
     user_id: Optional[str] = None,
     username: Optional[str] = None,
     email: Optional[str] = None,
@@ -106,47 +110,15 @@ async def plex_user(
         - Valid PLEX_TOKEN environment variable set
         - Admin/owner permissions for create/update/delete operations
 
-    Parameters:
-        operation: The user operation to perform (required)
-            - Must be one of: list, get, create, update, delete, update_permissions
-
-        user_id: User identifier
-            - Required for: get, update, delete, update_permissions
-            - Not used for: list, create
-
-        username: Username
-            - Required for: create
-            - Optional for: update
-            - Min length: 3, Max length: 50
-            - Not used for: other operations
-
-        email: Email address
-            - Required for: create
-            - Optional for: update
-            - Must be valid email format
-            - Not used for: other operations
-
-        password: Password
-            - Required for: create
-            - Optional for: update
-            - Min length: 8
-            - Not used for: other operations
-
-        role: User role
-            - Optional for: create, update
-            - Valid values: owner, admin, user, managed, shared
-            - Default: user
-            - Not used for: other operations
-
-        restricted: Whether user should be restricted
-            - Optional for: create, update
-            - Default: False
-            - Not used for: other operations
-
-        permissions: Permissions dictionary
-            - Required for: update_permissions
-            - Dictionary with permission keys (e.g., allowSync, allowCameraUpload, allowChannels, restricted)
-            - Not used for: other operations
+    Args:
+        operation (str): The user operation to perform. Required. Must be one of: "list", "get", "create", "update", "delete", "update_permissions"
+        user_id (str | None): User identifier (required for get/update/delete/update_permissions).
+        username (str | None): Username (required for create, optional for update).
+        email (str | None): Email address (required for create, optional for update).
+        password (str | None): Password (required for create, optional for update).
+        role (str | None): User role ("owner", "admin", "user", "managed", "shared").
+        restricted (bool | None): Whether user should be restricted.
+        permissions (dict | None): Permissions dictionary (required for update_permissions).
 
     Returns:
         Dictionary containing:
@@ -224,7 +196,9 @@ async def plex_user(
                     "success": False,
                     "error": "user_id is required for get operation",
                     "error_code": "MISSING_USER_ID",
-                    "suggestions": ["Use plex_user(operation='list') to find available user IDs"],
+                    "suggestions": [
+                        "Use plex_user(operation='list') to find available user IDs"
+                    ],
                 }
 
             user_data = await plex.get_user(user_id)
@@ -310,7 +284,9 @@ async def plex_user(
                         "success": False,
                         "error": "username must be at least 3 characters",
                         "error_code": "INVALID_USERNAME",
-                        "suggestions": ["Provide a username with at least 3 characters"],
+                        "suggestions": [
+                            "Provide a username with at least 3 characters"
+                        ],
                     }
                 update_kwargs["username"] = username
             if email is not None:
@@ -321,7 +297,9 @@ async def plex_user(
                         "success": False,
                         "error": "password must be at least 8 characters",
                         "error_code": "INVALID_PASSWORD",
-                        "suggestions": ["Provide a password with at least 8 characters"],
+                        "suggestions": [
+                            "Provide a password with at least 8 characters"
+                        ],
                     }
                 update_kwargs["password"] = password
             if role is not None:
@@ -435,7 +413,9 @@ async def plex_user(
         }
 
     except Exception as e:
-        logger.error(f"Unexpected error in plex_user operation '{operation}': {e}", exc_info=True)
+        logger.error(
+            f"Unexpected error in plex_user operation '{operation}': {e}", exc_info=True
+        )
         return {
             "success": False,
             "error": f"Unexpected error during {operation}: {str(e)}",
@@ -447,4 +427,3 @@ async def plex_user(
                 "Try the operation again with valid parameters",
             ],
         }
-

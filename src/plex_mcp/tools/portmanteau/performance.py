@@ -18,7 +18,9 @@ def _get_plex_service():
     """Get PlexService instance with proper environment variable handling."""
     from ...services.plex_service import PlexService
 
-    base_url = os.getenv("PLEX_URL") or os.getenv("PLEX_SERVER_URL", "http://localhost:32400")
+    base_url = os.getenv("PLEX_URL") or os.getenv(
+        "PLEX_SERVER_URL", "http://localhost:32400"
+    )
     token = os.getenv("PLEX_TOKEN")
 
     if not token:
@@ -162,52 +164,17 @@ async def plex_performance(
         - Valid PLEX_TOKEN environment variable set
         - Admin/owner permissions for settings modification operations
 
-    Parameters:
-        operation: The performance operation to perform (required)
-            - Must be one of: get_transcode_settings, update_transcode_settings, get_transcoding_status,
-              get_bandwidth, set_quality, get_throttling, set_throttling, list_profiles, create_profile,
-              delete_profile, get_server_status, get_server_info
-
-        profile_name: Quality profile name
-            - Required for: update_transcode_settings, set_quality, set_throttling, create_profile, delete_profile
-            - Optional for: get_transcode_settings, get_throttling
-            - Not used for: other operations
-
-        settings: Settings dictionary
-            - Required for: update_transcode_settings, create_profile
-            - Not used for: other operations
-
-        quality: Quality setting
-            - Required for: set_quality
-            - Examples: "1080p", "720p", "480p", "4K"
-            - Not used for: other operations
-
-        bitrate: Maximum bitrate in kbps
-            - Optional for: set_quality
-            - Not used for: other operations
-
-        enabled: Whether to enable throttling
-            - Required for: set_throttling
-            - Not used for: other operations
-
-        download_limit: Download limit in kbps
-            - Optional for: set_throttling
-            - Not used for: other operations
-
-        upload_limit: Upload limit in kbps
-            - Optional for: set_throttling
-            - Not used for: other operations
-
-        time_range: Time range for bandwidth data
-            - Optional for: get_bandwidth
-            - Valid values: "hour", "day", "week", "month"
-            - Default: "day"
-            - Not used for: other operations
-
-        is_default: Set as default profile
-            - Optional for: create_profile
-            - Default: False
-            - Not used for: other operations
+    Args:
+        operation (str): The performance operation to perform. Required. Must be one of: "get_transcode_settings", "update_transcode_settings", "get_transcoding_status", "get_bandwidth", "set_quality", "get_throttling", "set_throttling", "list_profiles", "create_profile", "delete_profile", "get_server_status", "get_server_info"
+        profile_name (str | None): Quality profile name. Required for: update_transcode_settings, set_quality, set_throttling, create_profile, delete_profile. Optional for: get_transcode_settings, get_throttling.
+        settings (dict | None): Settings dictionary. Required for: update_transcode_settings, create_profile.
+        quality (str | None): Quality setting (e.g., "1080p", "720p", "4K"). Required for: set_quality.
+        bitrate (int | None): Maximum bitrate in kbps. Optional for: set_quality.
+        enabled (bool | None): Whether to enable throttling. Required for: set_throttling.
+        download_limit (int | None): Download limit in kbps. Optional for: set_throttling.
+        upload_limit (int | None): Upload limit in kbps. Optional for: set_throttling.
+        time_range (str): Time range for bandwidth data ("hour", "day", "week", "month"). Default: "day". Optional for: get_bandwidth.
+        is_default (bool): Set as default profile. Default: False. Optional for: create_profile.
 
     Returns:
         Dictionary containing:
@@ -280,7 +247,9 @@ async def plex_performance(
                     "success": False,
                     "error": "settings dictionary is required for update_transcode_settings operation",
                     "error_code": "MISSING_SETTINGS",
-                    "suggestions": ["Provide settings parameter with configuration dictionary"],
+                    "suggestions": [
+                        "Provide settings parameter with configuration dictionary"
+                    ],
                 }
 
             result = await plex.update_transcode_settings(
@@ -326,7 +295,9 @@ async def plex_performance(
                     "success": False,
                     "error": "quality is required for set_quality operation",
                     "error_code": "MISSING_QUALITY",
-                    "suggestions": ["Provide quality parameter (e.g., '1080p', '720p', '480p')"],
+                    "suggestions": [
+                        "Provide quality parameter (e.g., '1080p', '720p', '480p')"
+                    ],
                 }
 
             result = await plex.set_stream_quality(
@@ -404,7 +375,9 @@ async def plex_performance(
                     "success": False,
                     "error": "settings dictionary is required for create_profile operation",
                     "error_code": "MISSING_SETTINGS",
-                    "suggestions": ["Provide settings parameter with profile configuration"],
+                    "suggestions": [
+                        "Provide settings parameter with profile configuration"
+                    ],
                 }
 
             result = await plex.create_quality_profile(
@@ -496,7 +469,10 @@ async def plex_performance(
         }
 
     except Exception as e:
-        logger.error(f"Unexpected error in plex_performance operation '{operation}': {e}", exc_info=True)
+        logger.error(
+            f"Unexpected error in plex_performance operation '{operation}': {e}",
+            exc_info=True,
+        )
         return {
             "success": False,
             "error": f"Unexpected error during {operation}: {str(e)}",
@@ -508,4 +484,3 @@ async def plex_performance(
                 "Try the operation again with valid parameters",
             ],
         }
-

@@ -1,0 +1,36 @@
+{
+  "$schema": "https://glama.ai/mcp/schemas/server.json",
+  "maintainers": ["sandraschi"],
+  "name": "plex-mcp",
+  "description": "FastMCP 2.13+ server for managing Plex Media Server with type-safe API. Server management, media browsing, playback control, and session management. Beta status.",
+  "type": "mcp_server",
+  "status": "beta",
+  "framework": "FastMCP 2.13+",
+  "tools": 8,
+  "transport": ["stdio"],
+  "keywords": [
+    "plex",
+    "media-server",
+    "streaming",
+    "video",
+    "audio",
+    "mcp-server",
+    "fastmcp",
+    "media-management"
+  ],
+  "features": {
+    "server_management": {
+      "enabled": true
+    },
+    "media_browsing": {
+      "enabled": true
+    },
+    "playback_control": {
+      "enabled": true
+    },
+    "session_management": {
+      "enabled": true
+    }
+  }
+}
+

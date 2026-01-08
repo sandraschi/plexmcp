@@ -18,7 +18,9 @@ def _get_plex_service():
     """Get PlexService instance with proper environment variable handling."""
     from ...services.plex_service import PlexService
 
-    base_url = os.getenv("PLEX_URL") or os.getenv("PLEX_SERVER_URL", "http://localhost:32400")
+    base_url = os.getenv("PLEX_URL") or os.getenv(
+        "PLEX_SERVER_URL", "http://localhost:32400"
+    )
     token = os.getenv("PLEX_TOKEN")
 
     if not token:
@@ -34,7 +36,9 @@ def _get_plex_service():
 
 @mcp.tool()
 async def plex_media(
-    operation: Literal["browse", "search", "get_details", "get_recent", "update_metadata"],
+    operation: Literal[
+        "browse", "search", "get_details", "get_recent", "update_metadata"
+    ],
     library_id: Optional[str] = None,
     media_key: Optional[str] = None,
     query: Optional[str] = None,
@@ -104,68 +108,20 @@ async def plex_media(
         - PLEX_SERVER_URL configured (or defaults to http://localhost:32400)
         - At least one media library configured in Plex
 
-    Parameters:
-        operation: The media operation to perform
-            - Required for all calls
-            - Must be one of: "browse", "search", "get_details", "get_recent", "update_metadata"
-
-        library_id: Library identifier
-            - Required for: browse
-            - Optional for: search, get_recent
-            - Not used for: get_details, update_metadata
-            - Find library IDs using plex_library("list") tool
-
-        media_key: Media item key/ID
-            - Required for: get_details, update_metadata
-            - Not used for: browse, search, get_recent
-            - Obtained from browse/search results
-
-        query: Search query text
-            - Optional for: search
-            - Not used for: other operations
-            - Searches title, description, tags, etc.
-
-        media_type: Media type filter
-            - Optional for: browse, search
-            - Valid values: "movie", "show", "episode", "album", "track", "photo"
-            - Not used for: get_details, get_recent, update_metadata
-
-        limit: Maximum results to return (default: 100)
-            - Optional for: browse, search, get_recent
-            - Range: 1-1000
-            - Not used for: get_details, update_metadata
-
-        genre: Genre filter
-            - Optional for: search
-            - Examples: "Action", "Comedy", "Drama", "Sci-Fi"
-            - Not used for: other operations
-
-        year: Year filter
-            - Optional for: search
-            - Can be single year or list
-            - Not used for: other operations
-
-        actor: Actor name filter
-            - Optional for: search
-            - Not used for: other operations
-
-        director: Director name filter
-            - Optional for: search
-            - Not used for: other operations
-
-        min_rating: Minimum rating filter (0-10)
-            - Optional for: search
-            - Not used for: other operations
-
-        unwatched: Unwatched items only filter
-            - Optional for: search
-            - True = only unwatched, False/None = all
-            - Not used for: other operations
-
-        metadata: Metadata updates
-            - Required for: update_metadata
-            - Dictionary with fields to update
-            - Not used for: other operations
+    Args:
+        operation (str): The media operation to perform. Required. Must be one of: "browse", "search", "get_details", "get_recent", "update_metadata"
+        library_id (str | None): Library identifier. Required for: browse. Optional for: search, get_recent. Use plex_library("list") to find IDs.
+        media_key (str | None): Media item key/ID. Required for: get_details, update_metadata. Obtained from browse/search results.
+        query (str | None): Search query text. Optional for: search. Searches title, description, tags, etc.
+        media_type (str | None): Media type filter. Optional for: browse, search. Valid: "movie", "show", "episode", "album", "track", "photo".
+        limit (int): Maximum results to return (1-1000). Default: 100. Optional for: browse, search, get_recent.
+        genre (str | None): Genre filter. Optional for: search. Examples: "Action", "Comedy", "Drama", "Sci-Fi".
+        year (int | None): Year filter. Optional for: search. Can be single year or list.
+        actor (str | None): Actor name filter. Optional for: search.
+        director (str | None): Director name filter. Optional for: search.
+        min_rating (float | None): Minimum rating filter (0-10). Optional for: search.
+        unwatched (bool | None): Unwatched items only filter. Optional for: search.
+        metadata (dict | None): Metadata updates. Required for: update_metadata. Dictionary with fields to update.
 
     Returns:
         Dictionary containing:
@@ -259,7 +215,9 @@ async def plex_media(
             return {
                 "success": True,
                 "operation": "browse",
-                "data": [item.dict() for item in items] if hasattr(items[0], "dict") else items,
+                "data": [item.dict() for item in items]
+                if hasattr(items[0], "dict")
+                else items,
                 "count": len(items),
             }
 
@@ -285,7 +243,9 @@ async def plex_media(
             return {
                 "success": True,
                 "operation": "search",
-                "data": [item.dict() if hasattr(item, "dict") else item for item in items],
+                "data": [
+                    item.dict() if hasattr(item, "dict") else item for item in items
+                ],
                 "count": len(items),
                 "search_criteria": search_params,
             }
@@ -313,7 +273,9 @@ async def plex_media(
             return {
                 "success": True,
                 "operation": "get_recent",
-                "data": [item.dict() if hasattr(item, "dict") else item for item in items],
+                "data": [
+                    item.dict() if hasattr(item, "dict") else item for item in items
+                ],
                 "count": len(items),
             }
 
@@ -403,5 +365,3 @@ async def plex_media(
                 "Try the operation again with valid parameters",
             ],
         }
-
-

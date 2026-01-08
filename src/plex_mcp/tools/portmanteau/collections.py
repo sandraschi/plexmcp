@@ -18,7 +18,9 @@ def _get_plex_service():
     """Get PlexService instance with proper environment variable handling."""
     from ...services.plex_service import PlexService
 
-    base_url = os.getenv("PLEX_URL") or os.getenv("PLEX_SERVER_URL", "http://localhost:32400")
+    base_url = os.getenv("PLEX_URL") or os.getenv(
+        "PLEX_SERVER_URL", "http://localhost:32400"
+    )
     token = os.getenv("PLEX_TOKEN")
 
     if not token:
@@ -34,7 +36,9 @@ def _get_plex_service():
 
 @mcp.tool()
 async def plex_collections(
-    operation: Literal["list", "get", "create", "update", "delete", "add_items", "remove_items"],
+    operation: Literal[
+        "list", "get", "create", "update", "delete", "add_items", "remove_items"
+    ],
     collection_id: Optional[str] = None,
     library_id: Optional[str] = None,
     title: Optional[str] = None,
@@ -99,9 +103,9 @@ async def plex_collections(
     - Use when: Removing media from a collection
 
     Prerequisites:
-    - Plex Media Server running and accessible
-    - Valid PLEX_TOKEN environment variable set
-    - PLEX_SERVER_URL configured (or defaults to http://localhost:32400)
+        - Plex Media Server running and accessible
+        - Valid PLEX_TOKEN environment variable set
+        - PLEX_SERVER_URL configured (or defaults to http://localhost:32400)
 
     Args:
         operation: The collection operation to perform. Required. Must be one of:
@@ -285,11 +289,15 @@ async def plex_collections(
                 "success": False,
                 "error": f"Unknown operation: {operation}",
                 "error_code": "INVALID_OPERATION",
-                "suggestions": ["Use one of: list, get, create, update, delete, add_items, remove_items"],
+                "suggestions": [
+                    "Use one of: list, get, create, update, delete, add_items, remove_items"
+                ],
             }
 
     except Exception as e:
-        logger.error(f"Error in plex_collections operation '{operation}': {e}", exc_info=True)
+        logger.error(
+            f"Error in plex_collections operation '{operation}': {e}", exc_info=True
+        )
         return {
             "success": False,
             "error": str(e),
@@ -300,4 +308,3 @@ async def plex_collections(
                 "Verify collection_id is valid if provided",
             ],
         }
-

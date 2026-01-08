@@ -18,7 +18,9 @@ def _get_plex_service():
     """Get PlexService instance with proper environment variable handling."""
     from ...services.plex_service import PlexService
 
-    base_url = os.getenv("PLEX_URL") or os.getenv("PLEX_SERVER_URL", "http://localhost:32400")
+    base_url = os.getenv("PLEX_URL") or os.getenv(
+        "PLEX_SERVER_URL", "http://localhost:32400"
+    )
     token = os.getenv("PLEX_TOKEN")
 
     if not token:
@@ -113,45 +115,16 @@ async def plex_integration(
         - Valid PLEX_TOKEN environment variable set
         - Integrations may require additional API keys or configuration
 
-    Parameters:
-        operation: The integration operation to perform (required)
-            - Must be one of: list_integrations, vienna_recommendations, european_content, anime_season_info, configure, sync
-
-        content_type: Type of content
-            - Required for: vienna_recommendations
-            - Optional for: european_content
-            - Not used for: other operations
-
-        limit: Maximum number of results
-            - Optional for: vienna_recommendations, european_content
-            - Default: 10
-            - Not used for: other operations
-
-        include_european: Include European content
-            - Optional for: vienna_recommendations
-            - Default: True
-            - Not used for: other operations
-
-        country: Country filter
-            - Optional for: european_content
-            - Not used for: other operations
-
-        year: Year for anime season
-            - Required for: anime_season_info
-            - Not used for: other operations
-
-        season: Season name
-            - Required for: anime_season_info
-            - Valid values: winter, spring, summer, fall
-            - Not used for: other operations
-
-        integration_name: Name of the integration
-            - Required for: configure, sync
-            - Not used for: other operations
-
-        config: Configuration dictionary
-            - Required for: configure
-            - Not used for: other operations
+    Args:
+        operation (str): The integration operation to perform. Required. Must be one of: "list_integrations", "vienna_recommendations", "european_content", "anime_season_info", "configure", "sync"
+        content_type (str | None): Type of content (required for vienna_recommendations, optional for european_content).
+        limit (int): Maximum number of results (default: 10).
+        include_european (bool): Include European content (for vienna_recommendations, default: True).
+        country (str | None): Country filter (optional for european_content).
+        year (int | None): Year for anime season (required for anime_season_info).
+        season (str | None): Season name: "winter", "spring", "summer", "fall" (required for anime_season_info).
+        integration_name (str | None): Name of the integration (required for configure, sync).
+        config (dict | None): Configuration dictionary (required for configure).
 
     Returns:
         Dictionary containing:
@@ -207,9 +180,21 @@ async def plex_integration(
         if operation == "list_integrations":
             # Placeholder - would list available integrations
             integrations = [
-                {"name": "vienna", "enabled": True, "description": "Vienna-specific content recommendations"},
-                {"name": "european", "enabled": True, "description": "European content metadata"},
-                {"name": "anime", "enabled": True, "description": "Anime season information"},
+                {
+                    "name": "vienna",
+                    "enabled": True,
+                    "description": "Vienna-specific content recommendations",
+                },
+                {
+                    "name": "european",
+                    "enabled": True,
+                    "description": "European content metadata",
+                },
+                {
+                    "name": "anime",
+                    "enabled": True,
+                    "description": "Anime season information",
+                },
             ]
             return {
                 "success": True,
@@ -225,20 +210,26 @@ async def plex_integration(
                     "success": False,
                     "error": "content_type is required for vienna_recommendations operation",
                     "error_code": "MISSING_CONTENT_TYPE",
-                    "suggestions": ["Provide content_type parameter (e.g., 'movie', 'show')"],
+                    "suggestions": [
+                        "Provide content_type parameter (e.g., 'movie', 'show')"
+                    ],
                 }
 
             from ...api.vienna import RecommendationRequest
 
             request = RecommendationRequest(
-                content_type=content_type, limit=limit, include_european=include_european
+                content_type=content_type,
+                limit=limit,
+                include_european=include_european,
             )
             result = await get_vienna_recommendations(request)
             return {
                 "success": True,
                 "operation": "vienna_recommendations",
                 "content_type": content_type,
-                "data": [item.dict() if hasattr(item, "dict") else item for item in result],
+                "data": [
+                    item.dict() if hasattr(item, "dict") else item for item in result
+                ],
                 "count": len(result),
             }
 
@@ -255,7 +246,9 @@ async def plex_integration(
                 "operation": "european_content",
                 "country": country,
                 "content_type": content_type,
-                "data": [item.dict() if hasattr(item, "dict") else item for item in result],
+                "data": [
+                    item.dict() if hasattr(item, "dict") else item for item in result
+                ],
                 "count": len(result),
             }
 
@@ -273,7 +266,9 @@ async def plex_integration(
                     "success": False,
                     "error": "season is required for anime_season_info operation",
                     "error_code": "MISSING_SEASON",
-                    "suggestions": ["Provide season parameter: winter, spring, summer, or fall"],
+                    "suggestions": [
+                        "Provide season parameter: winter, spring, summer, or fall"
+                    ],
                 }
 
             from ...api.vienna import AnimeSeasonInfoRequest
@@ -302,11 +297,15 @@ async def plex_integration(
                     "success": False,
                     "error": "config dictionary is required for configure operation",
                     "error_code": "MISSING_CONFIG",
-                    "suggestions": ["Provide config parameter with configuration dictionary"],
+                    "suggestions": [
+                        "Provide config parameter with configuration dictionary"
+                    ],
                 }
 
             # Placeholder implementation
-            logger.info(f"Configuring integration {integration_name} with config: {config}")
+            logger.info(
+                f"Configuring integration {integration_name} with config: {config}"
+            )
             return {
                 "success": True,
                 "operation": "configure",
@@ -364,7 +363,10 @@ async def plex_integration(
         }
 
     except Exception as e:
-        logger.error(f"Unexpected error in plex_integration operation '{operation}': {e}", exc_info=True)
+        logger.error(
+            f"Unexpected error in plex_integration operation '{operation}': {e}",
+            exc_info=True,
+        )
         return {
             "success": False,
             "error": f"Unexpected error during {operation}: {str(e)}",
@@ -376,4 +378,3 @@ async def plex_integration(
                 "Try the operation again with valid parameters",
             ],
         }
-

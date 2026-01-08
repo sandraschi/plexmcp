@@ -18,7 +18,9 @@ def _get_plex_service():
     """Get PlexService instance with proper environment variable handling."""
     from ...services.plex_service import PlexService
 
-    base_url = os.getenv("PLEX_URL") or os.getenv("PLEX_SERVER_URL", "http://localhost:32400")
+    base_url = os.getenv("PLEX_URL") or os.getenv(
+        "PLEX_SERVER_URL", "http://localhost:32400"
+    )
     token = os.getenv("PLEX_TOKEN")
 
     if not token:
@@ -104,46 +106,15 @@ async def plex_organization(
         - Valid PLEX_TOKEN environment variable set
         - Admin/owner permissions for organization operations
 
-    Parameters:
-        operation: The organization operation to perform (required)
-            - Must be one of: organize, analyze, clean_bundles, optimize_database, fix_issues
-
-        library_id: Library identifier
-            - Required for: organize, analyze, fix_issues
-            - Optional for: clean_bundles (if omitted, cleans all libraries)
-            - Not used for: optimize_database
-
-        dry_run: Preview changes without applying
-            - Optional for: organize
-            - Default: False
-            - If True, only shows what would be changed
-            - Not used for: other operations
-
-        patterns: Custom organization patterns
-            - Optional for: organize
-            - Dictionary with pattern configurations
-            - Not used for: other operations
-
-        threshold_days: Days threshold for bundle cleanup
-            - Optional for: clean_bundles
-            - Default: 30
-            - Bundles older than this will be cleaned
-            - Not used for: other operations
-
-        analyze: Run ANALYZE on database
-            - Optional for: optimize_database
-            - Default: True
-            - Not used for: other operations
-
-        vacuum: Run VACUUM on database
-            - Optional for: optimize_database
-            - Default: True
-            - Not used for: other operations
-
-        reindex: Rebuild indexes
-            - Optional for: optimize_database
-            - Default: True
-            - Not used for: other operations
+    Args:
+        operation (str): The organization operation to perform. Required. Must be one of: "organize", "analyze", "clean_bundles", "optimize_database", "fix_issues"
+        library_id (str | None): Library identifier. Required for: organize, analyze, fix_issues. Optional for: clean_bundles.
+        dry_run (bool): Preview changes without applying. Default: False. Optional for: organize.
+        patterns (dict | None): Custom organization patterns. Optional for: organize.
+        threshold_days (int): Days threshold for bundle cleanup. Default: 30. Optional for: clean_bundles.
+        analyze (bool): Run ANALYZE on database. Default: True. Optional for: optimize_database.
+        vacuum (bool): Run VACUUM on database. Default: True. Optional for: optimize_database.
+        reindex (bool): Rebuild indexes. Default: True. Optional for: optimize_database.
 
     Returns:
         Dictionary containing:
@@ -279,7 +250,11 @@ async def plex_organization(
                     "success": True,
                     "operation": "fix_issues",
                     "library_id": library_id,
-                    "data": {"issues_found": 0, "issues_fixed": 0, "message": "No issues found"},
+                    "data": {
+                        "issues_found": 0,
+                        "issues_fixed": 0,
+                        "message": "No issues found",
+                    },
                 }
 
             # Attempt to fix issues (placeholder implementation)
@@ -331,7 +306,10 @@ async def plex_organization(
         }
 
     except Exception as e:
-        logger.error(f"Unexpected error in plex_organization operation '{operation}': {e}", exc_info=True)
+        logger.error(
+            f"Unexpected error in plex_organization operation '{operation}': {e}",
+            exc_info=True,
+        )
         return {
             "success": False,
             "error": f"Unexpected error during {operation}: {str(e)}",
@@ -343,4 +321,3 @@ async def plex_organization(
                 "Try the operation again with valid parameters",
             ],
         }
-

@@ -1,23 +1,44 @@
-"""FastMCP 2.10.1 server setup for Plex MCP."""
+"""FastMCP 2.14+ server setup for Plex MCP (Legacy - Use server.py instead).
+
+This module is kept for backward compatibility but is deprecated.
+Use plex_mcp.server:main as the entry point instead.
+"""
 
 import logging
 import os
 from typing import Any, Dict, Optional
 
-from fastmcp import FastMCP
+# Import portmanteau tools to register them
+# This ensures all @mcp.tool() decorators execute
+from .app import mcp
+from .tools import portmanteau  # noqa: F401
 
-from .services.plex_service import PlexService
-from .tools import (
-    control_playback,
-    get_library_items,
-    get_media_info,
-    get_server_info,
-    get_server_status,
-    list_clients,
-    list_libraries,
-    list_sessions,
-    search_media,
-)
+# Legacy imports - these may not exist, so we handle gracefully
+try:
+    from .tools import (
+        control_playback,
+        get_library_items,
+        get_media_info,
+        get_server_info,
+        get_server_status,
+        list_clients,
+        list_libraries,
+        list_sessions,
+        plex_audio_mgr,
+        search_media,
+    )
+except ImportError:
+    # Old tools don't exist - use portmanteau tools instead
+    control_playback = None
+    get_library_items = None
+    get_media_info = None
+    get_server_info = None
+    get_server_status = None
+    list_clients = None
+    list_libraries = None
+    list_sessions = None
+    plex_audio_mgr = None
+    search_media = None
 
 # Configure logging
 logging.basicConfig(
@@ -26,63 +47,17 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-class PlexMCP(FastMCP):
-    """Plex MCP server implementation."""
-
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
-        """Initialize the Plex MCP server.
-
-        Args:
-            config: Optional configuration overrides
-        """
-        # Default configuration
-        default_config = {
-            "server": {
-                "host": "0.0.0.0",
-                "port": 8000,
-                "debug": False,
-            },
-            "plex": {
-                "base_url": os.getenv("PLEX_SERVER_URL", "http://localhost:32400"),
-                "token": os.getenv("PLEX_TOKEN", ""),
-                "timeout": int(os.getenv("PLEX_TIMEOUT", "30")),
-            },
-            "mcp": {
-                "name": "plex-mcp",
-                "version": "1.0.0",
-                "description": "Plex Media Server MCP",
-            },
-        }
-
-        # Merge with provided config
-        if config:
-            self._merge_config(default_config, config)
-
-        # Initialize FastMCP
-        super().__init__(config=default_config)
-
-        # Initialize Plex service
-        self.plex = PlexService(
-            base_url=default_config["plex"]["base_url"],
-            token=default_config["plex"]["token"],
-            timeout=default_config["plex"]["timeout"],
-        )
-
-        # Register tools with dependency injection
-        self.register_tool(get_server_status, self.plex)
-        self.register_tool(list_libraries, self.plex)
-        self.register_tool(get_server_info, self.plex)
-        self.register_tool(search_media, self.plex)
-        self.register_tool(get_media_info, self.plex)
-        self.register_tool(get_library_items, self.plex)
-        self.register_tool(list_sessions, self.plex)
-        self.register_tool(list_clients, self.plex)
-        self.register_tool(control_playback, self.plex)
+# Legacy PlexMCP class - deprecated, use server.py instead
+# Tools are now registered via @mcp.tool() decorators in portmanteau modules
 
     def _merge_config(self, default: Dict[str, Any], override: Dict[str, Any]) -> None:
         """Recursively merge configuration dictionaries."""
         for key, value in override.items():
-            if key in default and isinstance(default[key], dict) and isinstance(value, dict):
+            if (
+                key in default
+                and isinstance(default[key], dict)
+                and isinstance(value, dict)
+            ):
                 self._merge_config(default[key], value)
             else:
                 default[key] = value
@@ -101,30 +76,23 @@ class PlexMCP(FastMCP):
 
 
 def run_server(config_path: Optional[str] = None):
-    """Run the Plex MCP server.
+    """Run the Plex MCP server (Legacy - redirects to server.py).
 
     Args:
-        config_path: Optional path to a configuration file
+        config_path: Optional path to a configuration file (ignored, use env vars)
+    
+    Note: This function is deprecated. Use plex_mcp.server:main instead.
     """
-    # Load configuration if provided
-    config = {}
-    if config_path:
-        import yaml
-
-        with open(config_path, "r") as f:
-            config = yaml.safe_load(f)
-
-    # Create and start the server
-    app = PlexMCP(config=config)
-
-    # Get server config
-    server_config = config.get("server", {})
-    host = server_config.get("host", "0.0.0.0")
-    port = server_config.get("port", 8000)
-    debug = server_config.get("debug", False)
-
-    # Run the server
-    app.run(host=host, port=port, debug=debug)
+    import warnings
+    warnings.warn(
+        "mcp_setup.run_server is deprecated. Use plex_mcp.server:main instead.",
+        DeprecationWarning,
+        stacklevel=2
+    )
+    
+    # Redirect to main server entry point
+    from .server import main
+    main()
 
 
 if __name__ == "__main__":

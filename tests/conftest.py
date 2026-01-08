@@ -44,6 +44,34 @@ def mock_plex_server():
 
 
 @pytest.fixture
+def plex_service(request, mock_plex_service):
+    """
+    PlexService fixture that prefers real server when available, falls back to mocks.
+    
+    This fixture checks if a real Plex server is available. If so, it returns
+    the real service. Otherwise, it returns the mocked service.
+    
+    Tests using this fixture will automatically use the real server if PLEX_URL
+    and PLEX_TOKEN are set, otherwise they will use mocks.
+    """
+    # Check if real server is available
+    plex_url = os.getenv("PLEX_URL") or os.getenv("PLEX_SERVER_URL")
+    plex_token = os.getenv("PLEX_TOKEN")
+    
+    if plex_url and plex_token:
+        try:
+            # Try to get real service (may skip if not available)
+            real_service = request.getfixturevalue("real_plex_service")
+            return real_service
+        except Exception:
+            # Fall back to mock if real service not available or fails
+            # This catches pytest.skip exceptions and other errors
+            pass
+    
+    return mock_plex_service
+
+
+@pytest.fixture
 def mock_plex_service(mock_plex_server, mock_library_data):
     """Mock PlexService for testing portmanteau tools."""
     from plex_mcp.services.plex_service import PlexService
@@ -104,6 +132,8 @@ def mock_plex_service(mock_plex_server, mock_library_data):
         service.seek_playback = AsyncMock(return_value=True)
         service.skip_next = AsyncMock(return_value=True)
         service.skip_previous = AsyncMock(return_value=True)
+        service.control_playback = AsyncMock(return_value=True)
+        # Mock set_volume specifically (it uses control_playback with volume parameter)
         service.control_playback = AsyncMock(return_value=True)
         
         # Mock async methods for server operations

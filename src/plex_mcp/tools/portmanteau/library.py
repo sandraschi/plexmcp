@@ -18,7 +18,9 @@ def _get_plex_service():
     """Get PlexService instance with proper environment variable handling."""
     from ...services.plex_service import PlexService
 
-    base_url = os.getenv("PLEX_URL") or os.getenv("PLEX_SERVER_URL", "http://localhost:32400")
+    base_url = os.getenv("PLEX_URL") or os.getenv(
+        "PLEX_SERVER_URL", "http://localhost:32400"
+    )
     token = os.getenv("PLEX_TOKEN")
 
     if not token:
@@ -164,52 +166,17 @@ async def plex_library(
         - Admin/owner permissions for create/update/delete operations
         - Valid media paths for create/add_location operations
 
-    Parameters:
-        operation: The library operation to perform (required)
-            - Must be one of: list, get, create, update, delete, scan, refresh, optimize, empty_trash, add_location, remove_location, clean_bundles
-
-        library_id: Library identifier
-            - Required for: get, create, update, delete, scan, refresh, optimize, empty_trash, add_location, remove_location
-            - Optional for: clean_bundles (if omitted, cleans all libraries)
-            - Not used for: list
-
-        name: Library name
-            - Required for: create
-            - Optional for: update
-            - Not used for: other operations
-
-        library_type: Library type
-            - Required for: create
-            - Valid values: movie, show, music, photo
-            - Not used for: other operations
-
-        path: Media folder path
-            - Required for: create, add_location, remove_location
-            - Optional for: update
-            - Not used for: other operations
-
-        agent: Metadata agent
-            - Optional for: create, update
-            - Not used for: other operations
-
-        scanner: Media scanner
-            - Optional for: create, update
-            - Not used for: other operations
-
-        language: Library language code
-            - Optional for: create, update
-            - Default: "en"
-            - Not used for: other operations
-
-        thumb: Thumbnail URL
-            - Optional for: create, update
-            - Not used for: other operations
-
-        force: Force operation
-            - Optional for: scan
-            - Default: False
-            - If True, forces a full scan
-            - Not used for: other operations
+    Args:
+        operation (str): The library operation to perform. Required. Must be one of: "list", "get", "create", "update", "delete", "scan", "refresh", "optimize", "empty_trash", "add_location", "remove_location", "clean_bundles"
+        library_id (str | None): Library identifier. Required for: get, create, update, delete, scan, refresh, optimize, empty_trash, add_location, remove_location. Optional for: clean_bundles.
+        name (str | None): Library name. Required for: create. Optional for: update.
+        library_type (str | None): Library type. Required for: create. Valid: "movie", "show", "music", "photo".
+        path (str | None): Media folder path. Required for: create, add_location, remove_location. Optional for: update.
+        agent (str | None): Metadata agent. Optional for: create, update.
+        scanner (str | None): Media scanner. Optional for: create, update.
+        language (str): Library language code. Default: "en". Optional for: create, update.
+        thumb (str | None): Thumbnail URL. Optional for: create, update.
+        force (bool): Force operation. Optional for: scan. Default: False. If True, forces a full scan.
 
     Returns:
         Dictionary containing:
@@ -289,7 +256,9 @@ async def plex_library(
                     "success": False,
                     "error": "library_id is required for get operation",
                     "error_code": "MISSING_LIBRARY_ID",
-                    "suggestions": ["Use plex_library('list') to find available library IDs"],
+                    "suggestions": [
+                        "Use plex_library('list') to find available library IDs"
+                    ],
                 }
 
             library = await plex.get_library(library_id)
@@ -374,7 +343,9 @@ async def plex_library(
                     "success": False,
                     "error": "library_type is required for create operation",
                     "error_code": "MISSING_LIBRARY_TYPE",
-                    "suggestions": ["Provide library_type: movie, show, music, or photo"],
+                    "suggestions": [
+                        "Provide library_type: movie, show, music, or photo"
+                    ],
                 }
             if not path:
                 return {
@@ -534,7 +505,9 @@ async def plex_library(
                     "success": False,
                     "error": "path is required for remove_location operation",
                     "error_code": "MISSING_PATH",
-                    "suggestions": ["Provide path parameter for the location to remove"],
+                    "suggestions": [
+                        "Provide path parameter for the location to remove"
+                    ],
                 }
 
             result = await plex.remove_library_location(library_id, path)
@@ -580,5 +553,3 @@ async def plex_library(
                 "Check server logs for detailed error information",
             ],
         }
-
-

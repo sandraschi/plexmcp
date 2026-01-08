@@ -4,6 +4,9 @@
 [![Python](https://img.shields.io/badge/Python-3.11+-green)](https://python.org)
 [![Plex](https://img.shields.io/badge/Plex-Media%20Server-orange)](https://plex.tv)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Status](https://img.shields.io/badge/Status-ALPHA-red)](https://github.com/yourusername/plex-mcp)
+
+> **⚠️ ALPHA STATUS**: This project is in alpha development. Some features may be incomplete or unstable. **Playback control (`plex play`, `plex pause`) is currently non-functional for ALL clients**, including GDM-discoverable clients (PlexAmp) and non-GDM clients (Plex Web, Plex for Windows). See [STATUS_2026-01-08.md](STATUS_2026-01-08.md) for detailed status.
 
 A FastMCP 2.13+ server implementation for managing Plex Media Server with a clean, type-safe API.
 

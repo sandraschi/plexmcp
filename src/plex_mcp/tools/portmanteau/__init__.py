@@ -16,6 +16,7 @@ after thorough testing and user migration.
 """
 
 # Import implemented portmanteau tools
+from .audio_mgr import plex_audio_mgr
 from .collections import plex_collections
 from .help import plex_help
 from .integration import plex_integration
@@ -33,6 +34,7 @@ from .streaming import plex_streaming
 from .user import plex_user
 
 __all__ = [
+    "plex_audio_mgr",
     "plex_media",
     "plex_library",
     "plex_user",
@@ -49,4 +51,3 @@ __all__ = [
     "plex_quality",
     "plex_help",
 ]
-
