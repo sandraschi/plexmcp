@@ -81,6 +81,15 @@ from fastmcp import FastMCP
 # Create the main FastMCP instance
 mcp = FastMCP(name="PlexMCP", version="2.1.0")
 
+
+def http_app():
+    """
+    Return FastAPI app for HTTP mode (FastMCP 2.14+).
+
+    This provides the HTTP interface that can be mounted in webapps.
+    """
+    return mcp.http_app()
+
 # CRITICAL: After server initialization, restore stdout for stdio mode
 # This allows the server to communicate via JSON-RPC while preventing initialization logging
 if _is_stdio_mode:
