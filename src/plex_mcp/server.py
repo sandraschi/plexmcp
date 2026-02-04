@@ -1,6 +1,7 @@
 """
-PlexMCP - FastMCP 2.13+ Server for Plex Media Server Management
+PlexMCP - FastMCP 2.14.3 Server for Plex Media Server Management
 
+FastMCP 2.14.3 compliant with conversational tool returns and sampling capabilities.
 Austrian efficiency for Sandra's media streaming needs.
 """
 
@@ -15,6 +16,10 @@ logger = get_logger(__name__)
 # Import portmanteau tools to register them with the MCP server
 # The @mcp.tool() decorators execute when modules are imported
 from .tools import portmanteau  # noqa: F401, E402
+
+# Import and register agentic workflow tools (FastMCP 2.14.3 sampling features)
+from .tools.agentic import register_agentic_tools  # noqa: E402
+register_agentic_tools()
 
 # NOTE: Old individual tools (server, media, sessions, users, playlists, organization, quality, library)
 # are deprecated and will be removed in a future version.
@@ -38,12 +43,17 @@ from .tools import portmanteau  # noqa: F401, E402
 
 def main():
     """
-    Main entry point for PlexMCP server with FastMCP 2.10+ compatibility.
+    Main entry point for PlexMCP server with FastMCP 2.14.3 conversational features.
 
     Supports both HTTP and STDIO (JSON-RPC) modes based on command line arguments.
-    When run without arguments, defaults to STDIO mode (FastMCP 2.10+ default).
+    When run without arguments, defaults to STDIO mode (FastMCP 2.14.3 default).
 
-    For STDIO mode (default in FastMCP 2.10+): python -m plex_mcp.server
+    FEATURES:
+    - Conversational tool returns for natural AI interaction
+    - Sampling capabilities for agentic workflows
+    - Portmanteau tools for comprehensive media management
+
+    For STDIO mode (default in FastMCP 2.14.3): python -m plex_mcp.server
     For HTTP mode: python -m plex_mcp.server --http
     """
     import argparse

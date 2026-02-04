@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-02-04
+
+### Added
+- **MCPB Packaging**: Full implementation of standard MCPB bundles with optimized build patterns
+- **Build Infrastructure**: Added `mcpb.json` and staging patterns for clean packaging
+
+### Fixed
+- **Startup Logic**: Standardized server execution via system Python (`python -m plex_mcp`)
+- **Dependency Management**: Resolved missing `aiohttp`, `fastmcp`, and `plexapi` in system environment
+- **Path Resolution**: Fixed `PYTHONPATH` issues in `mcp_config.json` for reliable module loading
+
 ## [Unreleased] - ALPHA
 
 ### Status

@@ -3,9 +3,9 @@ requires = ["setuptools>=68.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "plex-mcp"
+name = "plex-mcp-advanced"
 version = "2.0.0"
-description = "FastMCP 2.13+ & MCPB package for Plex Media Server management"
+description = "FastMCP 2.14.3+ & MCPB package for Plex Media Server management with conversational AI and sampling"
 authors = [
     {name = "Sandra Schipal", email = "sandra@sandraschi.dev"}
 ]
@@ -29,7 +29,7 @@ classifiers = [
 ]
 
 dependencies = [
-    "fastmcp>=2.14.0,<3.0.0",
+    "fastmcp>=2.14.3,<3.0.0",
     "aiohttp>=3.9.0,<4.0.0",
     "aiofiles>=23.2.0,<24.0.0",
     "plexapi>=4.15.0,<5.0.0",
@@ -54,7 +54,7 @@ dev = [
 ]
 
 [project.scripts]
-plex-mcp = "plex_mcp.server:main"
+plex-mcp-advanced = "plex_mcp.server:main"
 
 [project.urls]
 Homepage = "https://github.com/yourusername/plex-mcp"
@@ -79,3 +79,4 @@ python_version = "3.11"
 strict = true
 warn_return_any = true
 warn_unused_configs = true
+

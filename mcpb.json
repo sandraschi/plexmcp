@@ -8,7 +8,10 @@
     "version": "2.12.0",
     "server": {
       "command": "python",
-      "args": ["-m", "plex_mcp.main"],
+      "args": [
+        "-m",
+        "plex_mcp.main"
+      ],
       "transport": "stdio"
     },
     "capabilities": {
@@ -20,5 +23,26 @@
     "fastmcp": ">=2.10.0",
     "plexapi": ">=4.15.0",
     "requests": ">=2.31.0"
+  },
+  "build": {
+    "include": [
+      "src/**/*",
+      "README.md",
+      "manifest.json",
+      "mcpb.json"
+    ],
+    "exclude": [
+      ".git/",
+      ".venv/",
+      "venv/",
+      ".cursor/",
+      ".windsurf/",
+      "target/",
+      "build/",
+      "dist/",
+      "**/__pycache__/",
+      "tests/",
+      "logs/"
+    ]
   }
 }

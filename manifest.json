@@ -12,7 +12,10 @@
     "entry_point": "src/plex_mcp/main.py",
     "mcp_config": {
       "command": "python",
-      "args": ["-m", "plex_mcp.main"],
+      "args": [
+        "-m",
+        "plex_mcp.main"
+      ],
       "env": {
         "PYTHONPATH": "${PWD}",
         "PLEX_URL": "${user_config.plex_url}",
@@ -131,8 +134,10 @@
     }
   ],
   "compatibility": {
-    "platforms": ["win32", "linux", "darwin"],
-    "python_version": ">=3.10",
-    "mcp_version": ">=2.10.0"
+    "platforms": [
+      "win32",
+      "linux",
+      "darwin"
+    ]
   }
 }

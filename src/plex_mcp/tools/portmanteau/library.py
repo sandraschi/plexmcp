@@ -2,7 +2,7 @@
 PlexMCP Library Management Portmanteau Tool
 
 Consolidates all library-related operations into a single comprehensive interface.
-FastMCP 2.13+ compliant with comprehensive docstrings and AI-friendly error messages.
+FastMCP 2.14.3 compliant with conversational tool returns and sampling capabilities.
 """
 
 import os
@@ -69,7 +69,7 @@ async def plex_library(
     - Improves discoverability by grouping related operations together
     - Reduces cognitive load when working with library management tasks
     - Enables consistent library interface across all operations
-    - Follows FastMCP 2.13+ best practices for feature-rich MCP servers
+    - Follows FastMCP 2.14.3+ best practices with conversational returns and sampling
 
     SUPPORTED OPERATIONS:
     - list: List all media libraries
@@ -179,14 +179,28 @@ async def plex_library(
         force (bool): Force operation. Optional for: scan. Default: False. If True, forces a full scan.
 
     Returns:
-        Dictionary containing:
-            - success: Boolean indicating operation success
-            - operation: The operation that was performed
-            - data: Operation-specific result data
-            - count: Number of items returned (for list operation)
-            - error: Error message if success is False
-            - error_code: Specific error code for programmatic handling
-            - suggestions: List of suggested fixes (on error)
+        Dictionary following FastMCP 2.14.3 conversational response patterns:
+        ```json
+        {
+          "success": true,
+          "operation": "list",
+          "message": "Successfully retrieved 3 media libraries from your Plex server",
+          "data": [...],
+          "count": 3,
+          "next_steps": ["Use 'plex_library get' to see details", "Use 'plex_media' to browse content"]
+        }
+        ```
+
+        **Success Response Structure:**
+        - success (bool): Operation success status
+        - operation (str): Library operation that was performed
+        - message (str): Conversational response for natural AI interaction
+        - data: Operation-specific result data
+        - count: Number of items returned (for list operation)
+        - next_steps: List of suggested next actions
+        - error: Error message if success is False
+        - error_code: Specific error code for programmatic handling
+        - suggestions: List of suggested fixes (on error)
 
     Examples:
         # List all libraries

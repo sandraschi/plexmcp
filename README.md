@@ -29,10 +29,28 @@ A FastMCP 2.13+ server implementation for managing Plex Media Server with a clea
 
 ### Installation
 
+#### From PyPI (Recommended)
+
+```bash
+pip install plex-mcp-advanced
+```
+
+#### From GitHub Releases
+
+```bash
+# Direct wheel download
+pip install https://github.com/sandraschi/plex-mcp/releases/download/v2.0.0/plex_mcp_advanced-2.0.0-py3-none-any.whl
+
+# Or from git
+pip install git+https://github.com/sandraschi/plex-mcp.git
+```
+
+#### For Development
+
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/yourusername/plex-mcp.git
+   git clone https://github.com/sandraschi/plex-mcp.git
    cd plex-mcp
    ```
 
@@ -306,8 +324,12 @@ $response.user.authenticationToken
 
 ### **Step 2: Install PlexMCP**
 
+Standardized installation uses the system Python environment for maximum reliability in Antigravity:
+
 ```powershell
-cd d:\dev\repos\plexmcp
+# Install in system environment (SOTA 2026 pattern)
+pip install fastmcp aiohttp plexapi pydantic requests
+cd d:\dev\repos\plex-mcp
 pip install -e .
 ```
 
