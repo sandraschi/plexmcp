@@ -11,19 +11,22 @@ Separating it prevents circular import issues.
 import os
 import sys
 
-if os.name == 'nt':  # Windows only
+if os.name == "nt":  # Windows only
     try:
         # Force binary mode for stdin/stdout to prevent CRLF conversion
         import msvcrt
+
         msvcrt.setmode(sys.stdin.fileno(), os.O_BINARY)
         msvcrt.setmode(sys.stdout.fileno(), os.O_BINARY)
     except (OSError, AttributeError):
         # Fallback: just ensure no CRLF conversion
         pass
 
+
 # DevNullStdout class for stdio mode to prevent any console output during initialization
 class DevNullStdout:
     """Suppress all stdout writes during stdio mode to prevent JSON-RPC protocol corruption."""
+
     def __init__(self, original_stdout):
         self.original_stdout = original_stdout
         self.buffer = []
@@ -38,11 +41,12 @@ class DevNullStdout:
 
     def get_buffered_output(self):
         """Get all buffered output for debugging if needed."""
-        return ''.join(self.buffer)
+        return "".join(self.buffer)
 
     def restore(self):
         """Restore original stdout."""
         sys.stdout = self.original_stdout
+
 
 # CRITICAL: Detect stdio mode BEFORE importing logger
 # This must be done before ANY logging imports
@@ -59,21 +63,39 @@ if _is_stdio_mode:
 
     # Create a null logger that does nothing
     class NullLogger:
-        def debug(self, *args, **kwargs): pass
-        def info(self, *args, **kwargs): pass
-        def warning(self, *args, **kwargs): pass
-        def error(self, *args, **kwargs): pass
-        def critical(self, *args, **kwargs): pass
-        def exception(self, *args, **kwargs): pass
+        def debug(self, *args, **kwargs):
+            pass
 
-        def setLevel(self, *args, **kwargs): pass
-        def addHandler(self, *args, **kwargs): pass
-        def removeHandler(self, *args, **kwargs): pass
+        def info(self, *args, **kwargs):
+            pass
+
+        def warning(self, *args, **kwargs):
+            pass
+
+        def error(self, *args, **kwargs):
+            pass
+
+        def critical(self, *args, **kwargs):
+            pass
+
+        def exception(self, *args, **kwargs):
+            pass
+
+        def setLevel(self, *args, **kwargs):
+            pass
+
+        def addHandler(self, *args, **kwargs):
+            pass
+
+        def removeHandler(self, *args, **kwargs):
+            pass
 
     # Replace the logging module's getLogger function
     original_getLogger = logging.getLogger
+
     def null_getLogger(name=None):
         return NullLogger()
+
     logging.getLogger = null_getLogger
 
 from fastmcp import FastMCP
@@ -109,7 +131,7 @@ RESPONSE FORMAT:
 PORTMANTEAU DESIGN:
 Tools are consolidated into logical groups to prevent tool explosion while maintaining full functionality.
 Each portmanteau tool handles multiple related operations through an 'operation' parameter.
-"""
+""",
 )
 
 
@@ -121,10 +143,11 @@ def http_app():
     """
     return mcp.http_app()
 
+
 # CRITICAL: After server initialization, restore stdout for stdio mode
 # This allows the server to communicate via JSON-RPC while preventing initialization logging
 if _is_stdio_mode:
-    if hasattr(sys.stdout, 'restore'):
+    if hasattr(sys.stdout, "restore"):
         sys.stdout.restore()
         # Now we can safely write to stdout for JSON-RPC communication
 
@@ -133,8 +156,9 @@ if _is_stdio_mode:
 
     # Set up proper logging to stderr only (not stdout)
     import logging
+
     logging.basicConfig(
         level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        stream=sys.stderr  # Critical: log to stderr, not stdout
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        stream=sys.stderr,  # Critical: log to stderr, not stdout
     )

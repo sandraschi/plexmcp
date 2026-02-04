@@ -6,7 +6,7 @@ FastMCP 2.13+ compliant with comprehensive docstrings and AI-friendly error mess
 """
 
 import os
-from typing import Any, Dict, Literal, Optional
+from typing import Any, Literal
 
 from ...app import mcp
 from ...utils import get_logger
@@ -18,9 +18,7 @@ def _get_plex_service():
     """Get PlexService instance with proper environment variable handling."""
     from ...services.plex_service import PlexService
 
-    base_url = os.getenv("PLEX_URL") or os.getenv(
-        "PLEX_SERVER_URL", "http://localhost:32400"
-    )
+    base_url = os.getenv("PLEX_URL") or os.getenv("PLEX_SERVER_URL", "http://localhost:32400")
     token = os.getenv("PLEX_TOKEN")
 
     if not token:
@@ -44,9 +42,9 @@ async def plex_server(
         "restart",
         "update",
     ],
-    maintenance_operation: Optional[str] = None,
-    options: Optional[Dict[str, Any]] = None,
-) -> Dict[str, Any]:
+    maintenance_operation: str | None = None,
+    options: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """Comprehensive server management operations for Plex Media Server.
 
     PORTMANTEAU PATTERN RATIONALE:
@@ -217,9 +215,7 @@ async def plex_server(
         # Operation: restart
         elif operation == "restart":
             # Note: Plex API may not support programmatic restart
-            logger.warning(
-                "Server restart operation may not be fully supported by Plex API"
-            )
+            logger.warning("Server restart operation may not be fully supported by Plex API")
             return {
                 "success": False,
                 "error": "Server restart is not yet fully implemented",
@@ -233,9 +229,7 @@ async def plex_server(
         # Operation: update
         elif operation == "update":
             # Note: Plex API may not support programmatic updates
-            logger.warning(
-                "Server update operation may not be fully supported by Plex API"
-            )
+            logger.warning("Server update operation may not be fully supported by Plex API")
             return {
                 "success": False,
                 "error": "Server update is not yet fully implemented",

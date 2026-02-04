@@ -11,7 +11,7 @@ import socket
 import ssl
 import urllib.parse
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any
 
 import aiohttp
 
@@ -34,7 +34,7 @@ def is_port_open(host: str, port: int, timeout: float = 2.0) -> bool:
             sock.settimeout(timeout)
             result = sock.connect_ex((host, port))
             return result == 0
-    except (socket.gaierror, socket.timeout, ConnectionRefusedError):
+    except (TimeoutError, socket.gaierror, ConnectionRefusedError):
         return False
     except Exception as e:
         logger.warning(f"Error checking port {port} on {host}: {e}")
@@ -42,7 +42,7 @@ def is_port_open(host: str, port: int, timeout: float = 2.0) -> bool:
 
 
 async def async_is_port_open(
-    host: str, port: int, timeout: float = 2.0, loop: Optional[asyncio.AbstractEventLoop] = None
+    host: str, port: int, timeout: float = 2.0, loop: asyncio.AbstractEventLoop | None = None
 ) -> bool:
     """Asynchronously check if a TCP port is open on a remote host.
 
@@ -64,7 +64,7 @@ async def async_is_port_open(
         writer.close()
         await writer.wait_closed()
         return True
-    except (asyncio.TimeoutError, ConnectionRefusedError, OSError):
+    except (TimeoutError, ConnectionRefusedError, OSError):
         return False
     except Exception as e:
         logger.warning(f"Error checking port {port} on {host}: {e}")
@@ -117,8 +117,8 @@ def is_valid_port(port: int) -> bool:
 
 
 async def is_plex_server_reachable(
-    base_url: str, token: Optional[str] = None, timeout: float = 5.0, ssl_verify: bool = True
-) -> Tuple[bool, Optional[Dict[str, Any]]]:
+    base_url: str, token: str | None = None, timeout: float = 5.0, ssl_verify: bool = True
+) -> tuple[bool, dict[str, Any] | None]:
     """Check if a Plex server is reachable and return its status.
 
     Args:
@@ -165,7 +165,7 @@ async def is_plex_server_reachable(
                 ) as response:
                     if response.status != 200:
                         return False, None
-            except (aiohttp.ClientError, asyncio.TimeoutError):
+            except (TimeoutError, aiohttp.ClientError):
                 return False, None
 
             # Then try to get server info from the API
@@ -177,7 +177,7 @@ async def is_plex_server_reachable(
                         data = await response.text()
                         return True, {"status": "online", "data": data}
                     return False, None
-            except (aiohttp.ClientError, asyncio.TimeoutError):
+            except (TimeoutError, aiohttp.ClientError):
                 return False, None
 
     except Exception as e:
@@ -186,7 +186,7 @@ async def is_plex_server_reachable(
 
 
 def get_plex_auth_url(
-    client_id: str, redirect_uri: str, app_name: str = "PlexMCP", forward_url: Optional[str] = None
+    client_id: str, redirect_uri: str, app_name: str = "PlexMCP", forward_url: str | None = None
 ) -> str:
     """Generate a Plex OAuth authentication URL.
 
@@ -245,9 +245,9 @@ def check_plex_url_connectivity(url: str) -> bool:
 
 
 def get_ssl_context(
-    cert_file: Optional[Union[str, Path]] = None,
-    key_file: Optional[Union[str, Path]] = None,
-    ca_certs: Optional[Union[str, Path]] = None,
+    cert_file: str | Path | None = None,
+    key_file: str | Path | None = None,
+    ca_certs: str | Path | None = None,
     verify: bool = True,
 ) -> ssl.SSLContext:
     """Create an SSL context for secure connections.

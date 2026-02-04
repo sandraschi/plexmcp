@@ -6,7 +6,7 @@ FastMCP 2.13+ compliant with comprehensive docstrings and AI-friendly error mess
 """
 
 import os
-from typing import Any, Dict, Literal, Optional
+from typing import Any, Literal
 
 from ...app import mcp
 from ...utils import get_logger
@@ -18,9 +18,7 @@ def _get_plex_service():
     """Get PlexService instance with proper environment variable handling."""
     from ...services.plex_service import PlexService
 
-    base_url = os.getenv("PLEX_URL") or os.getenv(
-        "PLEX_SERVER_URL", "http://localhost:32400"
-    )
+    base_url = os.getenv("PLEX_URL") or os.getenv("PLEX_SERVER_URL", "http://localhost:32400")
     token = os.getenv("PLEX_TOKEN")
 
     if not token:
@@ -44,10 +42,10 @@ async def plex_quality(
         "delete_profile",
         "set_default",
     ],
-    profile_name: Optional[str] = None,
-    settings: Optional[Dict[str, Any]] = None,
+    profile_name: str | None = None,
+    settings: dict[str, Any] | None = None,
     is_default: bool = False,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Comprehensive quality profile management tool for Plex Media Server.
 
     PORTMANTEAU PATTERN RATIONALE:
@@ -259,9 +257,7 @@ async def plex_quality(
             }
 
     except Exception as e:
-        logger.error(
-            f"Error in plex_quality operation '{operation}': {e}", exc_info=True
-        )
+        logger.error(f"Error in plex_quality operation '{operation}': {e}", exc_info=True)
         return {
             "success": False,
             "error": str(e),

@@ -6,7 +6,7 @@ FastMCP 2.13+ compliant with comprehensive docstrings and AI-friendly error mess
 """
 
 import os
-from typing import Any, Dict, Literal, Optional
+from typing import Any, Literal
 
 from ...app import mcp
 from ...utils import get_logger
@@ -18,9 +18,7 @@ def _get_plex_service():
     """Get PlexService instance with proper environment variable handling."""
     from ...services.plex_service import PlexService
 
-    base_url = os.getenv("PLEX_URL") or os.getenv(
-        "PLEX_SERVER_URL", "http://localhost:32400"
-    )
+    base_url = os.getenv("PLEX_URL") or os.getenv("PLEX_SERVER_URL", "http://localhost:32400")
     token = os.getenv("PLEX_TOKEN")
 
     if not token:
@@ -49,14 +47,14 @@ async def plex_streaming(
         "set_volume",
         "control",
     ],
-    client_id: Optional[str] = None,
-    media_key: Optional[str] = None,
-    seek_to: Optional[int] = None,
-    offset: Optional[int] = 30,
-    action: Optional[str] = None,
-    volume: Optional[int] = None,
-    quality: Optional[str] = None,
-) -> Dict[str, Any]:
+    client_id: str | None = None,
+    media_key: str | None = None,
+    seek_to: int | None = None,
+    offset: int | None = 30,
+    action: str | None = None,
+    volume: int | None = None,
+    quality: str | None = None,
+) -> dict[str, Any]:
     """Comprehensive playback control and session management operations for Plex Media Server.
 
     PORTMANTEAU PATTERN RATIONALE:
@@ -254,7 +252,7 @@ async def plex_streaming(
                             "Use plex_streaming(operation='list_clients') to see available clients",
                         ],
                     }
-                
+
                 # Get all clients
                 all_clients = await plex.get_clients()
                 if not all_clients:
@@ -267,7 +265,7 @@ async def plex_streaming(
                             "Try plex_streaming(operation='list_clients') to check available clients",
                         ],
                     }
-                
+
                 # Select best client for this media type
                 selected_client = await plex._run_in_executor(
                     plex._select_client_for_media, media_type, all_clients
@@ -282,9 +280,11 @@ async def plex_streaming(
                             f"Available clients: {[c.get('name') for c in all_clients]}",
                         ],
                     }
-                
+
                 client_id = selected_client.get("machineIdentifier") or selected_client.get("id")
-                logger.info(f"Auto-selected client '{selected_client.get('name')}' ({selected_client.get('product')}) for {media_type} media")
+                logger.info(
+                    f"Auto-selected client '{selected_client.get('name')}' ({selected_client.get('product')}) for {media_type} media"
+                )
 
             result = await plex.control_playback(
                 client_identifier=client_id,
@@ -344,9 +344,7 @@ async def plex_streaming(
                     "success": False,
                     "error": "seek_to is required for seek operation",
                     "error_code": "MISSING_SEEK_TO",
-                    "suggestions": [
-                        "Provide seek_to parameter (position in milliseconds)"
-                    ],
+                    "suggestions": ["Provide seek_to parameter (position in milliseconds)"],
                 }
 
             result = await plex.control_playback(
@@ -395,9 +393,7 @@ async def plex_streaming(
                     "success": False,
                     "error": "quality is required for set_quality operation",
                     "error_code": "MISSING_QUALITY",
-                    "suggestions": [
-                        "Provide quality parameter (e.g., '1080p', '720p', '480p')"
-                    ],
+                    "suggestions": ["Provide quality parameter (e.g., '1080p', '720p', '480p')"],
                 }
 
             # Note: Plex API may have limited support for quality settings

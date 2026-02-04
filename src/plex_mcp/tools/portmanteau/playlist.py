@@ -6,7 +6,7 @@ FastMCP 2.13+ compliant with comprehensive docstrings and AI-friendly error mess
 """
 
 import os
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Literal
 
 from ...app import mcp
 from ...utils import get_logger
@@ -18,9 +18,7 @@ def _get_plex_service():
     """Get PlexService instance with proper environment variable handling."""
     from ...services.plex_service import PlexService
 
-    base_url = os.getenv("PLEX_URL") or os.getenv(
-        "PLEX_SERVER_URL", "http://localhost:32400"
-    )
+    base_url = os.getenv("PLEX_URL") or os.getenv("PLEX_SERVER_URL", "http://localhost:32400")
     token = os.getenv("PLEX_TOKEN")
 
     if not token:
@@ -34,7 +32,7 @@ def _get_plex_service():
     return PlexService(base_url=base_url, token=token)
 
 
-def _format_playlist(playlist) -> Dict[str, Any]:
+def _format_playlist(playlist) -> dict[str, Any]:
     """Format a playlist object into a dictionary."""
 
     return {
@@ -65,13 +63,13 @@ async def plex_playlist(
         "remove_items",
         "get_analytics",
     ],
-    playlist_id: Optional[str] = None,
-    title: Optional[str] = None,
-    items: Optional[List[str]] = None,
-    description: Optional[str] = None,
-    public: Optional[bool] = None,
-    sort: Optional[str] = None,
-) -> Dict[str, Any]:
+    playlist_id: str | None = None,
+    title: str | None = None,
+    items: list[str] | None = None,
+    description: str | None = None,
+    public: bool | None = None,
+    sort: str | None = None,
+) -> dict[str, Any]:
     """Comprehensive playlist management operations for Plex Media Server.
 
     PORTMANTEAU PATTERN RATIONALE:
@@ -262,18 +260,14 @@ async def plex_playlist(
                     "success": False,
                     "error": "title is required for create operation",
                     "error_code": "MISSING_TITLE",
-                    "suggestions": [
-                        "Provide title parameter (min 1 character, max 255)"
-                    ],
+                    "suggestions": ["Provide title parameter (min 1 character, max 255)"],
                 }
             if not items:
                 return {
                     "success": False,
                     "error": "items list is required for create operation",
                     "error_code": "MISSING_ITEMS",
-                    "suggestions": [
-                        "Provide items parameter with list of media item IDs"
-                    ],
+                    "suggestions": ["Provide items parameter with list of media item IDs"],
                 }
 
             # Get the media items from Plex
@@ -396,9 +390,7 @@ async def plex_playlist(
                     "success": False,
                     "error": "items list is required for add_items operation",
                     "error_code": "MISSING_ITEMS",
-                    "suggestions": [
-                        "Provide items parameter with list of media item IDs"
-                    ],
+                    "suggestions": ["Provide items parameter with list of media item IDs"],
                 }
 
             try:
@@ -478,9 +470,7 @@ async def plex_playlist(
                         items_to_remove.append(item)
 
                 if not items_to_remove:
-                    logger.warning(
-                        f"No matching items found to remove from playlist {playlist_id}"
-                    )
+                    logger.warning(f"No matching items found to remove from playlist {playlist_id}")
                     return {
                         "success": True,
                         "operation": "remove_items",
@@ -526,9 +516,7 @@ async def plex_playlist(
                 playlist_items = playlist.items()
 
                 # Get view counts and other metrics
-                total_plays = sum(
-                    getattr(item, "viewCount", 0) for item in playlist_items
-                )
+                total_plays = sum(getattr(item, "viewCount", 0) for item in playlist_items)
                 unique_users = len(
                     set(
                         item.lastViewedAt

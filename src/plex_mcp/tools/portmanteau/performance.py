@@ -6,7 +6,7 @@ FastMCP 2.13+ compliant with comprehensive docstrings and AI-friendly error mess
 """
 
 import os
-from typing import Any, Dict, Literal, Optional
+from typing import Any, Literal
 
 from ...app import mcp
 from ...utils import get_logger
@@ -18,9 +18,7 @@ def _get_plex_service():
     """Get PlexService instance with proper environment variable handling."""
     from ...services.plex_service import PlexService
 
-    base_url = os.getenv("PLEX_URL") or os.getenv(
-        "PLEX_SERVER_URL", "http://localhost:32400"
-    )
+    base_url = os.getenv("PLEX_URL") or os.getenv("PLEX_SERVER_URL", "http://localhost:32400")
     token = os.getenv("PLEX_TOKEN")
 
     if not token:
@@ -50,16 +48,16 @@ async def plex_performance(
         "get_server_status",
         "get_server_info",
     ],
-    profile_name: Optional[str] = None,
-    settings: Optional[Dict[str, Any]] = None,
-    quality: Optional[str] = None,
-    bitrate: Optional[int] = None,
-    enabled: Optional[bool] = None,
-    download_limit: Optional[int] = None,
-    upload_limit: Optional[int] = None,
+    profile_name: str | None = None,
+    settings: dict[str, Any] | None = None,
+    quality: str | None = None,
+    bitrate: int | None = None,
+    enabled: bool | None = None,
+    download_limit: int | None = None,
+    upload_limit: int | None = None,
     time_range: str = "day",
     is_default: bool = False,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Comprehensive performance, quality, and server status operations for Plex Media Server.
 
     PORTMANTEAU PATTERN RATIONALE:
@@ -247,9 +245,7 @@ async def plex_performance(
                     "success": False,
                     "error": "settings dictionary is required for update_transcode_settings operation",
                     "error_code": "MISSING_SETTINGS",
-                    "suggestions": [
-                        "Provide settings parameter with configuration dictionary"
-                    ],
+                    "suggestions": ["Provide settings parameter with configuration dictionary"],
                 }
 
             result = await plex.update_transcode_settings(
@@ -295,9 +291,7 @@ async def plex_performance(
                     "success": False,
                     "error": "quality is required for set_quality operation",
                     "error_code": "MISSING_QUALITY",
-                    "suggestions": [
-                        "Provide quality parameter (e.g., '1080p', '720p', '480p')"
-                    ],
+                    "suggestions": ["Provide quality parameter (e.g., '1080p', '720p', '480p')"],
                 }
 
             result = await plex.set_stream_quality(
@@ -375,9 +369,7 @@ async def plex_performance(
                     "success": False,
                     "error": "settings dictionary is required for create_profile operation",
                     "error_code": "MISSING_SETTINGS",
-                    "suggestions": [
-                        "Provide settings parameter with profile configuration"
-                    ],
+                    "suggestions": ["Provide settings parameter with profile configuration"],
                 }
 
             result = await plex.create_quality_profile(

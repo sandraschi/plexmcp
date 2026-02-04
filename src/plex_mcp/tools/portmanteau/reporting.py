@@ -6,7 +6,7 @@ FastMCP 2.13+ compliant with comprehensive docstrings and AI-friendly error mess
 """
 
 import os
-from typing import Any, Dict, Literal, Optional
+from typing import Any, Literal
 
 from ...app import mcp
 from ...utils import get_logger
@@ -18,9 +18,7 @@ def _get_plex_service():
     """Get PlexService instance with proper environment variable handling."""
     from ...services.plex_service import PlexService
 
-    base_url = os.getenv("PLEX_URL") or os.getenv(
-        "PLEX_SERVER_URL", "http://localhost:32400"
-    )
+    base_url = os.getenv("PLEX_URL") or os.getenv("PLEX_SERVER_URL", "http://localhost:32400")
     token = os.getenv("PLEX_TOKEN")
 
     if not token:
@@ -44,11 +42,11 @@ async def plex_reporting(
         "performance_report",
         "export_report",
     ],
-    library_id: Optional[str] = None,
-    time_range: Optional[str] = None,
-    format: Optional[Literal["json", "csv", "html"]] = None,
-    output_path: Optional[str] = None,
-) -> Dict[str, Any]:
+    library_id: str | None = None,
+    time_range: str | None = None,
+    format: Literal["json", "csv", "html"] | None = None,
+    output_path: str | None = None,
+) -> dict[str, Any]:
     """Comprehensive reporting and analytics tool for Plex Media Server.
 
     PORTMANTEAU PATTERN RATIONALE:
@@ -198,9 +196,7 @@ async def plex_reporting(
             reports = []
             for lib in libraries:
                 lib_id = lib.get("key") or lib.get("id")
-                items_result = await plex.get_library_items(
-                    library_id=lib_id, limit=1000, offset=0
-                )
+                items_result = await plex.get_library_items(library_id=lib_id, limit=1000, offset=0)
                 items = (
                     items_result.get("items", [])
                     if isinstance(items_result, dict)
@@ -271,9 +267,7 @@ async def plex_reporting(
             }
 
     except Exception as e:
-        logger.error(
-            f"Error in plex_reporting operation '{operation}': {e}", exc_info=True
-        )
+        logger.error(f"Error in plex_reporting operation '{operation}': {e}", exc_info=True)
         return {
             "success": False,
             "error": str(e),

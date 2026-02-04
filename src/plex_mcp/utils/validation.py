@@ -8,7 +8,8 @@ import os
 import re
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Pattern, Type, TypeVar, Union
+from re import Pattern
+from typing import Any, TypeVar
 from urllib.parse import urlparse
 
 import pytz
@@ -30,7 +31,7 @@ PLEX_CLIENT_IDENTIFIER_PATTERN = re.compile(r"^[a-z0-9]{20,}$")
 class ValidationError(Exception):
     """Custom validation error class."""
 
-    def __init__(self, message: str, field: Optional[str] = None, code: Optional[str] = None):
+    def __init__(self, message: str, field: str | None = None, code: str | None = None):
         self.message = message
         self.field = field
         self.code = code or "validation_error"
@@ -51,7 +52,7 @@ def validate_required(value: Any, field: str = "field") -> None:
         raise ValidationError(f"{field} is required", field=field, code="required")
 
 
-def validate_type(value: Any, expected_type: Type[T], field: str = "field") -> None:
+def validate_type(value: Any, expected_type: type[T], field: str = "field") -> None:
     """Validate that a value is of the expected type.
 
     Args:
@@ -71,9 +72,9 @@ def validate_type(value: Any, expected_type: Type[T], field: str = "field") -> N
 
 
 def validate_length(
-    value: Union[str, list, dict],
-    min_length: Optional[int] = None,
-    max_length: Optional[int] = None,
+    value: str | list | dict,
+    min_length: int | None = None,
+    max_length: int | None = None,
     field: str = "field",
 ) -> None:
     """Validate the length of a string, list, or dictionary.
@@ -102,9 +103,9 @@ def validate_length(
 
 def validate_regex(
     value: str,
-    pattern: Union[str, Pattern],
+    pattern: str | Pattern,
     field: str = "field",
-    error_message: Optional[str] = None,
+    error_message: str | None = None,
 ) -> None:
     """Validate a string against a regular expression pattern.
 
@@ -122,7 +123,7 @@ def validate_regex(
         raise ValidationError(msg, field=field, code="invalid_format")
 
 
-def validate_enum(value: Any, allowed_values: List[Any], field: str = "field") -> None:
+def validate_enum(value: Any, allowed_values: list[Any], field: str = "field") -> None:
     """Validate that a value is one of the allowed values.
 
     Args:
@@ -141,9 +142,9 @@ def validate_enum(value: Any, allowed_values: List[Any], field: str = "field") -
 
 
 def validate_range(
-    value: Union[int, float],
-    min_value: Optional[Union[int, float]] = None,
-    max_value: Optional[Union[int, float]] = None,
+    value: int | float,
+    min_value: int | float | None = None,
+    max_value: int | float | None = None,
     field: str = "field",
 ) -> None:
     """Validate that a numeric value is within a specified range.
@@ -167,7 +168,7 @@ def validate_range(
 
 
 def validate_datetime(
-    value: Union[str, datetime],
+    value: str | datetime,
     timezone_aware: bool = False,
     future_only: bool = False,
     past_only: bool = False,
@@ -306,7 +307,7 @@ def validate_plex_client_identifier(value: str, field: str = "client_identifier"
 
 
 def validate_file_path(
-    path: Union[str, Path],
+    path: str | Path,
     must_exist: bool = False,
     must_be_file: bool = False,
     must_be_dir: bool = False,
@@ -359,8 +360,8 @@ def validate_file_path(
 
 
 def validate_pydantic_model(
-    model_class: Type[BaseModel], data: Dict[str, Any], context: Optional[Dict[str, Any]] = None
-) -> Dict[str, Any]:
+    model_class: type[BaseModel], data: dict[str, Any], context: dict[str, Any] | None = None
+) -> dict[str, Any]:
     """Validate data against a Pydantic model.
 
     Args:
@@ -394,8 +395,8 @@ def validate_pydantic_model(
 
 
 def validate_with_schema(
-    schema: Dict[str, Any], data: Dict[str, Any], allow_extra: bool = False
-) -> Dict[str, Any]:
+    schema: dict[str, Any], data: dict[str, Any], allow_extra: bool = False
+) -> dict[str, Any]:
     """Validate data against a JSON Schema.
 
     Args:
@@ -438,7 +439,7 @@ def validate_with_schema(
 
 
 def validate_condition(
-    condition: bool, message: str, field: Optional[str] = None, code: str = "validation_error"
+    condition: bool, message: str, field: str | None = None, code: str = "validation_error"
 ) -> None:
     """Validate a custom condition.
 
@@ -501,7 +502,7 @@ def validate_plex_url(value: str, field: str = "url") -> None:
         )
 
 
-def validate_media_item(data: Dict[str, Any], field: str = "media_item") -> None:
+def validate_media_item(data: dict[str, Any], field: str = "media_item") -> None:
     """
     Validate a Plex media item data structure.
 
@@ -564,7 +565,7 @@ def validate_media_item(data: Dict[str, Any], field: str = "media_item") -> None
             )
 
 
-def validate_playlist(data: Dict[str, Any], field: str = "playlist") -> None:
+def validate_playlist(data: dict[str, Any], field: str = "playlist") -> None:
     """
     Validate a Plex playlist data structure.
 

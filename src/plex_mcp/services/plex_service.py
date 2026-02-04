@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 from plexapi.exceptions import PlexApiException
 from plexapi.server import PlexServer
@@ -27,7 +27,7 @@ class PlexService:
         self.base_url = base_url.rstrip("/")
         self.token = token
         self.timeout = timeout
-        self.server: Optional[PlexServer] = None
+        self.server: PlexServer | None = None
         self._initialized = False
 
     async def connect(self) -> None:
@@ -67,7 +67,7 @@ class PlexService:
             logger.error(f"Failed to get server status: {str(e)}")
             raise
 
-    def _get_server_status_sync(self) -> Dict[str, Any]:
+    def _get_server_status_sync(self) -> dict[str, Any]:
         """Synchronous helper to get server status."""
         if not self.server:
             raise RuntimeError("Not connected to Plex server")
@@ -83,7 +83,7 @@ class PlexService:
             else 0,
         }
 
-    async def list_libraries(self) -> List[Dict[str, Any]]:
+    async def list_libraries(self) -> list[dict[str, Any]]:
         """Get list of all libraries from Plex server.
 
         Returns:
@@ -100,11 +100,11 @@ class PlexService:
             logger.error(f"Failed to list libraries: {str(e)}")
             raise
 
-    async def get_libraries(self) -> List[Dict[str, Any]]:
+    async def get_libraries(self) -> list[dict[str, Any]]:
         """Alias for list_libraries for backward compatibility."""
         return await self.list_libraries()
 
-    def _get_libraries_sync(self) -> List[Dict[str, Any]]:
+    def _get_libraries_sync(self) -> list[dict[str, Any]]:
         """Synchronous helper to get libraries with complete section information."""
         if not self.server:
             raise RuntimeError("Not connected to Plex server")
@@ -123,9 +123,7 @@ class PlexService:
                     "updated_at": section.updatedAt.timestamp()
                     if hasattr(section, "updatedAt")
                     else 0,
-                    "created_at": section.addedAt.timestamp()
-                    if hasattr(section, "addedAt")
-                    else 0,
+                    "created_at": section.addedAt.timestamp() if hasattr(section, "addedAt") else 0,
                     "scanned_at": section.scannedAt.timestamp()
                     if hasattr(section, "scannedAt")
                     else 0,
@@ -135,9 +133,7 @@ class PlexService:
 
                 # Get additional metadata if available
                 if hasattr(section, "contentChangedAt"):
-                    section_info["content_changed_at"] = (
-                        section.contentChangedAt.timestamp()
-                    )
+                    section_info["content_changed_at"] = section.contentChangedAt.timestamp()
 
                 libraries.append(section_info)
 
@@ -150,16 +146,14 @@ class PlexService:
         return libraries
 
     async def search_media(
-        self, query: str, limit: int = 10, library_id: Optional[str] = None
-    ) -> List[MediaItem]:
+        self, query: str, limit: int = 10, library_id: str | None = None
+    ) -> list[MediaItem]:
         """Search for media across all libraries or within a specific library."""
         if not self._initialized:
             await self.connect()
 
         try:
-            results = await self._run_in_executor(
-                self._search_media_sync, query, limit, library_id
-            )
+            results = await self._run_in_executor(self._search_media_sync, query, limit, library_id)
             return [MediaItem(**item) for item in results]
 
         except PlexApiException as e:
@@ -167,8 +161,8 @@ class PlexService:
             raise
 
     def _search_media_sync(
-        self, query: str, limit: int, library_id: Optional[str] = None
-    ) -> List[Dict[str, Any]]:
+        self, query: str, limit: int, library_id: str | None = None
+    ) -> list[dict[str, Any]]:
         """Synchronous helper to search for media."""
         if not self.server:
             raise RuntimeError("Not connected to Plex server")
@@ -195,8 +189,8 @@ class PlexService:
         self,
         library_id: str,
         dry_run: bool = False,
-        patterns: Optional[Dict[str, str]] = None,
-    ) -> Dict[str, Any]:
+        patterns: dict[str, str] | None = None,
+    ) -> dict[str, Any]:
         """Organize a Plex library according to best practices.
 
         Args:
@@ -230,7 +224,7 @@ class PlexService:
             logger.error(f"Error organizing library {library_id}: {e}")
             raise
 
-    async def analyze_library(self, library_id: str) -> Dict[str, Any]:
+    async def analyze_library(self, library_id: str) -> dict[str, Any]:
         """Analyze a library for organization issues.
 
         Args:
@@ -274,10 +268,10 @@ class PlexService:
 
     async def refresh_metadata(
         self,
-        item_id: Optional[str] = None,
-        library_id: Optional[str] = None,
+        item_id: str | None = None,
+        library_id: str | None = None,
         force: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Refresh metadata for an item or library.
 
         Args:
@@ -293,9 +287,7 @@ class PlexService:
 
         try:
             if item_id:
-                item = await self._run_in_executor(
-                    lambda: self.server.fetchItem(int(item_id))
-                )
+                item = await self._run_in_executor(lambda: self.server.fetchItem(int(item_id)))
                 await self._run_in_executor(item.refresh)
                 return {"item_id": item_id, "title": item.title, "refreshed": True}
             elif library_id:
@@ -323,7 +315,7 @@ class PlexService:
         password: str,
         role: str,
         restricted: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Create a new Plex user.
 
         Args:
@@ -372,15 +364,13 @@ class PlexService:
                 "thumb": user.thumb,
                 "restricted": restricted,
                 "role": role,
-                "created_at": user.createdAt.timestamp()
-                if hasattr(user, "createdAt")
-                else None,
+                "created_at": user.createdAt.timestamp() if hasattr(user, "createdAt") else None,
             }
         except Exception as e:
             logger.error(f"Error creating user {username}: {e}")
             raise
 
-    async def update_user(self, user_id: str, **kwargs) -> Dict[str, Any]:
+    async def update_user(self, user_id: str, **kwargs) -> dict[str, Any]:
         """Update an existing Plex user.
 
         Args:
@@ -399,9 +389,7 @@ class PlexService:
 
             # Update fields if provided
             if "username" in kwargs:
-                await self._run_in_executor(
-                    setattr, user, "username", kwargs["username"]
-                )
+                await self._run_in_executor(setattr, user, "username", kwargs["username"])
             if "email" in kwargs:
                 await self._run_in_executor(setattr, user, "email", kwargs["email"])
             if "password" in kwargs:
@@ -452,7 +440,7 @@ class PlexService:
             logger.error(f"Error deleting user {user_id}: {e}")
             return False
 
-    async def list_users(self) -> List[Dict[str, Any]]:
+    async def list_users(self) -> list[dict[str, Any]]:
         """List all Plex users.
 
         Returns:
@@ -472,9 +460,7 @@ class PlexService:
                     "email": user.email,
                     "thumb": getattr(user, "thumb", ""),
                     "restricted": getattr(user, "restricted", False),
-                    "role": "managed"
-                    if hasattr(user, "home") and user.home
-                    else "friend",
+                    "role": "managed" if hasattr(user, "home") and user.home else "friend",
                     "created_at": user.createdAt.timestamp()
                     if hasattr(user, "createdAt")
                     else None,
@@ -485,7 +471,7 @@ class PlexService:
             logger.error(f"Error listing users: {e}")
             return []
 
-    async def get_user(self, user_id: str) -> Optional[Dict[str, Any]]:
+    async def get_user(self, user_id: str) -> dict[str, Any] | None:
         """Get a specific Plex user by ID.
 
         Args:
@@ -511,9 +497,7 @@ class PlexService:
                 "thumb": getattr(user, "thumb", ""),
                 "restricted": getattr(user, "restricted", False),
                 "role": "managed" if hasattr(user, "home") and user.home else "friend",
-                "created_at": user.createdAt.timestamp()
-                if hasattr(user, "createdAt")
-                else None,
+                "created_at": user.createdAt.timestamp() if hasattr(user, "createdAt") else None,
                 "permissions": await self._get_user_permissions(user),
             }
         except Exception as e:
@@ -521,8 +505,8 @@ class PlexService:
             return None
 
     async def update_user_permissions(
-        self, user_id: str, permissions: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, user_id: str, permissions: dict[str, Any]
+    ) -> dict[str, Any]:
         """Update permissions for a Plex user.
 
         Args:
@@ -567,9 +551,7 @@ class PlexService:
 
     # Library Management Methods
 
-    async def scan_library(
-        self, library_id: str, force: bool = False
-    ) -> Dict[str, Any]:
+    async def scan_library(self, library_id: str, force: bool = False) -> dict[str, Any]:
         """Scan a library for new or updated files.
 
         Args:
@@ -648,7 +630,7 @@ class PlexService:
             logger.error(f"Error optimizing library {library_id}: {e}")
             return False
 
-    async def get_library(self, library_id: str) -> Optional[Dict[str, Any]]:
+    async def get_library(self, library_id: str) -> dict[str, Any] | None:
         """Get information about a specific library.
 
         Args:
@@ -680,7 +662,7 @@ class PlexService:
         language: str,
         location: str,
         **kwargs,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """Add a new library.
 
         Args:
@@ -716,9 +698,7 @@ class PlexService:
             logger.error(f"Error adding library {name}: {e}")
             return None
 
-    async def update_library(
-        self, library_id: str, **kwargs
-    ) -> Optional[Dict[str, Any]]:
+    async def update_library(self, library_id: str, **kwargs) -> dict[str, Any] | None:
         """Update a library's settings.
 
         Args:
@@ -742,13 +722,9 @@ class PlexService:
             if "agent" in kwargs:
                 await self._run_in_executor(section.editAdvanced, agent=kwargs["agent"])
             if "scanner" in kwargs:
-                await self._run_in_executor(
-                    section.editAdvanced, scanner=kwargs["scanner"]
-                )
+                await self._run_in_executor(section.editAdvanced, scanner=kwargs["scanner"])
             if "language" in kwargs:
-                await self._run_in_executor(
-                    section.editAdvanced, language=kwargs["language"]
-                )
+                await self._run_in_executor(section.editAdvanced, language=kwargs["language"])
             if "thumb" in kwargs:
                 await self._run_in_executor(section.uploadPoster, url=kwargs["thumb"])
 
@@ -826,9 +802,7 @@ class PlexService:
             await self._run_in_executor(section.removeLocation, path)
             return True
         except Exception as e:
-            logger.error(
-                f"Error removing location {path} from library {library_id}: {e}"
-            )
+            logger.error(f"Error removing location {path} from library {library_id}: {e}")
             return False
 
     async def get_library_items(
@@ -836,9 +810,9 @@ class PlexService:
         library_id: str,
         limit: int = 100,
         offset: int = 0,
-        sort: Optional[str] = None,
+        sort: str | None = None,
         **filters,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get items from a library.
 
         Args:
@@ -871,9 +845,7 @@ class PlexService:
             if sort:
                 reverse = sort.startswith("-")
                 sort_key = sort.lstrip("-")
-                items = sorted(
-                    items, key=lambda x: getattr(x, sort_key, ""), reverse=reverse
-                )
+                items = sorted(items, key=lambda x: getattr(x, sort_key, ""), reverse=reverse)
 
             # Apply pagination
             total = len(items)
@@ -924,7 +896,7 @@ class PlexService:
             logger.error(f"Error emptying trash for library {library_id}: {e}")
             return False
 
-    async def clean_bundles(self, library_id: Optional[str] = None) -> Dict[str, Any]:
+    async def clean_bundles(self, library_id: str | None = None) -> dict[str, Any]:
         """Clean old bundles for a library or all libraries.
 
         Args:
@@ -954,7 +926,7 @@ class PlexService:
             logger.error(f"Error cleaning bundles: {e}")
             return {"cleaned": False, "error": str(e)}
 
-    def _format_library_section(self, section) -> Dict[str, Any]:
+    def _format_library_section(self, section) -> dict[str, Any]:
         """Format a library section into a dictionary."""
         return {
             "id": section.key,
@@ -964,19 +936,15 @@ class PlexService:
             "scanner": section.scanner,
             "language": section.language,
             "uuid": section.uuid,
-            "updated_at": section.updatedAt.timestamp()
-            if hasattr(section, "updatedAt")
-            else 0,
-            "scanned_at": section.scannedAt.timestamp()
-            if hasattr(section, "scannedAt")
-            else 0,
+            "updated_at": section.updatedAt.timestamp() if hasattr(section, "updatedAt") else 0,
+            "scanned_at": section.scannedAt.timestamp() if hasattr(section, "scannedAt") else 0,
             "count": len(section.all()),
             "locations": [loc for loc in section.locations]
             if hasattr(section, "locations")
             else [],
         }
 
-    async def _format_media_item(self, item) -> Dict[str, Any]:
+    async def _format_media_item(self, item) -> dict[str, Any]:
         """Format a media item into a dictionary."""
         if not item:
             return None
@@ -1071,20 +1039,14 @@ class PlexService:
                     "video_resolution": m.videoResolution
                     if hasattr(m, "videoResolution")
                     else None,
-                    "video_frame_rate": m.videoFrameRate
-                    if hasattr(m, "videoFrameRate")
-                    else None,
+                    "video_frame_rate": m.videoFrameRate if hasattr(m, "videoFrameRate") else None,
                     "audio_codec": m.audioCodec if hasattr(m, "audioCodec") else None,
-                    "audio_channels": m.audioChannels
-                    if hasattr(m, "audioChannels")
-                    else None,
+                    "audio_channels": m.audioChannels if hasattr(m, "audioChannels") else None,
                     "container": m.container if hasattr(m, "container") else None,
                     "bitrate": m.bitrate if hasattr(m, "bitrate") else None,
                     "width": m.width if hasattr(m, "width") else None,
                     "height": m.height if hasattr(m, "height") else None,
-                    "aspect_ratio": m.aspectRatio
-                    if hasattr(m, "aspectRatio")
-                    else None,
+                    "aspect_ratio": m.aspectRatio if hasattr(m, "aspectRatio") else None,
                     "duration": m.duration if hasattr(m, "duration") else None,
                 }
                 for m in item.media
@@ -1094,31 +1056,31 @@ class PlexService:
 
     async def advanced_search_media(
         self,
-        query: Optional[str] = None,
+        query: str | None = None,
         limit: int = 100,
         offset: int = 0,
-        library_id: Optional[str] = None,
-        media_type: Optional[str] = None,
-        title: Optional[str] = None,
-        year: Optional[Union[int, List[int], str]] = None,
-        decade: Optional[int] = None,
-        genre: Optional[Union[str, List[str]]] = None,
-        actor: Optional[Union[str, List[str]]] = None,
-        director: Optional[Union[str, List[str]]] = None,
-        content_rating: Optional[Union[str, List[str]]] = None,
-        studio: Optional[Union[str, List[str]]] = None,
-        country: Optional[Union[str, List[str]]] = None,
-        language: Optional[Union[str, List[str]]] = None,
-        collection: Optional[Union[str, List[str]]] = None,
-        min_rating: Optional[float] = None,
-        max_rating: Optional[float] = None,
-        min_year: Optional[int] = None,
-        max_year: Optional[int] = None,
-        unwatched: Optional[bool] = None,
+        library_id: str | None = None,
+        media_type: str | None = None,
+        title: str | None = None,
+        year: int | list[int] | str | None = None,
+        decade: int | None = None,
+        genre: str | list[str] | None = None,
+        actor: str | list[str] | None = None,
+        director: str | list[str] | None = None,
+        content_rating: str | list[str] | None = None,
+        studio: str | list[str] | None = None,
+        country: str | list[str] | None = None,
+        language: str | list[str] | None = None,
+        collection: str | list[str] | None = None,
+        min_rating: float | None = None,
+        max_rating: float | None = None,
+        min_year: int | None = None,
+        max_year: int | None = None,
+        unwatched: bool | None = None,
         sort_by: str = "titleSort",
         sort_dir: str = "asc",
         **kwargs,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Advanced search for media with extensive filtering options.
 
         Args:
@@ -1249,7 +1211,7 @@ class PlexService:
                 "error": str(e),
             }
 
-    async def get_media_info(self, media_id: str) -> Optional[Dict[str, Any]]:
+    async def get_media_info(self, media_id: str) -> dict[str, Any] | None:
         """Get detailed information about a media item.
 
         Args:
@@ -1262,15 +1224,13 @@ class PlexService:
             await self.connect()
 
         try:
-            item = await self._run_in_executor(
-                lambda: self.server.fetchItem(int(media_id))
-            )
+            item = await self._run_in_executor(lambda: self.server.fetchItem(int(media_id)))
             return await self._format_media_item(item)
         except Exception as e:
             logger.error(f"Error getting media info for {media_id}: {e}")
             return None
 
-    async def update_media(self, media_id: str, **updates) -> Optional[Dict[str, Any]]:
+    async def update_media(self, media_id: str, **updates) -> dict[str, Any] | None:
         """Update media item metadata.
 
         Args:
@@ -1284,23 +1244,17 @@ class PlexService:
             await self.connect()
 
         try:
-            item = await self._run_in_executor(
-                lambda: self.server.fetchItem(int(media_id))
-            )
+            item = await self._run_in_executor(lambda: self.server.fetchItem(int(media_id)))
 
             # Apply updates
             for key, value in updates.items():
                 if hasattr(item, f"set{key.capitalize()}"):
-                    await self._run_in_executor(
-                        getattr(item, f"set{key.capitalize()}")
-                    )(value)
+                    await self._run_in_executor(getattr(item, f"set{key.capitalize()}"))(value)
                 elif hasattr(item, key):
                     await self._run_in_executor(setattr, item, key, value)
 
             # Reload the item to get updated data
-            item = await self._run_in_executor(
-                lambda: self.server.fetchItem(int(media_id))
-            )
+            item = await self._run_in_executor(lambda: self.server.fetchItem(int(media_id)))
 
             return await self._format_media_item(item)
 
@@ -1321,9 +1275,7 @@ class PlexService:
             await self.connect()
 
         try:
-            item = await self._run_in_executor(
-                lambda: self.server.fetchItem(int(media_id))
-            )
+            item = await self._run_in_executor(lambda: self.server.fetchItem(int(media_id)))
             await self._run_in_executor(item.delete)
             return True
         except Exception as e:
@@ -1344,9 +1296,7 @@ class PlexService:
             await self.connect()
 
         try:
-            item = await self._run_in_executor(
-                lambda: self.server.fetchItem(int(media_id))
-            )
+            item = await self._run_in_executor(lambda: self.server.fetchItem(int(media_id)))
             await self._run_in_executor(item.rate, rating)
             return True
         except Exception as e:
@@ -1366,9 +1316,7 @@ class PlexService:
             await self.connect()
 
         try:
-            item = await self._run_in_executor(
-                lambda: self.server.fetchItem(int(media_id))
-            )
+            item = await self._run_in_executor(lambda: self.server.fetchItem(int(media_id)))
             await self._run_in_executor(item.markWatched)
             return True
         except Exception as e:
@@ -1388,16 +1336,14 @@ class PlexService:
             await self.connect()
 
         try:
-            item = await self._run_in_executor(
-                lambda: self.server.fetchItem(int(media_id))
-            )
+            item = await self._run_in_executor(lambda: self.server.fetchItem(int(media_id)))
             await self._run_in_executor(item.markUnwatched)
             return True
         except Exception as e:
             logger.error(f"Error marking media {media_id} as unwatched: {e}")
             return False
 
-    async def get_media_streams(self, media_id: str) -> List[Dict[str, Any]]:
+    async def get_media_streams(self, media_id: str) -> list[dict[str, Any]]:
         """Get stream information for a media item.
 
         Args:
@@ -1410,9 +1356,7 @@ class PlexService:
             await self.connect()
 
         try:
-            item = await self._run_in_executor(
-                lambda: self.server.fetchItem(int(media_id))
-            )
+            item = await self._run_in_executor(lambda: self.server.fetchItem(int(media_id)))
 
             streams = []
             for media in item.media:
@@ -1429,17 +1373,13 @@ class PlexService:
                             "height": getattr(stream, "height", None),
                             "duration": getattr(stream, "duration", None),
                             "bit_depth": getattr(stream, "bitDepth", None),
-                            "chroma_subsampling": getattr(
-                                stream, "chromaSubsampling", None
-                            ),
+                            "chroma_subsampling": getattr(stream, "chromaSubsampling", None),
                             "frame_rate": getattr(stream, "frameRate", None),
                             "profile": getattr(stream, "profile", None),
                             "ref_frames": getattr(stream, "refFrames", None),
                             "sampling_rate": getattr(stream, "samplingRate", None),
                             "selected": getattr(stream, "selected", False),
-                            "stream_identifier": getattr(
-                                stream, "streamIdentifier", None
-                            ),
+                            "stream_identifier": getattr(stream, "streamIdentifier", None),
                             "title": getattr(stream, "title", None),
                         }
                         streams.append(stream_info)
@@ -1450,9 +1390,7 @@ class PlexService:
             logger.error(f"Error getting streams for media {media_id}: {e}")
             return []
 
-    async def get_related_media(
-        self, media_id: str, limit: int = 10
-    ) -> List[Dict[str, Any]]:
+    async def get_related_media(self, media_id: str, limit: int = 10) -> list[dict[str, Any]]:
         """Get related media items.
 
         Args:
@@ -1466,15 +1404,11 @@ class PlexService:
             await self.connect()
 
         try:
-            item = await self._run_in_executor(
-                lambda: self.server.fetchItem(int(media_id))
-            )
+            item = await self._run_in_executor(lambda: self.server.fetchItem(int(media_id)))
 
             related = []
             if hasattr(item, "related"):
-                related_items = await self._run_in_executor(
-                    lambda: item.related(maxresults=limit)
-                )
+                related_items = await self._run_in_executor(lambda: item.related(maxresults=limit))
                 related = [await self._format_media_item(i) for i in related_items]
 
             return related
@@ -1485,7 +1419,7 @@ class PlexService:
 
     async def get_media_children(
         self, media_id: str, limit: int = 100, offset: int = 0
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get child items for a media item (e.g., episodes for a show).
 
         Args:
@@ -1500,9 +1434,7 @@ class PlexService:
             await self.connect()
 
         try:
-            item = await self._run_in_executor(
-                lambda: self.server.fetchItem(int(media_id))
-            )
+            item = await self._run_in_executor(lambda: self.server.fetchItem(int(media_id)))
 
             if not hasattr(item, "children") or not callable(item.children):
                 return {"items": [], "total": 0, "offset": 0, "limit": limit}
@@ -1522,7 +1454,7 @@ class PlexService:
             logger.error(f"Error getting children for media {media_id}: {e}")
             return {"items": [], "total": 0, "offset": 0, "limit": limit}
 
-    async def get_media_metadata(self, media_id: str) -> Dict[str, Any]:
+    async def get_media_metadata(self, media_id: str) -> dict[str, Any]:
         """Get metadata for a media item.
 
         Args:
@@ -1535,9 +1467,7 @@ class PlexService:
             await self.connect()
 
         try:
-            item = await self._run_in_executor(
-                lambda: self.server.fetchItem(int(media_id))
-            )
+            item = await self._run_in_executor(lambda: self.server.fetchItem(int(media_id)))
 
             metadata = {
                 "id": item.ratingKey,
@@ -1563,7 +1493,7 @@ class PlexService:
             logger.error(f"Error getting metadata for media {media_id}: {e}")
             return {}
 
-    async def get_media_analysis(self, media_id: str) -> Dict[str, Any]:
+    async def get_media_analysis(self, media_id: str) -> dict[str, Any]:
         """Get analysis data for a media item.
 
         Args:
@@ -1576,9 +1506,7 @@ class PlexService:
             await self.connect()
 
         try:
-            item = await self._run_in_executor(
-                lambda: self.server.fetchItem(int(media_id))
-            )
+            item = await self._run_in_executor(lambda: self.server.fetchItem(int(media_id)))
 
             analysis = {
                 "id": item.ratingKey,
@@ -1641,9 +1569,7 @@ class PlexService:
                                         "chroma_subsampling": getattr(
                                             stream, "chromaSubsampling", None
                                         ),
-                                        "ref_frames": getattr(
-                                            stream, "refFrames", None
-                                        ),
+                                        "ref_frames": getattr(stream, "refFrames", None),
                                         "scan_type": getattr(stream, "scanType", None),
                                     }
                                 )
@@ -1651,12 +1577,8 @@ class PlexService:
                                 stream_info.update(
                                     {
                                         "channels": stream.channels,
-                                        "sampling_rate": getattr(
-                                            stream, "samplingRate", None
-                                        ),
-                                        "bitrate_mode": getattr(
-                                            stream, "bitrateMode", None
-                                        ),
+                                        "sampling_rate": getattr(stream, "samplingRate", None),
+                                        "bitrate_mode": getattr(stream, "bitrateMode", None),
                                         "audio_channel_layout": getattr(
                                             stream, "audioChannelLayout", None
                                         ),
@@ -1686,7 +1608,7 @@ class PlexService:
             logger.error(f"Error getting analysis for media {media_id}: {e}")
             return {}
 
-    async def _get_user_permissions(self, user) -> Dict[str, Any]:
+    async def _get_user_permissions(self, user) -> dict[str, Any]:
         """Helper method to get user permissions."""
         return {
             "allowSync": getattr(user, "allowSync", False),
@@ -1709,7 +1631,7 @@ class PlexService:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         await self.close()
 
-    async def get_sessions(self) -> List[Dict[str, Any]]:
+    async def get_sessions(self) -> list[dict[str, Any]]:
         """Get all active Plex sessions."""
         if not self._initialized:
             await self.connect()
@@ -1719,7 +1641,7 @@ class PlexService:
             logger.error(f"Failed to get sessions: {str(e)}")
             return []
 
-    def _get_sessions_sync(self) -> List[Dict[str, Any]]:
+    def _get_sessions_sync(self) -> list[dict[str, Any]]:
         """Synchronous helper to get sessions."""
         if not self.server:
             raise RuntimeError("Not connected to Plex server")
@@ -1736,15 +1658,9 @@ class PlexService:
                     "duration": getattr(session, "duration", 0),
                     "view_offset": getattr(session, "viewOffset", 0),
                     "player": {
-                        "title": session.player.title
-                        if hasattr(session, "player")
-                        else "",
-                        "product": session.player.product
-                        if hasattr(session, "player")
-                        else "",
-                        "state": session.player.state
-                        if hasattr(session, "player")
-                        else "",
+                        "title": session.player.title if hasattr(session, "player") else "",
+                        "product": session.player.product if hasattr(session, "player") else "",
+                        "state": session.player.state if hasattr(session, "player") else "",
                         "machineIdentifier": session.player.machineIdentifier
                         if hasattr(session, "player")
                         else "",
@@ -1756,7 +1672,7 @@ class PlexService:
             )
         return sessions
 
-    async def get_clients(self) -> List[Dict[str, Any]]:
+    async def get_clients(self) -> list[dict[str, Any]]:
         """Get all available Plex clients."""
         if not self._initialized:
             await self.connect()
@@ -1767,8 +1683,8 @@ class PlexService:
         except Exception as e:
             logger.error(f"Failed to get clients: {str(e)}")
             return []
-    
-    def _get_media_type(self, media_key: str) -> Optional[str]:
+
+    def _get_media_type(self, media_key: str) -> str | None:
         """Get media type from media_key by fetching the item."""
         if not self.server:
             return None
@@ -1780,32 +1696,38 @@ class PlexService:
         except Exception as e:
             logger.warning(f"Failed to get media type for {media_key}: {e}")
             return None
-    
+
     def _select_client_for_media(
-        self, media_type: str, clients: List[Dict[str, Any]]
-    ) -> Optional[Dict[str, Any]]:
+        self, media_type: str, clients: list[dict[str, Any]]
+    ) -> dict[str, Any] | None:
         """Select the best client for a given media type.
-        
+
         Rules:
         - Music and audiobooks → PlexAmp (if available)
         - Movies, TV shows, etc. → Plex Web or Plex app (video-capable clients)
         """
         if not clients:
             return None
-        
+
         # Audio-only media types
         audio_types = {"track", "album", "artist"}
-        is_audio = media_type in audio_types or "music" in media_type.lower() or "audiobook" in media_type.lower()
-        
+        is_audio = (
+            media_type in audio_types
+            or "music" in media_type.lower()
+            or "audiobook" in media_type.lower()
+        )
+
         if is_audio:
             # Prefer PlexAmp for audio
             for client in clients:
                 product = client.get("product", "").lower()
                 if "plexamp" in product:
-                    logger.info(f"Selected PlexAmp client '{client.get('name')}' for audio media type '{media_type}'")
+                    logger.info(
+                        f"Selected PlexAmp client '{client.get('name')}' for audio media type '{media_type}'"
+                    )
                     return client
             # Fall back to any client if PlexAmp not available
-            logger.info(f"No PlexAmp found, using first available client for audio")
+            logger.info("No PlexAmp found, using first available client for audio")
             return clients[0]
         else:
             # For video content, prefer video-capable clients (not PlexAmp)
@@ -1815,31 +1737,37 @@ class PlexService:
                 # Exclude PlexAmp for video
                 if "plexamp" not in product:
                     video_clients.append(client)
-            
+
             if video_clients:
                 # Prefer Plex Web or Plex app
                 for client in video_clients:
                     product = client.get("product", "").lower()
                     if "plex web" in product or "plex" in product:
-                        logger.info(f"Selected video client '{client.get('name')}' ({product}) for media type '{media_type}'")
+                        logger.info(
+                            f"Selected video client '{client.get('name')}' ({product}) for media type '{media_type}'"
+                        )
                         return client
                 # Fall back to first video-capable client
-                logger.info(f"Using first video-capable client '{video_clients[0].get('name')}' for media type '{media_type}'")
+                logger.info(
+                    f"Using first video-capable client '{video_clients[0].get('name')}' for media type '{media_type}'"
+                )
                 return video_clients[0]
             else:
                 # No video clients available, return first client anyway
-                logger.warning(f"No video-capable clients found, using first available client for media type '{media_type}'")
+                logger.warning(
+                    f"No video-capable clients found, using first available client for media type '{media_type}'"
+                )
                 return clients[0]
 
     def _find_client_by_id(self, client_identifier: str):
         """Helper method to find a client by machineIdentifier using all available methods.
-        
+
         This is more reliable than just using server.clients() which might miss some clients.
         Uses the same multi-source approach as _get_clients_sync.
         """
         if not self.server:
             return None
-        
+
         # Try Method 1: Direct clients()
         try:
             for client in self.server.clients():
@@ -1847,7 +1775,7 @@ class PlexService:
                     return client
         except Exception:
             pass
-        
+
         # Try Method 2: From active sessions
         try:
             for session in self.server.sessions():
@@ -1857,7 +1785,7 @@ class PlexService:
                             return player
         except Exception:
             pass
-        
+
         # Try Method 3: From account resources (same as _get_clients_sync)
         try:
             account = self.server.myPlexAccount()
@@ -1867,17 +1795,19 @@ class PlexService:
                 is_client = provides and ("player" in provides or "client" in provides.lower())
                 is_server = provides and "server" in provides
                 if is_client and not is_server:
-                    machine_id = getattr(resource, "clientIdentifier", getattr(resource, "machineIdentifier", ""))
+                    machine_id = getattr(
+                        resource, "clientIdentifier", getattr(resource, "machineIdentifier", "")
+                    )
                     if machine_id == client_identifier:
                         return resource
         except Exception:
             pass
-        
+
         return None
-    
-    def _get_clients_sync(self) -> List[Dict[str, Any]]:
+
+    def _get_clients_sync(self) -> list[dict[str, Any]]:
         """Synchronous helper to get clients.
-        
+
         Gets clients from multiple sources:
         1. server.clients() - actively discoverable clients via GDM
         2. Active sessions - clients that have active sessions (even if paused)
@@ -1885,9 +1815,9 @@ class PlexService:
         """
         if not self.server:
             raise RuntimeError("Not connected to Plex server")
-        
+
         clients_dict = {}  # Use dict to deduplicate by machineIdentifier
-        
+
         # Method 1: Get directly discoverable clients via plexapi
         try:
             for client in self.server.clients():
@@ -1908,7 +1838,7 @@ class PlexService:
                 }
         except Exception as e:
             logger.warning(f"Failed to get clients via server.clients(): {e}")
-        
+
         # Method 2: Get clients from active sessions (catches clients that might not be discoverable)
         try:
             for session in self.server.sessions():
@@ -1926,7 +1856,9 @@ class PlexService:
                                 "port": getattr(player, "port", 32400),
                                 "protocol": getattr(player, "protocol", "http"),
                                 "device": getattr(player, "device", ""),
-                                "device_name": getattr(player, "deviceName", getattr(player, "title", "Unknown")),
+                                "device_name": getattr(
+                                    player, "deviceName", getattr(player, "title", "Unknown")
+                                ),
                                 "id": machine_id,
                                 "machineIdentifier": machine_id,
                                 "local": getattr(player, "local", True),
@@ -1934,7 +1866,7 @@ class PlexService:
                             }
         except Exception as e:
             logger.warning(f"Failed to get clients from sessions: {e}")
-        
+
         # Method 3: Try using myPlexAccount().resources() which lists all resources including clients
         # This can find clients that aren't currently discoverable via GDM
         try:
@@ -1945,15 +1877,19 @@ class PlexService:
                 # Resources include both servers and clients
                 # Check what this resource provides
                 provides = getattr(resource, "provides", "")
-                logger.debug(f"Resource: {getattr(resource, 'name', 'Unknown')}, provides: {provides}, product: {getattr(resource, 'product', 'Unknown')}")
-                
+                logger.debug(
+                    f"Resource: {getattr(resource, 'name', 'Unknown')}, provides: {provides}, product: {getattr(resource, 'product', 'Unknown')}"
+                )
+
                 # Filter for client-capable resources (those that provide player functionality)
                 # Also include resources that are clients (not servers)
                 is_client = provides and ("player" in provides or "client" in provides.lower())
                 is_server = provides and "server" in provides
-                
+
                 if is_client and not is_server:
-                    machine_id = getattr(resource, "clientIdentifier", getattr(resource, "machineIdentifier", ""))
+                    machine_id = getattr(
+                        resource, "clientIdentifier", getattr(resource, "machineIdentifier", "")
+                    )
                     if machine_id and machine_id not in clients_dict:
                         # Get connection info from resource
                         connections = getattr(resource, "connections", [])
@@ -1962,7 +1898,9 @@ class PlexService:
                         protocol = "http"
                         if connections:
                             # Use the first local connection if available
-                            local_conn = next((c for c in connections if getattr(c, "local", False)), None)
+                            local_conn = next(
+                                (c for c in connections if getattr(c, "local", False)), None
+                            )
                             if local_conn:
                                 address = getattr(local_conn, "address", "")
                                 port = getattr(local_conn, "port", 32400)
@@ -1973,7 +1911,7 @@ class PlexService:
                                 address = getattr(conn, "address", "")
                                 port = getattr(conn, "port", 32400)
                                 protocol = getattr(conn, "protocol", "http")
-                        
+
                         clients_dict[machine_id] = {
                             "name": getattr(resource, "name", "Unknown Client"),
                             "product": getattr(resource, "product", "Unknown"),
@@ -1986,19 +1924,23 @@ class PlexService:
                             "device_name": getattr(resource, "name", "Unknown"),
                             "id": machine_id,
                             "machineIdentifier": machine_id,
-                            "local": any(getattr(c, "local", False) for c in connections) if connections else True,
+                            "local": any(getattr(c, "local", False) for c in connections)
+                            if connections
+                            else True,
                         }
-                        logger.debug(f"Added client from resources: {getattr(resource, 'name', 'Unknown')} ({machine_id})")
+                        logger.debug(
+                            f"Added client from resources: {getattr(resource, 'name', 'Unknown')} ({machine_id})"
+                        )
         except AttributeError as e:
             # myPlexAccount() or resources() might not be available
             logger.debug(f"myPlexAccount().resources() not available: {e}")
         except Exception as e:
             logger.warning(f"Failed to get clients via account resources(): {e}", exc_info=True)
-        
+
         # Log what we found
-        client_names = [c['name'] for c in clients_dict.values()]
+        client_names = [c["name"] for c in clients_dict.values()]
         logger.info(f"Found {len(clients_dict)} clients: {client_names}")
-        
+
         # Convert dict to list
         return list(clients_dict.values())
 
@@ -2007,9 +1949,7 @@ class PlexService:
         if not self._initialized:
             await self.connect()
         try:
-            return await self._run_in_executor(
-                self._play_media_sync, client_identifier, media_key
-            )
+            return await self._run_in_executor(self._play_media_sync, client_identifier, media_key)
         except Exception as e:
             logger.error(f"Failed to play media: {str(e)}")
             return False
@@ -2042,7 +1982,7 @@ class PlexService:
                 try:
                     logger.info(f"Using plexapi client.playMedia() for {plexapi_client.title}")
                     plexapi_client.playMedia(media_item)
-                    logger.info(f"SUCCESS: Started playback via plexapi")
+                    logger.info("SUCCESS: Started playback via plexapi")
                     return True
                 except Exception as e:
                     logger.warning(f"plexapi playMedia failed: {e}, trying HTTP API")
@@ -2059,34 +1999,39 @@ class PlexService:
                 else:
                     client_address = getattr(found_client, "address", "")
                     client_port = getattr(found_client, "port", 32400)
-                    client_name = getattr(found_client, "title", getattr(found_client, "name", "Unknown"))
+                    client_name = getattr(
+                        found_client, "title", getattr(found_client, "name", "Unknown")
+                    )
 
                 # For Plex Web and Plex for Windows, we need to use server API routing
                 # Direct HTTP won't work (address is 127.0.0.1 or server address)
                 import urllib.parse
+
                 import requests
-                
+
                 # Try server-side client control endpoint
                 # Try /system/players/{player}/playback/playMedia endpoint (from Plex API docs)
-                server_url = f"{self.base_url}/system/players/{client_identifier}/playback/playMedia"
+                server_url = (
+                    f"{self.base_url}/system/players/{client_identifier}/playback/playMedia"
+                )
                 params = {
                     "key": f"/library/metadata/{media_key}",
                     "path": f"{self.base_url}/library/metadata/{media_key}",
                     "offset": "0",
                 }
-                
+
                 full_url = f"{server_url}?{urllib.parse.urlencode(params)}"
                 headers = {"X-Plex-Token": self.token}
-                
+
                 logger.info(f"Trying /system/players endpoint: {full_url}")
                 response = requests.post(full_url, headers=headers, timeout=15)
-                
+
                 logger.info(f"Response: {response.status_code} - {response.text[:300]}")
-                
+
                 if response.status_code in (200, 201, 204):
-                    logger.info(f"SUCCESS: Started playback via /system/players")
+                    logger.info("SUCCESS: Started playback via /system/players")
                     return True
-                
+
                 # Fallback: Try /player/playback/playMedia
                 server_url2 = f"{self.base_url}/player/playback/playMedia"
                 params2 = {
@@ -2095,18 +2040,18 @@ class PlexService:
                     "key": f"/library/metadata/{media_key}",
                     "offset": "0",
                 }
-                
+
                 full_url2 = f"{server_url2}?{urllib.parse.urlencode(params2)}"
                 logger.info(f"Trying /player/playback endpoint: {full_url2}")
                 response2 = requests.post(full_url2, headers=headers, timeout=15)
-                
+
                 logger.info(f"Response2: {response2.status_code} - {response2.text[:300]}")
-                
+
                 if response2.status_code in (200, 201, 204):
-                    logger.info(f"SUCCESS: Started playback via /player/playback")
+                    logger.info("SUCCESS: Started playback via /player/playback")
                     return True
                 else:
-                    logger.error(f"Both endpoints failed")
+                    logger.error("Both endpoints failed")
 
             logger.error(f"Client {client_identifier} not found or not controllable")
             return False
@@ -2115,16 +2060,17 @@ class PlexService:
             return False
 
     def _send_client_command(
-        self, client: Any, command: str, params: Optional[Dict[str, Any]] = None
+        self, client: Any, command: str, params: dict[str, Any] | None = None
     ) -> bool:
         """Send a playback command to a Plex client.
-        
+
         Tries multiple methods in order:
         1. Use plexapi client object methods (most reliable)
         2. Direct HTTP to client (for directly accessible clients)
         3. Fallback to server API routing (may not work for all clients)
         """
         import urllib.parse
+
         import requests
 
         try:
@@ -2141,7 +2087,7 @@ class PlexService:
                 client_port = getattr(client, "port", 32400)
 
             if not client_identifier:
-                logger.error(f"Cannot send command: client missing machineIdentifier")
+                logger.error("Cannot send command: client missing machineIdentifier")
                 return False
 
             # Method 1: Try to get plexapi client object and use its methods
@@ -2172,15 +2118,17 @@ class PlexService:
                     query_params = {"commandID": "1"}
                     if params:
                         query_params.update(params)
-                    
+
                     full_url = f"{client_url}?{urllib.parse.urlencode(query_params)}"
                     headers = {"X-Plex-Token": self.token}
-                    
+
                     logger.debug(f"Direct HTTP to {client_name}: {full_url}")
                     response = requests.get(full_url, headers=headers, timeout=10)
-                    
+
                     if response.status_code in (200, 201, 204):
-                        logger.info(f"SUCCESS: Command '{command}' sent to {client_name} via direct HTTP")
+                        logger.info(
+                            f"SUCCESS: Command '{command}' sent to {client_name} via direct HTTP"
+                        )
                         return True
                 except Exception as e:
                     logger.debug(f"Direct HTTP failed: {e}")
@@ -2204,7 +2152,9 @@ class PlexService:
                 logger.info(f"SUCCESS: Command '{command}' sent to {client_name} via server API")
                 return True
             else:
-                logger.error(f"FAILED: Command '{command}' failed (Status: {response.status_code}, Response: {response.text[:200]})")
+                logger.error(
+                    f"FAILED: Command '{command}' failed (Status: {response.status_code}, Response: {response.text[:200]})"
+                )
                 return False
 
         except Exception as e:
@@ -2216,9 +2166,7 @@ class PlexService:
         if not self._initialized:
             await self.connect()
         try:
-            return await self._run_in_executor(
-                self._stop_playback_sync, client_identifier
-            )
+            return await self._run_in_executor(self._stop_playback_sync, client_identifier)
         except Exception as e:
             logger.error(f"Failed to stop playback: {str(e)}")
             return False
@@ -2242,7 +2190,7 @@ class PlexService:
         self,
         client_identifier: str,
         action: str,
-        media_key: Optional[str] = None,
+        media_key: str | None = None,
         **kwargs,
     ) -> bool:
         """Control playback on a client."""
@@ -2264,7 +2212,7 @@ class PlexService:
         self,
         client_identifier: str,
         action: str,
-        media_key: Optional[str] = None,
+        media_key: str | None = None,
         **kwargs,
     ) -> bool:
         """Synchronous helper to control playback."""
@@ -2306,7 +2254,7 @@ class PlexService:
                 except Exception as e:
                     logger.error(f"Could not fetch media item {media_key}: {e}")
                     return False
-                
+
                 command = "playMedia"
                 params = {
                     "key": f"/library/metadata/{media_key}",
@@ -2326,7 +2274,7 @@ class PlexService:
             logger.error(f"Error controlling playback: {str(e)}")
             return False
 
-    async def get_audio_streams(self, media_key: str) -> List[Dict[str, Any]]:
+    async def get_audio_streams(self, media_key: str) -> list[dict[str, Any]]:
         """Get available audio streams for a media item."""
         if not self._initialized:
             await self.connect()
@@ -2342,9 +2290,7 @@ class PlexService:
                         "language_code": getattr(stream, "languageCode", "unk"),
                         "codec": getattr(stream, "codec", "unknown"),
                         "channels": getattr(stream, "channels", 0),
-                        "title": getattr(
-                            stream, "displayTitle", getattr(stream, "title", "")
-                        ),
+                        "title": getattr(stream, "displayTitle", getattr(stream, "title", "")),
                         "selected": getattr(stream, "selected", False),
                     }
                 )
@@ -2377,16 +2323,12 @@ class PlexService:
                 return False
 
             # Plex remote control command for setting streams
-            return self._send_client_command(
-                client, "setStreams", {"audioStreamID": stream_id}
-            )
+            return self._send_client_command(client, "setStreams", {"audioStreamID": stream_id})
         except Exception as e:
             logger.error(f"Error setting audio stream: {str(e)}")
             return False
 
-    async def handover_media(
-        self, source_client_id: str, target_client_id: str
-    ) -> bool:
+    async def handover_media(self, source_client_id: str, target_client_id: str) -> bool:
         """Transfer playback from one client to another at the current offset."""
         if not self._initialized:
             await self.connect()
@@ -2398,9 +2340,7 @@ class PlexService:
             logger.error(f"Failed to handover media: {str(e)}")
             return False
 
-    def _handover_media_sync(
-        self, source_client_id: str, target_client_id: str
-    ) -> bool:
+    def _handover_media_sync(self, source_client_id: str, target_client_id: str) -> bool:
         """Synchronous helper for media handover."""
         if not self.server:
             raise RuntimeError("Not connected to Plex server")
@@ -2417,25 +2357,23 @@ class PlexService:
             )
 
             if not source_session:
-                logger.error(
-                    f"No active session found for source client {source_client_id}"
-                )
+                logger.error(f"No active session found for source client {source_client_id}")
                 return False
 
             # 2. Get current offset and media key
             media_key = source_session.ratingKey
             # Find the player in the session to get the offset
             player = next(
-                p
-                for p in source_session.players
-                if p.machineIdentifier == source_client_id
+                p for p in source_session.players if p.machineIdentifier == source_client_id
             )
             offset = getattr(player, "offset", 0)
 
             # 3. Find target client using multi-source discovery
             target_client = self._find_client_by_id(target_client_id)
             if not target_client:
-                logger.error(f"Target client {target_client_id} not found using any discovery method")
+                logger.error(
+                    f"Target client {target_client_id} not found using any discovery method"
+                )
                 return False
 
             # 4. Start playback on target at offset
@@ -2443,9 +2381,7 @@ class PlexService:
             uri = f"server://{server_machine_id}/com.plexapp.plugins.library/library/metadata/{media_key}"
 
             # Start playing on target
-            self._send_client_command(
-                target_client, "playMedia", {"uri": uri, "offset": offset}
-            )
+            self._send_client_command(target_client, "playMedia", {"uri": uri, "offset": offset})
 
             # 5. Stop playback on source using multi-source discovery
             source_client = self._find_client_by_id(source_client_id)

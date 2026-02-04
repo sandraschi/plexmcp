@@ -8,7 +8,11 @@ LIBRARY_DIR = FIXTURES_DIR / "library"
 DB_PATH = FIXTURES_DIR / "plex_test.db"
 
 # Import creation functions for use in conftest
-from .create_fixtures import create_test_database, create_test_video, create_library_structure  # noqa: E402
+from .create_fixtures import (  # noqa: E402
+    create_library_structure,
+    create_test_database,
+    create_test_video,
+)
 
 __all__ = [
     "FIXTURES_DIR",
@@ -19,4 +23,3 @@ __all__ = [
     "create_test_video",
     "create_library_structure",
 ]
-

@@ -15,8 +15,9 @@ class TestMainModule:
     @pytest.mark.asyncio
     async def test_main_is_async(self):
         """Test that main is an async function."""
-        from plex_mcp.main import main
         import inspect
+
+        from plex_mcp.main import main
 
         assert inspect.iscoroutinefunction(main)
 

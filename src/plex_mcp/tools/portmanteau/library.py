@@ -6,7 +6,7 @@ FastMCP 2.14.3 compliant with conversational tool returns and sampling capabilit
 """
 
 import os
-from typing import Any, Dict, Literal, Optional
+from typing import Any, Literal
 
 from ...app import mcp
 from ...utils import get_logger
@@ -18,9 +18,7 @@ def _get_plex_service():
     """Get PlexService instance with proper environment variable handling."""
     from ...services.plex_service import PlexService
 
-    base_url = os.getenv("PLEX_URL") or os.getenv(
-        "PLEX_SERVER_URL", "http://localhost:32400"
-    )
+    base_url = os.getenv("PLEX_URL") or os.getenv("PLEX_SERVER_URL", "http://localhost:32400")
     token = os.getenv("PLEX_TOKEN")
 
     if not token:
@@ -50,16 +48,16 @@ async def plex_library(
         "remove_location",
         "clean_bundles",
     ],
-    library_id: Optional[str] = None,
-    name: Optional[str] = None,
-    library_type: Optional[Literal["movie", "show", "music", "photo"]] = None,
-    path: Optional[str] = None,
-    agent: Optional[str] = None,
-    scanner: Optional[str] = None,
-    language: Optional[str] = "en",
-    thumb: Optional[str] = None,
+    library_id: str | None = None,
+    name: str | None = None,
+    library_type: Literal["movie", "show", "music", "photo"] | None = None,
+    path: str | None = None,
+    agent: str | None = None,
+    scanner: str | None = None,
+    language: str | None = "en",
+    thumb: str | None = None,
     force: bool = False,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Comprehensive library management operations for Plex Media Server.
 
     PORTMANTEAU PATTERN RATIONALE:
@@ -270,9 +268,7 @@ async def plex_library(
                     "success": False,
                     "error": "library_id is required for get operation",
                     "error_code": "MISSING_LIBRARY_ID",
-                    "suggestions": [
-                        "Use plex_library('list') to find available library IDs"
-                    ],
+                    "suggestions": ["Use plex_library('list') to find available library IDs"],
                 }
 
             library = await plex.get_library(library_id)
@@ -357,9 +353,7 @@ async def plex_library(
                     "success": False,
                     "error": "library_type is required for create operation",
                     "error_code": "MISSING_LIBRARY_TYPE",
-                    "suggestions": [
-                        "Provide library_type: movie, show, music, or photo"
-                    ],
+                    "suggestions": ["Provide library_type: movie, show, music, or photo"],
                 }
             if not path:
                 return {
@@ -519,9 +513,7 @@ async def plex_library(
                     "success": False,
                     "error": "path is required for remove_location operation",
                     "error_code": "MISSING_PATH",
-                    "suggestions": [
-                        "Provide path parameter for the location to remove"
-                    ],
+                    "suggestions": ["Provide path parameter for the location to remove"],
                 }
 
             result = await plex.remove_library_location(library_id, path)

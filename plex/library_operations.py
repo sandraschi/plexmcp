@@ -4,7 +4,7 @@ Austrian dev efficiency for media library operations
 """
 
 import logging
-from typing import Dict, Any, List
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +15,7 @@ class LibraryOperations:
     def __init__(self, plex_manager):
         self.plex = plex_manager
 
-    def get_libraries(self) -> List[Dict[str, Any]]:
+    def get_libraries(self) -> list[dict[str, Any]]:
         """Get all Plex libraries"""
         try:
             data = self.plex.get("/library/sections")

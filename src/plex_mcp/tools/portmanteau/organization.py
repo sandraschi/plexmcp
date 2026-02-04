@@ -6,7 +6,7 @@ FastMCP 2.13+ compliant with comprehensive docstrings and AI-friendly error mess
 """
 
 import os
-from typing import Any, Dict, Literal, Optional
+from typing import Any, Literal
 
 from ...app import mcp
 from ...utils import get_logger
@@ -18,9 +18,7 @@ def _get_plex_service():
     """Get PlexService instance with proper environment variable handling."""
     from ...services.plex_service import PlexService
 
-    base_url = os.getenv("PLEX_URL") or os.getenv(
-        "PLEX_SERVER_URL", "http://localhost:32400"
-    )
+    base_url = os.getenv("PLEX_URL") or os.getenv("PLEX_SERVER_URL", "http://localhost:32400")
     token = os.getenv("PLEX_TOKEN")
 
     if not token:
@@ -43,14 +41,14 @@ async def plex_organization(
         "optimize_database",
         "fix_issues",
     ],
-    library_id: Optional[str] = None,
+    library_id: str | None = None,
     dry_run: bool = False,
-    patterns: Optional[Dict[str, str]] = None,
+    patterns: dict[str, str] | None = None,
     threshold_days: int = 30,
     analyze: bool = True,
     vacuum: bool = True,
     reindex: bool = True,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Comprehensive library organization and maintenance operations for Plex Media Server.
 
     PORTMANTEAU PATTERN RATIONALE:

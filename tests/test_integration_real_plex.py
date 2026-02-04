@@ -9,8 +9,9 @@ These tests require:
 Tests are automatically skipped if server is not available.
 """
 
-import pytest
 from unittest.mock import patch
+
+import pytest
 
 from plex_mcp.tools.portmanteau.library import plex_library
 from plex_mcp.tools.portmanteau.media import plex_media
@@ -29,18 +30,20 @@ class TestRealPlexIntegration:
             await real_plex_service.connect()
         except Exception as e:
             pytest.skip(f"Failed to connect to Plex server: {str(e)}")
-        
+
         # Patch _get_plex_service to use our real service instance
-        with patch("plex_mcp.tools.portmanteau.library._get_plex_service", return_value=real_plex_service):
+        with patch(
+            "plex_mcp.tools.portmanteau.library._get_plex_service", return_value=real_plex_service
+        ):
             result = await plex_library.fn(operation="list")
-            
+
             assert result["success"] is True
             assert result["operation"] == "list"
             assert "data" in result
             assert isinstance(result["data"], list)
             # Real server should have at least one library
             assert len(result["data"]) > 0, "Real Plex server should have at least one library"
-            
+
             # Verify library structure
             library = result["data"][0]
             assert "id" in library or "key" in library
@@ -52,10 +55,12 @@ class TestRealPlexIntegration:
         # Ensure connected
         if not real_plex_service._initialized:
             await real_plex_service.connect()
-        
-        with patch("plex_mcp.tools.portmanteau.library._get_plex_service", return_value=real_plex_service):
+
+        with patch(
+            "plex_mcp.tools.portmanteau.library._get_plex_service", return_value=real_plex_service
+        ):
             result = await plex_library.fn(operation="get", library_id=test_library_id)
-            
+
             assert result["success"] is True
             assert result["operation"] == "get"
             assert "data" in result
@@ -67,10 +72,12 @@ class TestRealPlexIntegration:
         # Ensure connected
         if not real_plex_service._initialized:
             await real_plex_service.connect()
-        
-        with patch("plex_mcp.tools.portmanteau.server._get_plex_service", return_value=real_plex_service):
+
+        with patch(
+            "plex_mcp.tools.portmanteau.server._get_plex_service", return_value=real_plex_service
+        ):
             result = await plex_server.fn(operation="status")
-            
+
             assert result["success"] is True
             assert result["operation"] == "status"
             assert "data" in result
@@ -83,10 +90,12 @@ class TestRealPlexIntegration:
         # Ensure connected
         if not real_plex_service._initialized:
             await real_plex_service.connect()
-        
-        with patch("plex_mcp.tools.portmanteau.media._get_plex_service", return_value=real_plex_service):
+
+        with patch(
+            "plex_mcp.tools.portmanteau.media._get_plex_service", return_value=real_plex_service
+        ):
             result = await plex_media.fn(operation="browse", library_id=test_library_id, limit=10)
-            
+
             assert result["success"] is True
             assert result["operation"] == "browse"
             assert "data" in result
@@ -101,14 +110,15 @@ class TestRealPlexIntegration:
         # Ensure connected
         if not real_plex_service._initialized:
             await real_plex_service.connect()
-        
-        with patch("plex_mcp.tools.portmanteau.media._get_plex_service", return_value=real_plex_service):
+
+        with patch(
+            "plex_mcp.tools.portmanteau.media._get_plex_service", return_value=real_plex_service
+        ):
             # Search for something common (empty string searches all)
             result = await plex_media.fn(operation="search", query="", limit=5)
-            
+
             assert result["success"] is True
             assert result["operation"] == "search"
             assert "data" in result
             assert isinstance(result["data"], list)
             # Note: Results might be empty, so we just check structure
-

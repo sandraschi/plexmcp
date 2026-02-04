@@ -1,7 +1,7 @@
 """Plex quality and transcoding tools for FastMCP 2.10.1."""
 
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -11,23 +11,22 @@ from ..models.quality import BandwidthAnalysis, QualityProfile, TranscodingStatu
 
 def _get_plex_service():
     from ..services.plex_service import PlexService
-    base_url = os.getenv('PLEX_URL') or os.getenv('PLEX_SERVER_URL', 'http://localhost:32400')
-    token = os.getenv('PLEX_TOKEN')
+
+    base_url = os.getenv("PLEX_URL") or os.getenv("PLEX_SERVER_URL", "http://localhost:32400")
+    token = os.getenv("PLEX_TOKEN")
     if not token:
-        raise RuntimeError('PLEX_TOKEN environment variable is required')
+        raise RuntimeError("PLEX_TOKEN environment variable is required")
     return PlexService(base_url=base_url, token=token)
 
 
 class GetTranscodeSettingsRequest(BaseModel):
     """Request model for getting transcode settings."""
 
-    profile_name: Optional[str] = Field(None, description="Name of the quality profile to retrieve")
+    profile_name: str | None = Field(None, description="Name of the quality profile to retrieve")
 
 
 @mcp.tool()
-async def get_transcode_settings(
-    request: GetTranscodeSettingsRequest
-) -> Dict[str, Any]:
+async def get_transcode_settings(request: GetTranscodeSettingsRequest) -> dict[str, Any]:
     """Get current transcode settings for a quality profile.
 
     Args:
@@ -44,13 +43,11 @@ class UpdateTranscodeSettingsRequest(BaseModel):
     """Request model for updating transcode settings."""
 
     profile_name: str = Field(..., description="Name of the quality profile to update")
-    settings: Dict[str, Any] = Field(..., description="Dictionary of settings to update")
+    settings: dict[str, Any] = Field(..., description="Dictionary of settings to update")
 
 
 @mcp.tool()
-async def update_transcode_settings(
-    request: UpdateTranscodeSettingsRequest
-) -> bool:
+async def update_transcode_settings(request: UpdateTranscodeSettingsRequest) -> bool:
     """Update transcode settings for a quality profile.
 
     Args:
@@ -85,9 +82,7 @@ class GetBandwidthUsageRequest(BaseModel):
 
 
 @mcp.tool()
-async def get_bandwidth_usage(
-    request: GetBandwidthUsageRequest
-) -> BandwidthAnalysis:
+async def get_bandwidth_usage(request: GetBandwidthUsageRequest) -> BandwidthAnalysis:
     """Get bandwidth usage statistics.
 
     Args:
@@ -105,7 +100,7 @@ class SetStreamQualityRequest(BaseModel):
 
     profile_name: str = Field(..., description="Name of the quality profile")
     quality: str = Field(..., description="Quality setting (e.g., '1080p', '720p', '480p')")
-    bitrate: Optional[int] = Field(None, description="Maximum bitrate in kbps")
+    bitrate: int | None = Field(None, description="Maximum bitrate in kbps")
 
 
 @mcp.tool()
@@ -127,13 +122,11 @@ async def set_stream_quality(request: SetStreamQualityRequest) -> bool:
 class GetThrottlingStatusRequest(BaseModel):
     """Request model for getting throttling status."""
 
-    profile_name: Optional[str] = Field(None, description="Name of the quality profile")
+    profile_name: str | None = Field(None, description="Name of the quality profile")
 
 
 @mcp.tool()
-async def get_throttling_status(
-    request: GetThrottlingStatusRequest
-) -> Dict[str, Any]:
+async def get_throttling_status(request: GetThrottlingStatusRequest) -> dict[str, Any]:
     """Get current throttling status and settings.
 
     Args:
@@ -151,8 +144,8 @@ class SetThrottlingRequest(BaseModel):
 
     profile_name: str = Field(..., description="Name of the quality profile")
     enabled: bool = Field(..., description="Whether to enable throttling")
-    download_limit: Optional[int] = Field(None, description="Download limit in kbps")
-    upload_limit: Optional[int] = Field(None, description="Upload limit in kbps")
+    download_limit: int | None = Field(None, description="Download limit in kbps")
+    upload_limit: int | None = Field(None, description="Upload limit in kbps")
 
 
 @mcp.tool()
@@ -175,7 +168,7 @@ async def set_throttling(request: SetThrottlingRequest) -> bool:
 
 
 @mcp.tool()
-async def list_quality_profiles() -> List[QualityProfile]:
+async def list_quality_profiles() -> list[QualityProfile]:
     """List all available quality profiles.
 
     Returns:
@@ -189,7 +182,7 @@ class CreateQualityProfileRequest(BaseModel):
     """Request model for creating a quality profile."""
 
     name: str = Field(..., description="Name of the new profile")
-    settings: Dict[str, Any] = Field(..., description="Profile settings")
+    settings: dict[str, Any] = Field(..., description="Profile settings")
     is_default: bool = Field(False, description="Set as default profile")
 
 
@@ -227,7 +220,3 @@ async def delete_quality_profile(request: DeleteQualityProfileRequest) -> bool:
     """
     plex = _get_plex_service()
     return await plex.delete_quality_profile(profile_name=request.profile_name)
-
-
-
-

@@ -1,8 +1,9 @@
 """Tests for PlexMCP configuration module."""
 
 import os
-import pytest
 from unittest.mock import patch
+
+import pytest
 
 from plex_mcp.config import PlexConfig, setup_logging
 
@@ -52,7 +53,9 @@ class TestPlexConfig:
             PlexConfig(server_url="http://localhost:32400", plex_token="")
 
     @patch.dict(
-        os.environ, {"PLEX_SERVER_URL": "http://plex.example.com:32400", "PLEX_TOKEN": "env_token_123"}, clear=False
+        os.environ,
+        {"PLEX_SERVER_URL": "http://plex.example.com:32400", "PLEX_TOKEN": "env_token_123"},
+        clear=False,
     )
     def test_from_environment(self):
         """Test loading configuration from environment variables."""

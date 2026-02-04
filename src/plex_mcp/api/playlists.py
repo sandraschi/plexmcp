@@ -4,8 +4,6 @@ Playlist-related API endpoints for PlexMCP.
 This module contains API endpoints for managing Plex playlists.
 """
 
-from typing import List, Optional
-
 # Import the shared FastMCP instance from the package level
 # Import models
 from ..models import MediaItem, PlaylistAnalytics, PlaylistCreateRequest, PlexPlaylist
@@ -72,8 +70,8 @@ async def create_playlist(request: PlaylistCreateRequest) -> PlexPlaylist:
 
 
 async def get_playlists(
-    playlist_type: Optional[str] = None, user_playlists: bool = True
-) -> List[PlexPlaylist]:
+    playlist_type: str | None = None, user_playlists: bool = True
+) -> list[PlexPlaylist]:
     """
     Get all playlists from the Plex server.
 
@@ -182,7 +180,7 @@ async def get_playlist(playlist_id: str) -> PlexPlaylist:
         raise RuntimeError(f"Error fetching playlist: {str(e)}") from e
 
 
-async def get_playlist_items(playlist_id: str) -> List[MediaItem]:
+async def get_playlist_items(playlist_id: str) -> list[MediaItem]:
     """
     Get all items in a playlist.
 

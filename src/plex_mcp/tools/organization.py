@@ -2,7 +2,7 @@
 
 import logging
 import os
-from typing import Any, Dict, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -12,11 +12,13 @@ from ..models.media import MediaType
 
 def _get_plex_service():
     from ..services.plex_service import PlexService
-    base_url = os.getenv('PLEX_URL') or os.getenv('PLEX_SERVER_URL', 'http://localhost:32400')
-    token = os.getenv('PLEX_TOKEN')
+
+    base_url = os.getenv("PLEX_URL") or os.getenv("PLEX_SERVER_URL", "http://localhost:32400")
+    token = os.getenv("PLEX_TOKEN")
     if not token:
-        raise RuntimeError('PLEX_TOKEN environment variable is required')
+        raise RuntimeError("PLEX_TOKEN environment variable is required")
     return PlexService(base_url=base_url, token=token)
+
 
 logger = logging.getLogger(__name__)
 
@@ -26,11 +28,11 @@ class OrganizeRequest(BaseModel):
 
     library_id: str = Field(..., description="ID of the library to organize")
     dry_run: bool = Field(False, description="If True, only show what would be changed")
-    patterns: Optional[Dict[str, str]] = Field(None, description="Custom patterns for organization")
+    patterns: dict[str, str] | None = Field(None, description="Custom patterns for organization")
 
 
 @mcp.tool()
-async def organize_library(request: OrganizeRequest) -> Dict[str, Any]:
+async def organize_library(request: OrganizeRequest) -> dict[str, Any]:
     """Organize a Plex library according to best practices.
 
     Args:
@@ -58,7 +60,7 @@ class AnalyzeLibraryRequest(BaseModel):
 
 
 @mcp.tool()
-async def analyze_library(request: AnalyzeLibraryRequest) -> Dict[str, Any]:
+async def analyze_library(request: AnalyzeLibraryRequest) -> dict[str, Any]:
     """Analyze a library for organization issues.
 
     Args:
@@ -111,13 +113,13 @@ async def fix_media_match(request: FixMatchRequest) -> bool:
 class RefreshMetadataRequest(BaseModel):
     """Request model for refreshing metadata."""
 
-    item_id: Optional[str] = Field(None, description="ID of the item to refresh")
-    library_id: Optional[str] = Field(None, description="ID of the library to refresh")
+    item_id: str | None = Field(None, description="ID of the item to refresh")
+    library_id: str | None = Field(None, description="ID of the library to refresh")
     force: bool = Field(False, description="Force refresh even if not needed")
 
 
 @mcp.tool()
-async def refresh_metadata(request: RefreshMetadataRequest) -> Dict[str, Any]:
+async def refresh_metadata(request: RefreshMetadataRequest) -> dict[str, Any]:
     """Refresh metadata for an item or library.
 
     Args:
@@ -149,7 +151,7 @@ class CleanBundlesRequest(BaseModel):
 
 
 @mcp.tool()
-async def clean_bundles(request: CleanBundlesRequest) -> Dict[str, Any]:
+async def clean_bundles(request: CleanBundlesRequest) -> dict[str, Any]:
     """Clean up old bundles to free up disk space.
 
     Args:
@@ -184,7 +186,7 @@ class OptimizeDatabaseRequest(BaseModel):
 
 
 @mcp.tool()
-async def optimize_database(request: OptimizeDatabaseRequest) -> Dict[str, Any]:
+async def optimize_database(request: OptimizeDatabaseRequest) -> dict[str, Any]:
     """Optimize the Plex database.
 
     Args:
@@ -212,7 +214,3 @@ async def optimize_database(request: OptimizeDatabaseRequest) -> Dict[str, Any]:
     except Exception as e:
         logger.error(f"Error optimizing database: {e}")
         raise
-
-
-
-

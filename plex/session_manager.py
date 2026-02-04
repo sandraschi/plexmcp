@@ -3,7 +3,7 @@ Session Manager - Plex session and playback management
 """
 
 import logging
-from typing import Dict, Any, List
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +14,7 @@ class SessionManager:
     def __init__(self, plex_manager):
         self.plex = plex_manager
 
-    def get_sessions(self) -> List[Dict[str, Any]]:
+    def get_sessions(self) -> list[dict[str, Any]]:
         """Get current active sessions"""
         try:
             data = self.plex.get("/status/sessions")

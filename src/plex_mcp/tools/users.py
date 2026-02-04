@@ -1,7 +1,6 @@
 """Plex user management tools for FastMCP 2.10.1."""
 
 import os
-from typing import Optional
 
 from pydantic import BaseModel, EmailStr, Field
 
@@ -14,10 +13,11 @@ logger = get_logger(__name__)
 
 def _get_plex_service():
     from ..services.plex_service import PlexService
-    base_url = os.getenv('PLEX_URL') or os.getenv('PLEX_SERVER_URL', 'http://localhost:32400')
-    token = os.getenv('PLEX_TOKEN')
+
+    base_url = os.getenv("PLEX_URL") or os.getenv("PLEX_SERVER_URL", "http://localhost:32400")
+    token = os.getenv("PLEX_TOKEN")
     if not token:
-        raise RuntimeError('PLEX_TOKEN environment variable is required')
+        raise RuntimeError("PLEX_TOKEN environment variable is required")
     return PlexService(base_url=base_url, token=token)
 
 
@@ -60,11 +60,11 @@ class UpdateUserRequest(BaseModel):
     """Request model for updating a user."""
 
     user_id: str = Field(..., description="ID of the user to update")
-    username: Optional[str] = Field(None, min_length=3, max_length=50, description="New username")
-    email: Optional[EmailStr] = Field(None, description="New email address")
-    password: Optional[str] = Field(None, min_length=8, description="New password")
-    role: Optional[UserRole] = Field(None, description="New user role")
-    restricted: Optional[bool] = Field(None, description="Whether the user should be restricted")
+    username: str | None = Field(None, min_length=3, max_length=50, description="New username")
+    email: EmailStr | None = Field(None, description="New email address")
+    password: str | None = Field(None, min_length=8, description="New password")
+    role: UserRole | None = Field(None, description="New user role")
+    restricted: bool | None = Field(None, description="Whether the user should be restricted")
 
 
 @mcp.tool()
@@ -151,7 +151,7 @@ class GetUserRequest(BaseModel):
 
 
 @mcp.tool()
-async def get_user(request: GetUserRequest) -> Optional[User]:
+async def get_user(request: GetUserRequest) -> User | None:
     """Get a specific Plex user by ID.
 
     Args:
@@ -190,9 +190,7 @@ async def update_user_permissions(request: UpdateUserPermissionsRequest) -> User
     """
     plex = _get_plex_service()
     try:
-        await plex.update_user_permissions(
-            user_id=request.user_id, permissions=request.permissions
-        )
+        await plex.update_user_permissions(user_id=request.user_id, permissions=request.permissions)
         # Get the updated user data
         user_data = await plex.get_user(user_id=request.user_id)
         if not user_data:
@@ -201,7 +199,3 @@ async def update_user_permissions(request: UpdateUserPermissionsRequest) -> User
     except Exception as e:
         logger.error(f"Error updating permissions for user {request.user_id}: {e}")
         raise
-
-
-
-

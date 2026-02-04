@@ -6,7 +6,7 @@ FastMCP 2.13+ compliant with comprehensive docstrings and AI-friendly error mess
 """
 
 import os
-from typing import Any, Dict, Literal, Optional
+from typing import Any, Literal
 
 from ...app import mcp
 from ...models.user import UserRole
@@ -19,9 +19,7 @@ def _get_plex_service():
     """Get PlexService instance with proper environment variable handling."""
     from ...services.plex_service import PlexService
 
-    base_url = os.getenv("PLEX_URL") or os.getenv(
-        "PLEX_SERVER_URL", "http://localhost:32400"
-    )
+    base_url = os.getenv("PLEX_URL") or os.getenv("PLEX_SERVER_URL", "http://localhost:32400")
     token = os.getenv("PLEX_TOKEN")
 
     if not token:
@@ -37,17 +35,15 @@ def _get_plex_service():
 
 @mcp.tool()
 async def plex_user(
-    operation: Literal[
-        "list", "get", "create", "update", "delete", "update_permissions"
-    ],
-    user_id: Optional[str] = None,
-    username: Optional[str] = None,
-    email: Optional[str] = None,
-    password: Optional[str] = None,
-    role: Optional[Literal["owner", "admin", "user", "managed", "shared"]] = None,
-    restricted: Optional[bool] = None,
-    permissions: Optional[Dict[str, Any]] = None,
-) -> Dict[str, Any]:
+    operation: Literal["list", "get", "create", "update", "delete", "update_permissions"],
+    user_id: str | None = None,
+    username: str | None = None,
+    email: str | None = None,
+    password: str | None = None,
+    role: Literal["owner", "admin", "user", "managed", "shared"] | None = None,
+    restricted: bool | None = None,
+    permissions: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """Comprehensive user management operations for Plex Media Server.
 
     PORTMANTEAU PATTERN RATIONALE:
@@ -196,9 +192,7 @@ async def plex_user(
                     "success": False,
                     "error": "user_id is required for get operation",
                     "error_code": "MISSING_USER_ID",
-                    "suggestions": [
-                        "Use plex_user(operation='list') to find available user IDs"
-                    ],
+                    "suggestions": ["Use plex_user(operation='list') to find available user IDs"],
                 }
 
             user_data = await plex.get_user(user_id)
@@ -284,9 +278,7 @@ async def plex_user(
                         "success": False,
                         "error": "username must be at least 3 characters",
                         "error_code": "INVALID_USERNAME",
-                        "suggestions": [
-                            "Provide a username with at least 3 characters"
-                        ],
+                        "suggestions": ["Provide a username with at least 3 characters"],
                     }
                 update_kwargs["username"] = username
             if email is not None:
@@ -297,9 +289,7 @@ async def plex_user(
                         "success": False,
                         "error": "password must be at least 8 characters",
                         "error_code": "INVALID_PASSWORD",
-                        "suggestions": [
-                            "Provide a password with at least 8 characters"
-                        ],
+                        "suggestions": ["Provide a password with at least 8 characters"],
                     }
                 update_kwargs["password"] = password
             if role is not None:
@@ -413,9 +403,7 @@ async def plex_user(
         }
 
     except Exception as e:
-        logger.error(
-            f"Unexpected error in plex_user operation '{operation}': {e}", exc_info=True
-        )
+        logger.error(f"Unexpected error in plex_user operation '{operation}': {e}", exc_info=True)
         return {
             "success": False,
             "error": f"Unexpected error during {operation}: {str(e)}",

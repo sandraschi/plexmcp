@@ -6,7 +6,7 @@ FastMCP 2.13+ compliant with comprehensive docstrings and AI-friendly error mess
 """
 
 import os
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Literal
 
 from ...app import mcp
 from ...utils import get_logger
@@ -18,9 +18,7 @@ def _get_plex_service():
     """Get PlexService instance with proper environment variable handling."""
     from ...services.plex_service import PlexService
 
-    base_url = os.getenv("PLEX_URL") or os.getenv(
-        "PLEX_SERVER_URL", "http://localhost:32400"
-    )
+    base_url = os.getenv("PLEX_URL") or os.getenv("PLEX_SERVER_URL", "http://localhost:32400")
     token = os.getenv("PLEX_TOKEN")
 
     if not token:
@@ -36,15 +34,13 @@ def _get_plex_service():
 
 @mcp.tool()
 async def plex_collections(
-    operation: Literal[
-        "list", "get", "create", "update", "delete", "add_items", "remove_items"
-    ],
-    collection_id: Optional[str] = None,
-    library_id: Optional[str] = None,
-    title: Optional[str] = None,
-    summary: Optional[str] = None,
-    items: Optional[List[str]] = None,
-) -> Dict[str, Any]:
+    operation: Literal["list", "get", "create", "update", "delete", "add_items", "remove_items"],
+    collection_id: str | None = None,
+    library_id: str | None = None,
+    title: str | None = None,
+    summary: str | None = None,
+    items: list[str] | None = None,
+) -> dict[str, Any]:
     """Comprehensive collections management tool for Plex Media Server.
 
     PORTMANTEAU PATTERN RATIONALE:
@@ -295,9 +291,7 @@ async def plex_collections(
             }
 
     except Exception as e:
-        logger.error(
-            f"Error in plex_collections operation '{operation}': {e}", exc_info=True
-        )
+        logger.error(f"Error in plex_collections operation '{operation}': {e}", exc_info=True)
         return {
             "success": False,
             "error": str(e),

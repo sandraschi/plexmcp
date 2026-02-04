@@ -19,6 +19,7 @@ from .tools import portmanteau  # noqa: F401, E402
 
 # Import and register agentic workflow tools (FastMCP 2.14.3 sampling features)
 from .tools.agentic import register_agentic_tools  # noqa: E402
+
 register_agentic_tools()
 
 # NOTE: Old individual tools (server, media, sessions, users, playlists, organization, quality, library)

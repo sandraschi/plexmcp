@@ -6,7 +6,7 @@ FastMCP 2.13+ compliant with comprehensive docstrings and AI-friendly error mess
 """
 
 import os
-from typing import Any, Dict, Literal, Optional
+from typing import Any, Literal
 
 from ...app import mcp
 from ...utils import get_logger
@@ -18,9 +18,7 @@ def _get_plex_service():
     """Get PlexService instance with proper environment variable handling."""
     from ...services.plex_service import PlexService
 
-    base_url = os.getenv("PLEX_URL") or os.getenv(
-        "PLEX_SERVER_URL", "http://localhost:32400"
-    )
+    base_url = os.getenv("PLEX_URL") or os.getenv("PLEX_SERVER_URL", "http://localhost:32400")
     token = os.getenv("PLEX_TOKEN")
 
     if not token:
@@ -44,15 +42,15 @@ async def plex_integration(
         "configure",
         "sync",
     ],
-    content_type: Optional[str] = None,
+    content_type: str | None = None,
     limit: int = 10,
     include_european: bool = True,
-    country: Optional[str] = None,
-    year: Optional[int] = None,
-    season: Optional[Literal["winter", "spring", "summer", "fall"]] = None,
-    integration_name: Optional[str] = None,
-    config: Optional[Dict[str, Any]] = None,
-) -> Dict[str, Any]:
+    country: str | None = None,
+    year: int | None = None,
+    season: Literal["winter", "spring", "summer", "fall"] | None = None,
+    integration_name: str | None = None,
+    config: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """Comprehensive third-party integration operations for Plex Media Server.
 
     PORTMANTEAU PATTERN RATIONALE:
@@ -210,9 +208,7 @@ async def plex_integration(
                     "success": False,
                     "error": "content_type is required for vienna_recommendations operation",
                     "error_code": "MISSING_CONTENT_TYPE",
-                    "suggestions": [
-                        "Provide content_type parameter (e.g., 'movie', 'show')"
-                    ],
+                    "suggestions": ["Provide content_type parameter (e.g., 'movie', 'show')"],
                 }
 
             from ...api.vienna import RecommendationRequest
@@ -227,9 +223,7 @@ async def plex_integration(
                 "success": True,
                 "operation": "vienna_recommendations",
                 "content_type": content_type,
-                "data": [
-                    item.dict() if hasattr(item, "dict") else item for item in result
-                ],
+                "data": [item.dict() if hasattr(item, "dict") else item for item in result],
                 "count": len(result),
             }
 
@@ -246,9 +240,7 @@ async def plex_integration(
                 "operation": "european_content",
                 "country": country,
                 "content_type": content_type,
-                "data": [
-                    item.dict() if hasattr(item, "dict") else item for item in result
-                ],
+                "data": [item.dict() if hasattr(item, "dict") else item for item in result],
                 "count": len(result),
             }
 
@@ -266,9 +258,7 @@ async def plex_integration(
                     "success": False,
                     "error": "season is required for anime_season_info operation",
                     "error_code": "MISSING_SEASON",
-                    "suggestions": [
-                        "Provide season parameter: winter, spring, summer, or fall"
-                    ],
+                    "suggestions": ["Provide season parameter: winter, spring, summer, or fall"],
                 }
 
             from ...api.vienna import AnimeSeasonInfoRequest
@@ -297,15 +287,11 @@ async def plex_integration(
                     "success": False,
                     "error": "config dictionary is required for configure operation",
                     "error_code": "MISSING_CONFIG",
-                    "suggestions": [
-                        "Provide config parameter with configuration dictionary"
-                    ],
+                    "suggestions": ["Provide config parameter with configuration dictionary"],
                 }
 
             # Placeholder implementation
-            logger.info(
-                f"Configuring integration {integration_name} with config: {config}"
-            )
+            logger.info(f"Configuring integration {integration_name} with config: {config}")
             return {
                 "success": True,
                 "operation": "configure",

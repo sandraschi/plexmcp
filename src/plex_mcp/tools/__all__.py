@@ -47,6 +47,9 @@ from .playlists import (
     update_playlist,
 )
 
+# Audio management tools
+from .portmanteau.audio_mgr import plex_audio_mgr
+
 # Quality and transcoding tools
 from .quality import (
     create_quality_profile,
@@ -64,9 +67,6 @@ from .server import get_server_info, get_server_status
 
 # Session tools
 from .sessions import control_playback, list_clients, list_sessions
-
-# Audio management tools
-from .portmanteau.audio_mgr import plex_audio_mgr
 
 # User management tools
 from .users import (

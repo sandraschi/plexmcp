@@ -4,9 +4,10 @@ Austrian dev efficiency for media server operations
 """
 
 import logging
-import requests
-from typing import Dict, Any
+from typing import Any
 from urllib.parse import urljoin
+
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +27,7 @@ class PlexManager:
         self.session = requests.Session()
         self.session.headers.update({"X-Plex-Token": token, "Accept": "application/json"})
 
-    def get(self, endpoint: str, params: Dict = None) -> Dict:
+    def get(self, endpoint: str, params: dict = None) -> dict:
         """Make GET request to Plex API"""
         try:
             url = urljoin(self.server_url, endpoint)
@@ -36,7 +37,7 @@ class PlexManager:
         except Exception as e:
             raise PlexManagerError(f"GET request failed: {e}")
 
-    def post(self, endpoint: str, data: Dict = None) -> Dict:
+    def post(self, endpoint: str, data: dict = None) -> dict:
         """Make POST request to Plex API"""
         try:
             url = urljoin(self.server_url, endpoint)
@@ -46,7 +47,7 @@ class PlexManager:
         except Exception as e:
             raise PlexManagerError(f"POST request failed: {e}")
 
-    def get_server_info(self) -> Dict[str, Any]:
+    def get_server_info(self) -> dict[str, Any]:
         """Get Plex server information"""
         return self.get("/")
 

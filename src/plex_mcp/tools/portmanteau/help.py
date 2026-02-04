@@ -5,7 +5,7 @@ Provides help, tool discovery, and usage examples for PlexMCP.
 FastMCP 2.13+ compliant with comprehensive docstrings and AI-friendly error messages.
 """
 
-from typing import Any, Dict, Literal, Optional
+from typing import Any, Literal
 
 from ...app import mcp
 from ...utils import get_logger
@@ -16,9 +16,9 @@ logger = get_logger(__name__)
 @mcp.tool()
 async def plex_help(
     operation: Literal["help", "list_tools", "tool_info", "examples"],
-    tool_name: Optional[str] = None,
-    category: Optional[str] = None,
-) -> Dict[str, Any]:
+    tool_name: str | None = None,
+    category: str | None = None,
+) -> dict[str, Any]:
     """Comprehensive help and discovery tool for PlexMCP.
 
     PORTMANTEAU PATTERN RATIONALE:
@@ -316,9 +316,7 @@ Available Tool Categories:
 Use list_tools to see all available tools, or tool_info to get details about a specific tool.
 """
             if category:
-                filtered_tools = {
-                    k: v for k, v in tools_info.items() if v["category"] == category
-                }
+                filtered_tools = {k: v for k, v in tools_info.items() if v["category"] == category}
                 help_text += f"\nTools in category '{category}':\n"
                 for tool in filtered_tools.values():
                     help_text += f"  - {tool['name']}: {tool['description']}\n"

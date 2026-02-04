@@ -3,7 +3,7 @@ User Manager - Plex user and sharing management
 """
 
 import logging
-from typing import Dict, Any, List
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +14,7 @@ class UserManager:
     def __init__(self, plex_manager):
         self.plex = plex_manager
 
-    def get_users(self) -> List[Dict[str, Any]]:
+    def get_users(self) -> list[dict[str, Any]]:
         """Get all Plex users"""
         try:
             # This would require admin access

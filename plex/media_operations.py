@@ -3,7 +3,7 @@ Media Operations - Plex media search and management
 """
 
 import logging
-from typing import Dict, Any, List
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +14,7 @@ class MediaOperations:
     def __init__(self, plex_manager):
         self.plex = plex_manager
 
-    def search_media(self, query: str) -> List[Dict[str, Any]]:
+    def search_media(self, query: str) -> list[dict[str, Any]]:
         """Search media across libraries"""
         try:
             data = self.plex.get("/search", {"query": query})

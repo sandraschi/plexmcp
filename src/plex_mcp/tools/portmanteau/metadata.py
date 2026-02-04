@@ -6,7 +6,7 @@ FastMCP 2.13+ compliant with comprehensive docstrings and AI-friendly error mess
 """
 
 import os
-from typing import Any, Dict, Literal, Optional
+from typing import Any, Literal
 
 from ...app import mcp
 from ...utils import get_logger
@@ -18,9 +18,7 @@ def _get_plex_service():
     """Get PlexService instance with proper environment variable handling."""
     from ...services.plex_service import PlexService
 
-    base_url = os.getenv("PLEX_URL") or os.getenv(
-        "PLEX_SERVER_URL", "http://localhost:32400"
-    )
+    base_url = os.getenv("PLEX_URL") or os.getenv("PLEX_SERVER_URL", "http://localhost:32400")
     token = os.getenv("PLEX_TOKEN")
 
     if not token:
@@ -45,18 +43,15 @@ async def plex_metadata(
         "match",
         "organize",
     ],
-    item_id: Optional[str] = None,
-    library_id: Optional[str] = None,
-    match_id: Optional[str] = None,
-    media_type: Optional[
-        Literal[
-            "movie", "show", "season", "episode", "artist", "album", "track", "photo"
-        ]
-    ] = None,
-    metadata: Optional[Dict[str, Any]] = None,
+    item_id: str | None = None,
+    library_id: str | None = None,
+    match_id: str | None = None,
+    media_type: Literal["movie", "show", "season", "episode", "artist", "album", "track", "photo"]
+    | None = None,
+    metadata: dict[str, Any] | None = None,
     force: bool = False,
-    patterns: Optional[Dict[str, str]] = None,
-) -> Dict[str, Any]:
+    patterns: dict[str, str] | None = None,
+) -> dict[str, Any]:
     """Comprehensive metadata management operations for Plex Media Server.
 
     PORTMANTEAU PATTERN RATIONALE:
@@ -221,14 +216,10 @@ async def plex_metadata(
                 lib_id = lib.get("id") or str(lib.get("key", ""))
                 try:
                     result = await plex.refresh_metadata(library_id=lib_id, force=force)
-                    results.append(
-                        {"library_id": lib_id, "success": True, "result": result}
-                    )
+                    results.append({"library_id": lib_id, "success": True, "result": result})
                 except Exception as e:
                     logger.error(f"Error refreshing library {lib_id}: {e}")
-                    results.append(
-                        {"library_id": lib_id, "success": False, "error": str(e)}
-                    )
+                    results.append({"library_id": lib_id, "success": False, "error": str(e)})
 
             return {
                 "success": True,
@@ -253,9 +244,7 @@ async def plex_metadata(
                     "success": False,
                     "error": "match_id is required for fix_match operation",
                     "error_code": "MISSING_MATCH_ID",
-                    "suggestions": [
-                        "Provide match_id parameter with correct match identifier"
-                    ],
+                    "suggestions": ["Provide match_id parameter with correct match identifier"],
                 }
             if not media_type:
                 return {

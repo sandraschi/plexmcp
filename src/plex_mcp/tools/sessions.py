@@ -1,7 +1,6 @@
 """Plex session management tools for FastMCP 2.10.1."""
 
 import os
-from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -11,15 +10,16 @@ from ..models.session import Session
 
 def _get_plex_service():
     from ..services.plex_service import PlexService
-    base_url = os.getenv('PLEX_URL') or os.getenv('PLEX_SERVER_URL', 'http://localhost:32400')
-    token = os.getenv('PLEX_TOKEN')
+
+    base_url = os.getenv("PLEX_URL") or os.getenv("PLEX_SERVER_URL", "http://localhost:32400")
+    token = os.getenv("PLEX_TOKEN")
     if not token:
-        raise RuntimeError('PLEX_TOKEN environment variable is required')
+        raise RuntimeError("PLEX_TOKEN environment variable is required")
     return PlexService(base_url=base_url, token=token)
 
 
 @mcp.tool()
-async def list_sessions() -> List[Session]:
+async def list_sessions() -> list[Session]:
     """Get a list of all active Plex sessions.
 
     Returns:
@@ -40,7 +40,7 @@ class ClientInfo(BaseModel):
 
 
 @mcp.tool()
-async def list_clients() -> List[ClientInfo]:
+async def list_clients() -> list[ClientInfo]:
     """Get a list of all available Plex clients.
 
     Returns:
@@ -68,13 +68,11 @@ class PlaybackControlRequest(BaseModel):
         ...,
         description="Action to perform (play, pause, stop, skip_next, skip_previous, step_forward, step_back, seek_to)",
     )
-    media_key: Optional[str] = Field(
-        None, description="Media key to play (required for play action)"
-    )
-    seek_to: Optional[int] = Field(
+    media_key: str | None = Field(None, description="Media key to play (required for play action)")
+    seek_to: int | None = Field(
         None, description="Position in milliseconds to seek to (for seek_to action)"
     )
-    offset: Optional[int] = Field(
+    offset: int | None = Field(
         30, description="Time offset in seconds (for step_forward/step_back actions)"
     )
 
@@ -97,7 +95,3 @@ async def control_playback(request: PlaybackControlRequest) -> bool:
         seek_to=request.seek_to,
         offset=request.offset,
     )
-
-
-
-

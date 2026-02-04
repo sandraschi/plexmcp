@@ -5,7 +5,7 @@ This module contains administrative API endpoints for user management
 and server maintenance.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 # Import the shared FastMCP instance from the package level
 # Import models
@@ -18,7 +18,7 @@ from ..utils import get_logger
 logger = get_logger(__name__)
 
 
-async def get_users() -> List[UserPermissions]:
+async def get_users() -> list[UserPermissions]:
     """
     Get server users (admin function).
 
@@ -81,7 +81,7 @@ async def get_users() -> List[UserPermissions]:
         raise RuntimeError(f"Error fetching users: {str(e)}") from e
 
 
-async def update_user_permissions(user_id: str, permissions: Dict[str, Any]) -> UserPermissions:
+async def update_user_permissions(user_id: str, permissions: dict[str, Any]) -> UserPermissions:
     """
     Update user permissions and restrictions.
 
@@ -145,7 +145,7 @@ async def update_user_permissions(user_id: str, permissions: Dict[str, Any]) -> 
 
 
 async def run_server_maintenance(
-    operation: str, options: Optional[Dict[str, Any]] = None
+    operation: str, options: dict[str, Any] | None = None
 ) -> ServerMaintenanceResult:
     """
     Run server maintenance operations.
@@ -201,7 +201,7 @@ async def run_server_maintenance(
         raise RuntimeError(f"Error running maintenance operation: {str(e)}") from e
 
 
-async def get_server_health() -> Dict[str, Any]:
+async def get_server_health() -> dict[str, Any]:
     """
     Get detailed server health and performance metrics.
 

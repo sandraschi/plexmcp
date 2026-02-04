@@ -5,8 +5,7 @@ FastMCP 2.14.3 sampling capabilities for autonomous media management workflows.
 Provides conversational tool returns and intelligent orchestration.
 """
 
-import asyncio
-from typing import Any, Dict, List
+from typing import Any
 
 from ..app import mcp
 
@@ -17,9 +16,9 @@ def register_agentic_tools():
     @mcp.tool()
     async def agentic_plex_workflow(
         workflow_prompt: str,
-        available_tools: List[str],
+        available_tools: list[str],
         max_iterations: int = 5,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Execute agentic Plex workflows using FastMCP 2.14.3 sampling with tools.
 
         This tool demonstrates SEP-1577 by enabling the server's LLM to autonomously
@@ -45,7 +44,7 @@ def register_agentic_tools():
                 "prompt": workflow_prompt,
                 "available_tools": available_tools,
                 "max_iterations": max_iterations,
-                "analysis": "LLM will autonomously orchestrate Plex media operations"
+                "analysis": "LLM will autonomously orchestrate Plex media operations",
             }
 
             # This would use FastMCP 2.14.3 sampling to execute complex workflows
@@ -62,8 +61,8 @@ def register_agentic_tools():
                     "Complex multi-step workflows",
                     "Conversational responses",
                     "Error recovery and validation",
-                    "Parallel processing support"
-                ]
+                    "Parallel processing support",
+                ],
             }
 
             return result
@@ -72,16 +71,16 @@ def register_agentic_tools():
             return {
                 "success": False,
                 "error": f"Failed to execute agentic workflow: {str(e)}",
-                "message": "An error occurred while setting up the agentic workflow."
+                "message": "An error occurred while setting up the agentic workflow.",
             }
 
     @mcp.tool()
     async def intelligent_media_processing(
-        media_items: List[Dict[str, Any]],
+        media_items: list[dict[str, Any]],
         processing_goal: str,
-        available_operations: List[str],
+        available_operations: list[str],
         processing_strategy: str = "adaptive",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Intelligent batch media processing using FastMCP 2.14.3 sampling with tools.
 
         This tool uses the client's LLM to intelligently decide how to process batches
@@ -108,7 +107,7 @@ def register_agentic_tools():
                 "item_count": len(media_items),
                 "available_operations": available_operations,
                 "strategy": processing_strategy,
-                "analysis": "LLM will analyze each media item and choose optimal processing operations"
+                "analysis": "LLM will analyze each media item and choose optimal processing operations",
             }
 
             result = {
@@ -124,8 +123,8 @@ def register_agentic_tools():
                     "Automatic operation selection",
                     "Adaptive batching strategies",
                     "Quality validation",
-                    "Error recovery"
-                ]
+                    "Error recovery",
+                ],
             }
 
             return result
@@ -134,14 +133,14 @@ def register_agentic_tools():
             return {
                 "success": False,
                 "error": f"Failed to initiate intelligent processing: {str(e)}",
-                "message": "An error occurred while setting up intelligent media processing."
+                "message": "An error occurred while setting up intelligent media processing.",
             }
 
     @mcp.tool()
     async def conversational_plex_assistant(
         user_query: str,
         context_level: str = "comprehensive",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Conversational Plex assistant with natural language responses.
 
         Provides human-like interaction for Plex media management with detailed
@@ -159,13 +158,15 @@ def register_agentic_tools():
             response_templates = {
                 "basic": "I can help you manage your Plex media server.",
                 "comprehensive": "I'm your Plex Media Server assistant. I can help you browse libraries, control playback, manage users, organize content, and monitor server performance.",
-                "detailed": "Welcome to PlexMCP! I'm equipped with advanced media management capabilities including library browsing, playback control across multiple devices, user management, content organization, server monitoring, and intelligent media processing workflows."
+                "detailed": "Welcome to PlexMCP! I'm equipped with advanced media management capabilities including library browsing, playback control across multiple devices, user management, content organization, server monitoring, and intelligent media processing workflows.",
             }
 
             result = {
                 "success": True,
                 "operation": "conversational_assistance",
-                "message": response_templates.get(context_level, response_templates["comprehensive"]),
+                "message": response_templates.get(
+                    context_level, response_templates["comprehensive"]
+                ),
                 "user_query": user_query,
                 "context_level": context_level,
                 "suggestions": [
@@ -173,14 +174,14 @@ def register_agentic_tools():
                     "Control playback on connected devices",
                     "Manage user accounts and permissions",
                     "Organize content with playlists and collections",
-                    "Monitor server performance and health"
+                    "Monitor server performance and health",
                 ],
                 "next_steps": [
                     "Use 'plex_library' to browse your media",
                     "Use 'plex_streaming' to control playback",
                     "Use 'plex_user' to manage accounts",
-                    "Use 'plex_performance' to check server status"
-                ]
+                    "Use 'plex_performance' to check server status",
+                ],
             }
 
             return result
@@ -189,5 +190,5 @@ def register_agentic_tools():
             return {
                 "success": False,
                 "error": f"Failed to provide conversational assistance: {str(e)}",
-                "message": "I encountered an error while processing your request."
+                "message": "I encountered an error while processing your request.",
             }

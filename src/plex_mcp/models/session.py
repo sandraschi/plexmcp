@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -39,12 +39,13 @@ class MediaItem(BaseModel):
     def coerce_id_to_str(cls, v):
         """Convert id to string if it's an integer (Plex API returns int)."""
         return str(v) if v is not None else v
+
     title: str = Field(..., description="Title of the media")
-    year: Optional[int] = Field(None, description="Release year")
-    thumb: Optional[str] = Field(None, description="URL to thumbnail image")
-    duration: Optional[int] = Field(None, description="Duration in milliseconds")
-    added_at: Optional[int] = Field(None, description="Timestamp when added to library")
-    updated_at: Optional[int] = Field(None, description="Timestamp of last update")
+    year: int | None = Field(None, description="Release year")
+    thumb: str | None = Field(None, description="URL to thumbnail image")
+    duration: int | None = Field(None, description="Duration in milliseconds")
+    added_at: int | None = Field(None, description="Timestamp when added to library")
+    updated_at: int | None = Field(None, description="Timestamp of last update")
 
 
 class Session(BaseModel):
@@ -59,7 +60,7 @@ class Session(BaseModel):
     view_offset: int = Field(0, description="Current position in the media")
     duration: int = Field(0, description="Total duration of the media in milliseconds")
     media: MediaItem = Field(..., description="The media being played")
-    extra_metadata: Dict[str, Any] = Field(
+    extra_metadata: dict[str, Any] = Field(
         default_factory=dict, description="Additional metadata about the session"
     )
     created_at: datetime = Field(
@@ -73,5 +74,5 @@ class Session(BaseModel):
 class SessionList(BaseModel):
     """Model representing a list of active sessions."""
 
-    sessions: List[Session] = Field(default_factory=list, description="List of active sessions")
+    sessions: list[Session] = Field(default_factory=list, description="List of active sessions")
     total: int = Field(0, description="Total number of sessions")

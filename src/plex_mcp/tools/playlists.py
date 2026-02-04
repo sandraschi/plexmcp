@@ -2,7 +2,6 @@
 
 import logging
 import os
-from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -12,11 +11,13 @@ from ..models.playlists import PlaylistAnalytics, PlexPlaylist
 
 def _get_plex_service():
     from ..services.plex_service import PlexService
-    base_url = os.getenv('PLEX_URL') or os.getenv('PLEX_SERVER_URL', 'http://localhost:32400')
-    token = os.getenv('PLEX_TOKEN')
+
+    base_url = os.getenv("PLEX_URL") or os.getenv("PLEX_SERVER_URL", "http://localhost:32400")
+    token = os.getenv("PLEX_TOKEN")
     if not token:
-        raise RuntimeError('PLEX_TOKEN environment variable is required')
+        raise RuntimeError("PLEX_TOKEN environment variable is required")
     return PlexService(base_url=base_url, token=token)
+
 
 logger = logging.getLogger(__name__)
 
@@ -25,10 +26,10 @@ class CreatePlaylistRequest(BaseModel):
     """Request model for creating a new playlist."""
 
     title: str = Field(..., min_length=1, max_length=255, description="Title of the playlist")
-    items: List[str] = Field(..., description="List of media item IDs to include in the playlist")
-    description: Optional[str] = Field(None, description="Optional description for the playlist")
+    items: list[str] = Field(..., description="List of media item IDs to include in the playlist")
+    description: str | None = Field(None, description="Optional description for the playlist")
     public: bool = Field(False, description="Whether the playlist should be publicly visible")
-    sort: Optional[str] = Field(None, description="Sort order for playlist items")
+    sort: str | None = Field(None, description="Sort order for playlist items")
 
 
 @mcp.tool()
@@ -87,7 +88,7 @@ class GetPlaylistRequest(BaseModel):
 
 
 @mcp.tool()
-async def get_playlist(request: GetPlaylistRequest) -> Optional[PlexPlaylist]:
+async def get_playlist(request: GetPlaylistRequest) -> PlexPlaylist | None:
     """Get a specific playlist by ID.
 
     Args:
@@ -122,7 +123,7 @@ async def get_playlist(request: GetPlaylistRequest) -> Optional[PlexPlaylist]:
 
 
 @mcp.tool()
-async def list_playlists() -> List[PlexPlaylist]:
+async def list_playlists() -> list[PlexPlaylist]:
     """List all playlists.
 
     Returns:
@@ -160,14 +161,12 @@ class UpdatePlaylistRequest(BaseModel):
     """Request model for updating a playlist."""
 
     playlist_id: str = Field(..., description="ID of the playlist to update")
-    title: Optional[str] = Field(
+    title: str | None = Field(
         None, min_length=1, max_length=255, description="New title for the playlist"
     )
-    description: Optional[str] = Field(None, description="New description for the playlist")
-    public: Optional[bool] = Field(
-        None, description="Whether the playlist should be publicly visible"
-    )
-    sort: Optional[str] = Field(None, description="New sort order for playlist items")
+    description: str | None = Field(None, description="New description for the playlist")
+    public: bool | None = Field(None, description="Whether the playlist should be publicly visible")
+    sort: str | None = Field(None, description="New sort order for playlist items")
 
 
 @mcp.tool()
@@ -252,7 +251,7 @@ class AddToPlaylistRequest(BaseModel):
     """Request model for adding items to a playlist."""
 
     playlist_id: str = Field(..., description="ID of the playlist to add items to")
-    items: List[str] = Field(..., description="List of media item IDs to add to the playlist")
+    items: list[str] = Field(..., description="List of media item IDs to add to the playlist")
 
 
 @mcp.tool()
@@ -312,13 +311,11 @@ class RemoveFromPlaylistRequest(BaseModel):
     """Request model for removing items from a playlist."""
 
     playlist_id: str = Field(..., description="ID of the playlist to remove items from")
-    items: List[str] = Field(..., description="List of media item IDs to remove from the playlist")
+    items: list[str] = Field(..., description="List of media item IDs to remove from the playlist")
 
 
 @mcp.tool()
-async def remove_from_playlist(
-    request: RemoveFromPlaylistRequest
-) -> PlexPlaylist:
+async def remove_from_playlist(request: RemoveFromPlaylistRequest) -> PlexPlaylist:
     """Remove items from a playlist.
 
     Args:
@@ -378,9 +375,7 @@ class GetPlaylistAnalyticsRequest(BaseModel):
 
 
 @mcp.tool()
-async def get_playlist_analytics(
-    request: GetPlaylistAnalyticsRequest
-) -> PlaylistAnalytics:
+async def get_playlist_analytics(request: GetPlaylistAnalyticsRequest) -> PlaylistAnalytics:
     """Get analytics for a specific playlist.
 
     Args:
@@ -437,7 +432,3 @@ async def get_playlist_analytics(
     except Exception as e:
         logger.error(f"Error getting analytics for playlist {request.playlist_id}: {e}")
         raise
-
-
-
-

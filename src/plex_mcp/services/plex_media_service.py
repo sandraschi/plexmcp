@@ -13,14 +13,14 @@ Provides high-level access to Plex media server functionality including:
 import asyncio
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
-from pydantic import BaseModel
 from plexapi import utils
 from plexapi.exceptions import BadConfig, NotFound, Unauthorized
 from plexapi.playqueue import PlayQueue
 from plexapi.server import CONFIG, PlexServer
 from plexapi.video import Episode, Movie, Playlist, Season, Show
+from pydantic import BaseModel
 
 # RequestMethod is typically from plexapi.utils
 RequestMethod = getattr(utils, "RequestMethod", None)
@@ -31,6 +31,7 @@ if RequestMethod is None:
         POST = "POST"
         GET = "GET"
         PUT = "PUT"
+
 
 from ..models.media import LibrarySection as LibrarySectionModel  # noqa: E402
 from ..models.media import MediaItem, MediaType  # noqa: E402
@@ -80,8 +81,8 @@ class StreamPart(BaseModel):
     audio_profile: str
     video_decision: StreamDecision
     audio_decision: StreamDecision
-    width: Optional[int]
-    height: Optional[int]
+    width: int | None
+    height: int | None
     bitrate: int
     video_codec: str
     audio_codec: str
@@ -99,15 +100,15 @@ class StreamInfo(BaseModel):
     port: int
     uri: str
     status: str
-    session: Optional[str]
-    session_key: Optional[str]
+    session: str | None
+    session_key: str | None
     source_title: str
     decision: StreamDecision
     speed: float
     progress: float
     duration: int
     remaining: int
-    context: Dict[str, Any]
+    context: dict[str, Any]
     video_decision: StreamDecision
     audio_decision: StreamDecision
     quality: str
@@ -127,7 +128,7 @@ class StreamInfo(BaseModel):
     audio_channel_layout: str
     audio_profile: str
     video_profile: str
-    protocol_capabilities: List[str]
+    protocol_capabilities: list[str]
     stream_type: str
     decision_encoding: str
     decision_quality: str
@@ -156,10 +157,10 @@ class PlexMediaService(BaseService):
         self.base_url = base_url.rstrip("/")
         self.token = token
         self.timeout = timeout
-        self._plex: Optional[PlexServer] = None
-        self._sessions: Dict[str, Any] = {}
-        self._play_queues: Dict[str, PlayQueue] = {}
-        self._last_updated: Optional[datetime] = None
+        self._plex: PlexServer | None = None
+        self._sessions: dict[str, Any] = {}
+        self._play_queues: dict[str, PlayQueue] = {}
+        self._last_updated: datetime | None = None
 
     async def _initialize(self) -> None:
         """Initialize connection to Plex server."""
@@ -221,11 +222,11 @@ class PlexMediaService(BaseService):
     async def play_media(
         self,
         media_id: str,
-        client_id: Optional[str] = None,
+        client_id: str | None = None,
         offset: int = 0,
-        play_queue_id: Optional[str] = None,
+        play_queue_id: str | None = None,
         **kwargs,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Start playing media on a client.
 
         Args:
@@ -298,7 +299,7 @@ class PlexMediaService(BaseService):
             raise ServiceError(f"Failed to play media: {str(e)}", code="playback_error") from e
 
     @service_method(log_execution=True)
-    async def pause_playback(self, client_id: str) -> Dict[str, Any]:
+    async def pause_playback(self, client_id: str) -> dict[str, Any]:
         """Pause playback on a client.
 
         Args:
@@ -310,7 +311,7 @@ class PlexMediaService(BaseService):
         return await self._send_playback_command(client_id, "pause")
 
     @service_method(log_execution=True)
-    async def stop_playback(self, client_id: str) -> Dict[str, Any]:
+    async def stop_playback(self, client_id: str) -> dict[str, Any]:
         """Stop playback on a client.
 
         Args:
@@ -322,7 +323,7 @@ class PlexMediaService(BaseService):
         return await self._send_playback_command(client_id, "stop")
 
     @service_method(log_execution=True)
-    async def seek_to(self, client_id: str, position: int) -> Dict[str, Any]:
+    async def seek_to(self, client_id: str, position: int) -> dict[str, Any]:
         """Seek to a specific position in the current media.
 
         Args:
@@ -335,7 +336,7 @@ class PlexMediaService(BaseService):
         return await self._send_playback_command(client_id, "seekTo", offset=position)
 
     @service_method(log_execution=True)
-    async def step_forward(self, client_id: str) -> Dict[str, Any]:
+    async def step_forward(self, client_id: str) -> dict[str, Any]:
         """Step forward in the current media.
 
         Args:
@@ -347,7 +348,7 @@ class PlexMediaService(BaseService):
         return await self._send_playback_command(client_id, "stepForward")
 
     @service_method(log_execution=True)
-    async def step_back(self, client_id: str) -> Dict[str, Any]:
+    async def step_back(self, client_id: str) -> dict[str, Any]:
         """Step back in the current media.
 
         Args:
@@ -359,7 +360,7 @@ class PlexMediaService(BaseService):
         return await self._send_playback_command(client_id, "stepBack")
 
     @service_method(log_execution=True)
-    async def skip_next(self, client_id: str) -> Dict[str, Any]:
+    async def skip_next(self, client_id: str) -> dict[str, Any]:
         """Skip to the next item in the play queue.
 
         Args:
@@ -371,7 +372,7 @@ class PlexMediaService(BaseService):
         return await self._send_playback_command(client_id, "skipNext")
 
     @service_method(log_execution=True)
-    async def skip_previous(self, client_id: str) -> Dict[str, Any]:
+    async def skip_previous(self, client_id: str) -> dict[str, Any]:
         """Skip to the previous item in the play queue.
 
         Args:
@@ -383,7 +384,7 @@ class PlexMediaService(BaseService):
         return await self._send_playback_command(client_id, "skipPrevious")
 
     @service_method(log_execution=True)
-    async def set_volume(self, client_id: str, level: int, muted: bool = False) -> Dict[str, Any]:
+    async def set_volume(self, client_id: str, level: int, muted: bool = False) -> dict[str, Any]:
         """Set the volume level on a client.
 
         Args:
@@ -403,8 +404,8 @@ class PlexMediaService(BaseService):
         self,
         client_id: str,
         quality: StreamQuality = StreamQuality.QUALITY_1080P,
-        max_bitrate: Optional[int] = None,
-    ) -> Dict[str, Any]:
+        max_bitrate: int | None = None,
+    ) -> dict[str, Any]:
         """Set the streaming quality for a client.
 
         Args:
@@ -432,7 +433,7 @@ class PlexMediaService(BaseService):
 
     async def _send_playback_command(
         self, client_id: str, command: str, **params
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Send a playback command to a client.
 
         Args:
@@ -480,9 +481,9 @@ class PlexMediaService(BaseService):
     async def get_playlists(
         self,
         playlist_type: str = "audio",
-        user: Optional[Union[str, int]] = None,
+        user: str | int | None = None,
         sort: str = "titleSort",
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Get all playlists from the Plex server.
 
         Args:
@@ -534,7 +535,7 @@ class PlexMediaService(BaseService):
             raise ServiceError(f"Failed to get playlists: {str(e)}", code="playlist_error") from e
 
     @service_method(log_execution=True)
-    async def get_playlist(self, playlist_id: str, include_items: bool = True) -> Dict[str, Any]:
+    async def get_playlist(self, playlist_id: str, include_items: bool = True) -> dict[str, Any]:
         """Get a specific playlist by ID.
 
         Args:
@@ -588,12 +589,12 @@ class PlexMediaService(BaseService):
     async def create_playlist(
         self,
         title: str,
-        items: List[Union[str, int]],
+        items: list[str | int],
         playlist_type: str = "audio",
-        summary: Optional[str] = None,
+        summary: str | None = None,
         smart: bool = False,
         **kwargs,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Create a new playlist.
 
         Args:
@@ -653,11 +654,11 @@ class PlexMediaService(BaseService):
     async def update_playlist(
         self,
         playlist_id: str,
-        title: Optional[str] = None,
-        summary: Optional[str] = None,
-        items: Optional[List[Union[str, int]]] = None,
+        title: str | None = None,
+        summary: str | None = None,
+        items: list[str | int] | None = None,
         **kwargs,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Update an existing playlist.
 
         Args:
@@ -717,7 +718,7 @@ class PlexMediaService(BaseService):
             ) from e
 
     @service_method(log_execution=True)
-    async def delete_playlist(self, playlist_id: str) -> Dict[str, Any]:
+    async def delete_playlist(self, playlist_id: str) -> dict[str, Any]:
         """Delete a playlist.
 
         Args:
@@ -757,8 +758,8 @@ class PlexMediaService(BaseService):
 
     @service_method(log_execution=True)
     async def add_to_playlist(
-        self, playlist_id: str, items: List[Union[str, int]], append: bool = True
-    ) -> Dict[str, Any]:
+        self, playlist_id: str, items: list[str | int], append: bool = True
+    ) -> dict[str, Any]:
         """Add items to an existing playlist.
 
         Args:
@@ -817,8 +818,8 @@ class PlexMediaService(BaseService):
 
     @service_method(log_execution=True)
     async def remove_from_playlist(
-        self, playlist_id: str, items: List[Union[str, int]]
-    ) -> Dict[str, Any]:
+        self, playlist_id: str, items: list[str | int]
+    ) -> dict[str, Any]:
         """Remove items from a playlist.
 
         Args:
@@ -871,7 +872,7 @@ class PlexMediaService(BaseService):
     # ========================================================================
 
     @service_method(log_execution=True)
-    async def get_clients(self) -> List[Dict[str, Any]]:
+    async def get_clients(self) -> list[dict[str, Any]]:
         """Get all available Plex clients.
 
         Returns:
@@ -911,7 +912,7 @@ class PlexMediaService(BaseService):
             raise ServiceError(f"Failed to get clients: {str(e)}", code="client_error") from e
 
     @service_method(log_execution=True)
-    async def get_sessions(self, force_refresh: bool = False) -> List[Dict[str, Any]]:
+    async def get_sessions(self, force_refresh: bool = False) -> list[dict[str, Any]]:
         """Get current active sessions on the Plex server.
 
         Args:
@@ -1096,7 +1097,7 @@ class PlexMediaService(BaseService):
             raise ServiceError(f"Failed to get sessions: {str(e)}", code="session_error") from e
 
     @service_method(log_execution=True)
-    async def get_session(self, session_key: str) -> Optional[Dict[str, Any]]:
+    async def get_session(self, session_key: str) -> dict[str, Any] | None:
         """Get details for a specific session.
 
         Args:
@@ -1109,7 +1110,7 @@ class PlexMediaService(BaseService):
         return next((s for s in sessions if s["session_key"] == session_key), None)
 
     @service_method(log_execution=True)
-    async def terminate_session(self, session_key: str) -> Dict[str, Any]:
+    async def terminate_session(self, session_key: str) -> dict[str, Any]:
         """Terminate a specific session.
 
         Args:
@@ -1150,9 +1151,7 @@ class PlexMediaService(BaseService):
             ) from e
 
     @service_method(log_execution=True)
-    async def terminate_all_sessions(
-        self, user_id: Optional[Union[str, int]] = None
-    ) -> Dict[str, Any]:
+    async def terminate_all_sessions(self, user_id: str | int | None = None) -> dict[str, Any]:
         """Terminate all active sessions, optionally filtered by user.
 
         Args:
@@ -1216,12 +1215,12 @@ class PlexMediaService(BaseService):
     async def search_media(
         self,
         query: str,
-        libtype: Optional[Union[str, List[str]]] = None,
+        libtype: str | list[str] | None = None,
         limit: int = 50,
         offset: int = 0,
-        sort: Optional[str] = None,
+        sort: str | None = None,
         **filters,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Search for media across all libraries.
 
         Args:
@@ -1291,11 +1290,11 @@ class PlexMediaService(BaseService):
     @service_method(log_execution=True)
     async def get_recently_added(
         self,
-        libtype: Optional[str] = None,
+        libtype: str | None = None,
         limit: int = 20,
         offset: int = 0,
-        section_id: Optional[Union[str, int]] = None,
-    ) -> Dict[str, Any]:
+        section_id: str | int | None = None,
+    ) -> dict[str, Any]:
         """Get recently added media items.
 
         Args:
@@ -1359,8 +1358,8 @@ class PlexMediaService(BaseService):
 
     @service_method(log_execution=True)
     async def get_on_deck(
-        self, limit: int = 20, offset: int = 0, section_id: Optional[Union[str, int]] = None
-    ) -> Dict[str, Any]:
+        self, limit: int = 20, offset: int = 0, section_id: str | int | None = None
+    ) -> dict[str, Any]:
         """Get items that are currently on deck (in progress).
 
         Args:
@@ -1409,11 +1408,11 @@ class PlexMediaService(BaseService):
     @service_method(log_execution=True)
     async def get_recently_played(
         self,
-        libtype: Optional[str] = None,
+        libtype: str | None = None,
         limit: int = 20,
         offset: int = 0,
-        section_id: Optional[Union[str, int]] = None,
-    ) -> Dict[str, Any]:
+        section_id: str | int | None = None,
+    ) -> dict[str, Any]:
         """Get recently played media items.
 
         Args:
@@ -1472,7 +1471,7 @@ class PlexMediaService(BaseService):
             ) from e
 
     @service_method(log_execution=True)
-    async def get_media_metadata(self, item_id: str) -> Dict[str, Any]:
+    async def get_media_metadata(self, item_id: str) -> dict[str, Any]:
         """Get detailed metadata for a media item.
 
         Args:
@@ -1537,7 +1536,7 @@ class PlexMediaService(BaseService):
                 f"Failed to get media metadata: {str(e)}", code="metadata_failed"
             ) from e
 
-    def _format_media_item(self, item, include_metadata: bool = False) -> Dict[str, Any]:
+    def _format_media_item(self, item, include_metadata: bool = False) -> dict[str, Any]:
         """Format a Plex media item into a dictionary.
 
         Args:
@@ -1818,7 +1817,7 @@ class PlexMediaService(BaseService):
 
         return formatted
 
-    def _format_media_part(self, part) -> Dict[str, Any]:
+    def _format_media_part(self, part) -> dict[str, Any]:
         """Format a Plex media part into a dictionary.
 
         Args:
@@ -1845,7 +1844,7 @@ class PlexMediaService(BaseService):
             else [],
         }
 
-    def _format_stream(self, stream) -> Dict[str, Any]:
+    def _format_stream(self, stream) -> dict[str, Any]:
         """Format a Plex media stream into a dictionary.
 
         Args:
@@ -1923,7 +1922,7 @@ class PlexMediaService(BaseService):
         self._last_updated = None
 
     @service_method(log_execution=True)
-    async def get_library_sections(self) -> List[LibrarySectionModel]:
+    async def get_library_sections(self) -> list[LibrarySectionModel]:
         """Get all library sections.
 
         Returns:
@@ -1964,11 +1963,11 @@ class PlexMediaService(BaseService):
     async def search_media_by_type(
         self,
         query: str,
-        media_type: Optional[MediaType] = None,
-        section_id: Optional[str] = None,
+        media_type: MediaType | None = None,
+        section_id: str | None = None,
         limit: int = 20,
         offset: int = 0,
-    ) -> List[MediaItem]:
+    ) -> list[MediaItem]:
         """Search for media items with type filtering.
 
         Args:
@@ -2098,7 +2097,7 @@ class PlexMediaService(BaseService):
             return MediaType.OTHER
 
     @service_method(log_execution=True)
-    async def refresh_library(self, section_id: Optional[str] = None) -> Dict[str, Any]:
+    async def refresh_library(self, section_id: str | None = None) -> dict[str, Any]:
         """Refresh a library section or all sections.
 
         Args:
@@ -2132,10 +2131,10 @@ class PlexMediaService(BaseService):
     @service_method(log_execution=True)
     async def get_recently_added_by_type(
         self,
-        media_type: Optional[MediaType] = None,
+        media_type: MediaType | None = None,
         limit: int = 20,
-        section_id: Optional[str] = None,
-    ) -> List[MediaItem]:
+        section_id: str | None = None,
+    ) -> list[MediaItem]:
         """Get recently added media items with type filtering.
 
         Args:

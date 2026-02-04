@@ -7,7 +7,6 @@ operations for the Plex Media Server.
 
 import logging
 import random
-from typing import List, Optional
 
 from plexapi.exceptions import BadRequest, NotFound
 
@@ -97,8 +96,8 @@ class PlaylistService(BaseService):
             raise ServiceError(error_msg, code="playlist_creation_failed") from e
 
     async def get_playlists(
-        self, playlist_type: Optional[str] = None, user_playlists: bool = True
-    ) -> List[PlexPlaylist]:
+        self, playlist_type: str | None = None, user_playlists: bool = True
+    ) -> list[PlexPlaylist]:
         """Get all playlists from the Plex server.
 
         Args:
@@ -154,7 +153,7 @@ class PlaylistService(BaseService):
             logger.error(error_msg)
             raise ServiceError(error_msg, code="get_playlist_failed") from e
 
-    async def get_playlist_items(self, playlist_id: str) -> List[MediaItem]:
+    async def get_playlist_items(self, playlist_id: str) -> list[MediaItem]:
         """Get all items in a playlist.
 
         Args:
