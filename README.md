@@ -153,6 +153,16 @@ ruff check .
 mypy .
 ```
 
+## Webapp (Browser UI)
+
+A full webapp provides a browser UI that talks to the MCP server via a FastAPI backend (reservoir ports **10740** backend, **10741** frontend per [mcp-central-docs WEBAPP_PORTS](https://github.com/sandraschi/mcp-central-docs/blob/main/docs/operations/WEBAPP_PORTS.md)).
+
+**Features**: Glassmorphism UI, retractable sidebar, topbar, Logger modal (log tail), Help modal, local LLM chat (Ollama/LM Studio), personalities, prompt refining, chat export, light RAG context, AI workflows (e.g. search-and-summarize), semantic-style search.
+
+**Start**: From repo root, `cd webapp` then `powershell -ExecutionPolicy Bypass -File .\start.ps1`. Set `PLEX_TOKEN` and `PLEX_URL` in `webapp/backend/.env`. See [webapp/README.md](webapp/README.md) and [webapp/SETUP.md](webapp/SETUP.md).
+
+---
+
 ## 🤝 Contributing
 
 Contributions are welcome! Please read our [Contributing Guidelines](CONTRIBUTING.md) for details.
@@ -360,6 +370,12 @@ python -c "import asyncio; from plex_mcp.plex_manager import PlexManager; from p
 python -m plex_mcp.server
 # Opens: http://127.0.0.1:6274
 ```
+
+---
+
+## Cursor IDE
+
+With the **plex-mcp** folder open as the workspace, Cursor uses `.cursor/mcp.json` to start PlexMCP via `scripts/run-mcp-cursor.ps1` (sets `PYTHONPATH` so `pip install` is not required). Add your token in **Cursor Settings > Features > MCP > plex-mcp > Environment**: set `PLEX_TOKEN` (and override `PLEX_URL` if needed). Restart Cursor or reload MCP if the server does not appear.
 
 ---
 

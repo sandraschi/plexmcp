@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "plex-mcp": {
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "scripts/run-mcp-cursor.ps1"
+      ],
+      "env": {
+        "PLEX_URL": "http://localhost:32400"
+      }
+    }
+  }
+}

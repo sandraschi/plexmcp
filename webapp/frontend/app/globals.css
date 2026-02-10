@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #0f1419;
+  --foreground: #e6edf3;
+  --glass-bg: rgba(30, 41, 59, 0.6);
+  --glass-border: rgba(148, 163, 184, 0.15);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+}
+
+/* Glassmorphism panels */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.glass-panel-strong {
+  background: rgba(30, 41, 59, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+input,
+select,
+textarea {
+  background-color: #1e293b;
+  color: #e2e8f0;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #64748b;
+}
+
+select option {
+  background-color: #1e293b;
+  color: #e2e8f0;
+}

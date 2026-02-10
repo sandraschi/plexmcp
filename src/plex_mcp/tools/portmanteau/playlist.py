@@ -537,16 +537,16 @@ async def plex_playlist(
                     "name": playlist.title,
                     "total_plays": total_plays,
                     "unique_users": unique_users or 1,
-                    "avg_completion_rate": 75.0,  # This would require more detailed tracking
+                    "avg_completion_rate": 75.0,  # [SIMULATED] This would require more detailed tracking
                     "popular_items": [str(item.ratingKey) for item in popular_items],
-                    "skip_rate": 10.0,  # This would require more detailed tracking
+                    "skip_rate": 10.0,  # [SIMULATED] This would require more detailed tracking
                     "recommendations": [
-                        "Consider adding more recent content"
+                        "[SIMULATED] Consider adding more recent content"
                         if len(playlist_items) > 10
-                        else "Add more items to this playlist",
-                        "Create a themed playlist"
+                        else "[SIMULATED] Add more items to this playlist",
+                        "[SIMULATED] Create a themed playlist"
                         if "mix" not in playlist.title.lower()
-                        else "Great themed playlist!",
+                        else "[SIMULATED] Great themed playlist!",
                     ],
                     "last_played": max(
                         [

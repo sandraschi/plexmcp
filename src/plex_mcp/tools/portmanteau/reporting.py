@@ -176,7 +176,7 @@ async def plex_reporting(
                 "success": True,
                 "operation": "usage_report",
                 "time_range": time_range or "all",
-                "message": "Usage reporting requires session history data (not yet implemented)",
+                "message": "[SIMULATED] Usage reporting requires session history data (not yet implemented)",
                 "data": {},
             }
 
@@ -226,7 +226,7 @@ async def plex_reporting(
                 "success": True,
                 "operation": "user_activity",
                 "time_range": time_range or "all",
-                "message": "User activity reporting requires session history data (not yet implemented)",
+                "message": "[SIMULATED] User activity reporting requires session history data (not yet implemented)",
                 "data": {},
             }
 
@@ -253,7 +253,7 @@ async def plex_reporting(
                 "operation": "export_report",
                 "format": format,
                 "output_path": output_path,
-                "message": f"Report export to {format} format (not yet fully implemented)",
+                "message": f"[SIMULATED] Report export to {format} format (not yet fully implemented)",
             }
 
         else:

@@ -79,3 +79,7 @@ docs/_build/
 
 # Private documentation (internal dev notes, not for public)
 docs-private/
+
+# Node modules
+node_modules/
+.next/

@@ -18,6 +18,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ALPHA
 
+### Added
+- **Webapp (reservoir 10740/10741)**: Full browser UI with FastAPI backend and Next.js 15 frontend
+  - **Glassmorphism UI**: Backdrop-blur panels, retractable sidebar, topbar
+  - **Logger modal**: Tail of webapp log with level/filter (topbar)
+  - **Help modal**: Tiered help content (basic/intermediate/advanced/expert)
+  - **Local LLM stack**: Ollama/LM Studio/OpenAI-compatible chat (LLM_BASE_URL, LLM_API_KEY)
+  - **Advanced chat**: Personalities, prompt refining via LLM, chat export (MD/JSON)
+  - **Light RAG**: GET /api/rag/context for Plex search context injection
+  - **AI workflows**: POST /api/workflows/run (e.g. search_and_summarize)
+  - **Semantic search**: Keyword search + RAG context for chat
+  - **Movies page**: Pagination (page/limit in URL, offset to backend), card/list view toggle (persisted in localStorage)
+  - **Settings page**: Plex API key and URL, LLM provider (ollama/lmstudio/openai), base URL, API key, default model (from /api/llm/models); persisted via GET/PATCH /api/system/settings and backend data/settings.json (file overrides .env at runtime)
+  - **Start**: webapp/start.ps1 and start.bat; see webapp/SETUP.md
+- **Port reservoir**: Backend 10740, frontend 10741 (mcp-central-docs WEBAPP_PORTS.md)
+
 ### Status
 - **Project Status**: ALPHA - Active development, some features incomplete
 - **Known Issues**: Playback control (`plex play`, `plex pause`) is non-functional for ALL clients
@@ -28,6 +43,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Updated project status to ALPHA in README
 - Added alpha status badge and warning notice
+- Next.js frontend pinned to 15.2.0 (webpack dev); turbopack.root set for Next 16 compatibility
+- Backend config loads .env from webapp/backend path (not cwd) so token is found when started from any directory
+- Backend data/ and settings.json in .gitignore (secrets not committed)
 
 ### Fixed
 - Client discovery now finds all client types (PlexAmp, Plex Web, Plex for Windows)

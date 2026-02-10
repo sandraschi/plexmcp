@@ -27,6 +27,10 @@ plex-mcp/
 
 **Key Pattern**: Dual interface - FastMCP HTTP endpoints mounted at `/mcp` (stdio for MCP clients, HTTP for webapp).
 
+**Ports (reservoir)**: Backend 10740, frontend 10741. See [webapp/README.md](webapp/README.md) and [mcp-central-docs WEBAPP_PORTS](https://github.com/sandraschi/mcp-central-docs/blob/main/docs/operations/WEBAPP_PORTS.md).
+
+**Current feature set**: Glassmorphism UI, retractable sidebar, topbar, Logger modal (log tail), Help modal, Overview/Libraries/Search/Chat/Server pages, local LLM chat (Ollama/LM Studio), personalities, prompt refining, chat export (MD/JSON), light RAG context API, AI workflows (e.g. search_and_summarize). See [webapp/README.md](webapp/README.md) and [webapp/SETUP.md](webapp/SETUP.md).
+
 ## Critical Setup Steps (Do These First!)
 
 ### 1. Backend Setup

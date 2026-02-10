@@ -11,6 +11,7 @@ from fastmcp import FastMCP
 from mcp.server.stdio import stdio_server
 
 # Import all tool modules
+from .transport import run_server, run_server_async
 from .config import get_settings, setup_logging
 
 # Setup logging
@@ -31,7 +32,7 @@ async def main() -> None:
 
     # Run stdio server
     async with stdio_server() as (read_stream, write_stream):
-        await app.run(read_stream, write_stream, app.create_initialization_options())
+        await run_server_async(app, server_name="PlexMCP")
 
 
 if __name__ == "__main__":
