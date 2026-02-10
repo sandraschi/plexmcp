@@ -24,7 +24,7 @@ async def plex_help(
     PORTMANTEAU PATTERN RATIONALE:
     Instead of creating 4 separate tools (one per help operation), this tool consolidates related
     help and discovery operations into a single interface. This design:
-    - Prevents tool explosion (4 tools → 1 tool) while maintaining full functionality
+    - Prevents tool explosion (4 tools -> 1 tool) while maintaining full functionality
     - Improves discoverability by grouping related operations together
     - Reduces cognitive load when working with help tasks
     - Enables consistent help interface across all operations

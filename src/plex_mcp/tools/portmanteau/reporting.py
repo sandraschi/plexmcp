@@ -24,7 +24,7 @@ def _get_plex_service():
     if not token:
         raise RuntimeError(
             "PLEX_TOKEN environment variable is required. "
-            "Get your token from Plex Web App (Settings → Account → Authorized Devices) "
+            "Get your token from Plex Web App (Settings -> Account -> Authorized Devices) "
             "or visit https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/ "
             "for detailed instructions."
         )
@@ -52,7 +52,7 @@ async def plex_reporting(
     PORTMANTEAU PATTERN RATIONALE:
     Instead of creating 6 separate tools (one per report type), this tool consolidates related
     reporting operations into a single interface. This design:
-    - Prevents tool explosion (6 tools → 1 tool) while maintaining full functionality
+    - Prevents tool explosion (6 tools -> 1 tool) while maintaining full functionality
     - Improves discoverability by grouping related operations together
     - Reduces cognitive load when working with reporting tasks
     - Enables consistent reporting interface across all operations

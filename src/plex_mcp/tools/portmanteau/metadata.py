@@ -24,7 +24,7 @@ def _get_plex_service():
     if not token:
         raise RuntimeError(
             "PLEX_TOKEN environment variable is required. "
-            "Get your token from Plex Web App (Settings → Account → Authorized Devices) "
+            "Get your token from Plex Web App (Settings -> Account -> Authorized Devices) "
             "or visit https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/ "
             "for detailed instructions."
         )
@@ -57,7 +57,7 @@ async def plex_metadata(
     PORTMANTEAU PATTERN RATIONALE:
     Instead of creating 7+ separate tools (one per operation), this tool consolidates related
     metadata management operations into a single interface. This design:
-    - Prevents tool explosion (7+ tools → 1 tool) while maintaining full functionality
+    - Prevents tool explosion (7+ tools -> 1 tool) while maintaining full functionality
     - Improves discoverability by grouping related operations together
     - Reduces cognitive load when working with metadata management tasks
     - Enables consistent metadata interface across all operations
@@ -383,7 +383,7 @@ async def plex_metadata(
         if "PLEX_TOKEN" in error_msg:
             suggestions = [
                 "Set PLEX_TOKEN environment variable",
-                "Get token from: Plex Web App → Settings → Account → Authorized Devices",
+                "Get token from: Plex Web App -> Settings -> Account -> Authorized Devices",
                 "Or visit: https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/",
             ]
         elif "not found" in error_msg.lower():

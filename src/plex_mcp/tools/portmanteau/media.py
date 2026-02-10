@@ -24,7 +24,7 @@ def _get_plex_service():
     if not token:
         raise RuntimeError(
             "PLEX_TOKEN environment variable is required. "
-            "Get your token from Plex Web App (Settings → Account → Authorized Devices) "
+            "Get your token from Plex Web App (Settings -> Account -> Authorized Devices) "
             "or visit https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/ "
             "for detailed instructions."
         )
@@ -53,7 +53,7 @@ async def plex_media(
     PORTMANTEAU PATTERN RATIONALE:
     Instead of creating 5+ separate tools (one per operation), this tool consolidates related
     media operations into a single interface. This design:
-    - Prevents tool explosion (5+ tools → 1 tool) while maintaining full functionality
+    - Prevents tool explosion (5+ tools -> 1 tool) while maintaining full functionality
     - Improves discoverability by grouping related operations together
     - Reduces cognitive load when working with media management tasks
     - Enables consistent media interface across all operations
@@ -207,12 +207,13 @@ async def plex_media(
                     "related_tools": ["plex_library"],
                 }
 
-            items = await plex.get_library_items(library_id, limit=limit)
+            result = await plex.get_library_items(library_id, limit=limit)
             return {
                 "success": True,
                 "operation": "browse",
-                "data": [item.dict() for item in items] if hasattr(items[0], "dict") else items,
-                "count": len(items),
+                "data": result.get("items", []),
+                "count": len(result.get("items", [])),
+                "total": result.get("total", 0),
             }
 
         # Operation: search
@@ -318,7 +319,7 @@ async def plex_media(
         if "PLEX_TOKEN" in error_msg:
             suggestions = [
                 "Set PLEX_TOKEN environment variable",
-                "Get token from: Plex Web App → Settings → Account → Authorized Devices",
+                "Get token from: Plex Web App -> Settings -> Account -> Authorized Devices",
                 "Or visit: https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/",
             ]
         elif "not found" in error_msg.lower():

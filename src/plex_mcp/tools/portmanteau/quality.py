@@ -24,7 +24,7 @@ def _get_plex_service():
     if not token:
         raise RuntimeError(
             "PLEX_TOKEN environment variable is required. "
-            "Get your token from Plex Web App (Settings → Account → Authorized Devices) "
+            "Get your token from Plex Web App (Settings -> Account -> Authorized Devices) "
             "or visit https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/ "
             "for detailed instructions."
         )
@@ -51,7 +51,7 @@ async def plex_quality(
     PORTMANTEAU PATTERN RATIONALE:
     Instead of creating 6 separate tools (one per profile operation), this tool consolidates related
     quality profile operations into a single interface. This design:
-    - Prevents tool explosion (6 tools → 1 tool) while maintaining full functionality
+    - Prevents tool explosion (6 tools -> 1 tool) while maintaining full functionality
     - Improves discoverability by grouping related operations together
     - Reduces cognitive load when working with quality profile tasks
     - Enables consistent quality profile interface across all operations

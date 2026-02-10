@@ -24,7 +24,7 @@ def _get_plex_service():
     if not token:
         raise RuntimeError(
             "PLEX_TOKEN environment variable is required. "
-            "Get your token from Plex Web App (Settings → Account → Authorized Devices) "
+            "Get your token from Plex Web App (Settings > Account > Authorized Devices) "
             "or visit https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/ "
             "for detailed instructions."
         )
