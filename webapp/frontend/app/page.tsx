@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { Library, Search, Server } from "lucide-react";
-import { getServerStatus } from "@/lib/api";
+import { getServerStatus } from "@/utils/api";
 import { ErrorBanner } from "@/components/ui/error-banner";
 
 const BACKEND_HINT =
   "Set PLEX_TOKEN in webapp/backend/.env. Run: cd webapp; powershell -ExecutionPolicy Bypass -File .\\start.ps1";
 
 export default async function Home() {
-  let status: { success?: boolean; message?: string; [key: string]: unknown } | null = null;
+  let status: { success?: boolean; message?: string;[key: string]: unknown } | null = null;
   try {
     status = await getServerStatus();
   } catch {

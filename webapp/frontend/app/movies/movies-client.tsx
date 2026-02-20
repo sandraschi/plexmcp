@@ -138,22 +138,20 @@ export function MoviesClient({
           <button
             type="button"
             onClick={() => updateView("card")}
-            className={`px-3 py-1.5 rounded-lg text-sm border transition-colors ${
-              viewMode === "card"
+            className={`px-3 py-1.5 rounded-lg text-sm border transition-colors ${viewMode === "card"
                 ? "bg-amber/20 border-amber/50 text-amber"
                 : "glass-panel border-slate-600/50 text-slate-400 hover:text-slate-200"
-            }`}
+              }`}
           >
             Cards
           </button>
           <button
             type="button"
             onClick={() => updateView("list")}
-            className={`px-3 py-1.5 rounded-lg text-sm border transition-colors ${
-              viewMode === "list"
+            className={`px-3 py-1.5 rounded-lg text-sm border transition-colors ${viewMode === "list"
                 ? "bg-amber/20 border-amber/50 text-amber"
                 : "glass-panel border-slate-600/50 text-slate-400 hover:text-slate-200"
-            }`}
+              }`}
           >
             List
           </button>

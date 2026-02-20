@@ -1,4 +1,4 @@
-import { listLibraries, getMovies } from "@/lib/api";
+import { listLibraries, getMovies } from "@/utils/api";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { MoviesClient } from "./movies-client";
 

@@ -1,4 +1,4 @@
-import { getSettings } from "@/lib/api";
+import { getSettings } from "@/utils/api";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { SettingsClient } from "./settings-client";
 

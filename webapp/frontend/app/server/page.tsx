@@ -1,4 +1,4 @@
-import { getServerInfo } from "@/lib/api";
+import { getServerInfo } from "@/utils/api";
 import { ErrorBanner } from "@/components/ui/error-banner";
 
 export default async function ServerPage() {

@@ -26,9 +26,17 @@ if (-not (Test-Path $SrcPath)) {
     Write-Host "[ERROR] Source path not found: $SrcPath" -ForegroundColor Red
     exit 1
 }
-Write-Host "[INFO] Backend http://localhost:$BackendPort  Frontend http://localhost:$FrontendPort" -ForegroundColor Green
 $backendDir = Join-Path $WebappRoot "backend"
-$backendCmd = "Set-Location '$backendDir'; `$env:PYTHONPATH='$SrcPath'; `$env:PORT='$BackendPort'; `$env:CORS_ORIGINS='http://localhost:$FrontendPort,http://127.0.0.1:$FrontendPort'; python -m uvicorn app.main:app --reload --host 0.0.0.0 --port $BackendPort"
+$backendEnvPath = Join-Path $backendDir ".env"
+$plexEnv = ""
+if (Test-Path $backendEnvPath) {
+    Get-Content $backendEnvPath | ForEach-Object {
+        if ($_ -match "^\s*PLEX_TOKEN=(.+)$") { $plexEnv += "`$env:PLEX_TOKEN='$($matches[1].Trim())'; " }
+        if ($_ -match "^\s*PLEX_URL=(.+)$")    { $plexEnv += "`$env:PLEX_URL='$($matches[1].Trim())'; " }
+    }
+}
+Write-Host "[INFO] Backend http://localhost:$BackendPort  Frontend http://localhost:$FrontendPort" -ForegroundColor Green
+$backendCmd = "Set-Location '$backendDir'; `$env:PYTHONPATH='$SrcPath'; `$env:PORT='$BackendPort'; `$env:CORS_ORIGINS='http://localhost:$FrontendPort,http://127.0.0.1:$FrontendPort'; $plexEnv python -m uvicorn app.main:app --reload --host 0.0.0.0 --port $BackendPort"
 Start-Process powershell -ArgumentList "-NoExit", "-Command", $backendCmd
 
 Start-Sleep -Seconds 2

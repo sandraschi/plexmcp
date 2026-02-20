@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { proxyGet } from "@/lib/proxy";
+import { proxyGet } from "../../../../utils/proxy";
 
 const BACKEND_URL = (
   process.env.API_URL ||

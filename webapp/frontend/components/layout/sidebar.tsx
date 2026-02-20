@@ -24,9 +24,8 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
   return (
     <aside
-      className={`shrink-0 flex flex-col glass-panel-strong border-r border-slate-600/50 transition-[width] duration-200 ${
-        collapsed ? "w-16 min-w-[4rem]" : "w-56 min-w-[14rem]"
-      }`}
+      className={`shrink-0 flex flex-col glass-panel-strong border-r border-slate-600/50 transition-[width] duration-200 ${collapsed ? "w-16 min-w-[4rem]" : "w-56 min-w-[14rem]"
+        }`}
     >
       <nav className="flex-1 py-4 px-2 space-y-0.5 overflow-y-auto">
         {navItems.map(({ href, label, icon: Icon }) => {
@@ -35,9 +34,8 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             <Link
               key={href}
               href={href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                isActive ? "bg-amber/20 text-amber" : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
-              } ${collapsed ? "justify-center px-2" : ""}`}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${isActive ? "bg-amber/20 text-amber" : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+                } ${collapsed ? "justify-center px-2" : ""}`}
               title={collapsed ? label : undefined}
             >
               <Icon className="w-5 h-5 shrink-0" />

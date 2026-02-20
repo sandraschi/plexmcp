@@ -1,13 +1,9 @@
 {
-  "/api/llm/models/route": "app/api/llm/models/route.js",
-  "/api/server/info/route": "app/api/server/info/route.js",
   "/api/server/status/route": "app/api/server/status/route.js",
-  "/api/libraries/route": "app/api/libraries/route.js",
-  "/api/help/route": "app/api/help/route.js",
-  "/settings/page": "app/settings/page.js",
-  "/search/page": "app/search/page.js",
-  "/server/page": "app/server/page.js",
+  "/api/system/settings/route": "app/api/system/settings/route.js",
   "/page": "app/page.js",
-  "/chat/page": "app/chat/page.js",
-  "/libraries/page": "app/libraries/page.js"
+  "/search/page": "app/search/page.js",
+  "/libraries/page": "app/libraries/page.js",
+  "/settings/page": "app/settings/page.js",
+  "/movies/page": "app/movies/page.js"
 }

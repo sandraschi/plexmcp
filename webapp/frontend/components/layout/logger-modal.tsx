@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getLogs } from "@/lib/api";
+import { getLogs } from "@/utils/api";
 
 interface LoggerModalProps {
   onClose: () => void;
@@ -48,6 +48,8 @@ export function LoggerModal({ onClose }: LoggerModalProps) {
             <select
               value={level}
               onChange={(e) => setLevel(e.target.value)}
+              title="Log Level"
+              aria-label="Log Level"
               className="px-2 py-1 rounded bg-slate-700 text-slate-200 text-sm"
             >
               <option value="">All levels</option>
@@ -59,6 +61,8 @@ export function LoggerModal({ onClose }: LoggerModalProps) {
             <select
               value={tail}
               onChange={(e) => setTail(Number(e.target.value))}
+              title="Number of lines to show"
+              aria-label="Number of lines to show"
               className="px-2 py-1 rounded bg-slate-700 text-slate-200 text-sm"
             >
               <option value={100}>100 lines</option>
@@ -69,6 +73,8 @@ export function LoggerModal({ onClose }: LoggerModalProps) {
             <input
               type="text"
               placeholder="Filter..."
+              title="Filter logs"
+              aria-label="Filter logs"
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && load()}
@@ -92,7 +98,7 @@ export function LoggerModal({ onClose }: LoggerModalProps) {
         </div>
         {file && <p className="px-4 py-1 text-xs text-slate-500 truncate">{file}</p>}
         <pre className="p-4 overflow-auto text-sm text-slate-300 whitespace-pre-wrap font-mono flex-1 min-h-0">
-          {error ?? lines.join("") || "No log file found."}
+          {error || lines.join("") || "No log file found."}
         </pre>
       </div>
     </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getHelp } from "@/lib/api";
+import { getHelp } from "@/utils/api";
 
 interface HelpModalProps {
   onClose: () => void;

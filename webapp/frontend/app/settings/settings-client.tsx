@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getSettings, updateSettings, getLlmModels } from "@/lib/api";
+import { getSettings, updateSettings, getLlmModels } from '@/utils/api';
 
 const DEFAULT_MOVIES_LIBRARY_KEY = "plex-webapp-default-movies-library";
 const DEFAULT_LLM_MODEL_KEY = "plex-webapp-default-llm-model";

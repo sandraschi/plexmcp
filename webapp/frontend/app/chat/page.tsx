@@ -37,7 +37,7 @@ export default function ChatPage() {
     fetch("/api/llm/models")
       .then((r) => r.json())
       .then((d: { models?: string[] }) => setModels(d.models ?? []))
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   useEffect(() => {
@@ -66,13 +66,13 @@ export default function ChatPage() {
     const blob =
       format === "md"
         ? new Blob(
-            [
-              messages
-                .map((m) => (m.role === "user" ? `**You:** ${m.content}` : `**Assistant:** ${m.content}`))
-                .join("\n\n"),
-            ],
-            { type: "text/markdown" }
-          )
+          [
+            messages
+              .map((m) => (m.role === "user" ? `**You:** ${m.content}` : `**Assistant:** ${m.content}`))
+              .join("\n\n"),
+          ],
+          { type: "text/markdown" }
+        )
         : new Blob([JSON.stringify({ messages }, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -201,11 +201,10 @@ export default function ChatPage() {
             className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
           >
             <div
-              className={`max-w-[85%] rounded-lg px-4 py-2 ${
-                msg.role === "user"
-                  ? "bg-amber/20 text-slate-200"
-                  : "bg-slate-700/80 text-slate-200"
-              }`}
+              className={`max-w-[85%] rounded-lg px-4 py-2 ${msg.role === "user"
+                ? "bg-amber/20 text-slate-200"
+                : "bg-slate-700/80 text-slate-200"
+                }`}
             >
               <p className="whitespace-pre-wrap">{msg.content}</p>
             </div>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { listLibraries } from "@/lib/api";
+import { listLibraries } from "@/utils/api";
 import { ErrorBanner } from "@/components/ui/error-banner";
 
 export default async function LibrariesPage() {
