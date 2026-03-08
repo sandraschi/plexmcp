@@ -21,6 +21,21 @@
       "static/chunks/main-app.js",
       "static/chunks/app/api/server/status/route.js"
     ],
+    "/libraries/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/libraries/page.js"
+    ],
+    "/api/libraries/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/libraries/route.js"
+    ],
+    "/search/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/search/page.js"
+    ],
     "/movies/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -31,11 +46,6 @@
       "static/chunks/main-app.js",
       "static/chunks/app/api/system/settings/route.js"
     ],
-    "/api/libraries/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/libraries/route.js"
-    ],
     "/api/movies/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -45,6 +55,31 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/image/[...path]/route.js"
+    ],
+    "/chat/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/chat/page.js"
+    ],
+    "/api/llm/models/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/llm/models/route.js"
+    ],
+    "/search/semantic/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/search/semantic/page.js"
+    ],
+    "/settings/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/settings/page.js"
+    ],
+    "/api/rag/sync/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/rag/sync/route.js"
     ]
   }
 }

@@ -54,7 +54,7 @@ _is_stdio_mode = not sys.stdout.isatty()
 
 # NUCLEAR OPTION: Completely disable logger during stdio mode
 # Import logger first, then replace it with a no-op to prevent any stdout writes
-import logging
+import logging  # noqa: E402
 
 if _is_stdio_mode:
     # Replace stdout with our devnull version to catch any accidental writes
@@ -98,20 +98,24 @@ if _is_stdio_mode:
 
     logging.getLogger = null_getLogger
 
-from fastmcp import FastMCP
+from fastmcp import FastMCP  # noqa: E402
+from fastmcp.prompts import Message  # noqa: E402
 
-# Create the main FastMCP instance (FastMCP 3.1: name and version only)
-mcp = FastMCP(name="PlexMCP", version="2.2.0")
+# FastMCP 3.1: identity/instructions only; no name=, version=, description=, log_level=, debug=
+mcp = FastMCP(
+    "PlexMCP",
+    instructions="PlexMCP manages Plex Media Server: libraries, search, playback, metadata, RAG. Use portmanteau tools (plex_library, plex_media, plex_search, etc.) and plex_rag for semantic search.",
+)
 
 
 @mcp.prompt()
-def plex_media_guide() -> list[dict]:
+def plex_media_guide() -> list[Message]:
     """Guide for Plex media search and RAG. Use for agentic workflows."""
     return [
-        {
-            "role": "user",
-            "content": "PlexMCP: Use plex_search for keyword search; use plex_rag(operation='semantic_search', query='...') for natural-language semantic search over indexed metadata. Run plex_rag(operation='sync_metadata') once to index before semantic search.",
-        }
+        Message(
+            "PlexMCP: Use plex_search for keyword search; use plex_rag(operation='semantic_search', query='...') for natural-language semantic search over indexed metadata. Run plex_rag(operation='sync_metadata') once to index before semantic search.",
+            role="user",
+        )
     ]
 
 

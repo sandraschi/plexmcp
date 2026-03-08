@@ -24,6 +24,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ALPHA
 
+### Changed
+- **FastMCP 3.1 alignment**: Constructor updated to 3.1 style: `FastMCP("PlexMCP", instructions="...")` (no `name=`, `version=` kwargs). Prompt `plex_media_guide` now returns `list[Message]` via `fastmcp.prompts.Message` instead of raw dicts. Webapp backend replaced deprecated `@app.on_event("startup")` with a lifespan context manager.
+
 ### Added
 - **Movies webapp**: Plex poster images on movie cards and list (via Next.js image proxy `/api/image/...` to backend). Movie detail modal on card/list click: wider layout (max-w-4xl), full poster, metadata (year, duration, content rating, rating, studio, genres, directors, tagline, summary), **Play in Plex** button (opens Plex Web in new tab when Plex URL is set in Settings), Close and Escape to dismiss.
 - **Settings RAG section**: **RAG / Indexing** block with "Reindex metadata" button calling `POST /api/rag/sync`; shows indexed count or error so reindexing is visible without going to Semantic search.

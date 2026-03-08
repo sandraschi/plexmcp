@@ -1,5 +1,5 @@
 """
-FastMCP 2.14.4+ Dual Transport Configuration
+FastMCP 3.1 Dual Transport Configuration
 
 Standard module for all MCP servers in d:/Dev/repos.
 Provides unified transport configuration for STDIO, HTTP Streamable, and legacy SSE modes.
@@ -22,7 +22,7 @@ CLI Arguments:
 Usage:
     from .transport import run_server
 
-    mcp = FastMCP("my-server", version="1.0.0")
+    mcp = FastMCP("my-server", instructions="...")  # FastMCP 3.1
 
     def main():
         run_server(mcp, server_name="my-server")

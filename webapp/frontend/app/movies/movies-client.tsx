@@ -7,6 +7,7 @@ const VIEW_KEY = "plex-webapp-movies-view";
 type ViewMode = "card" | "list";
 
 interface Lib {
+  id?: string | number;
   key?: string;
   title?: string;
   type?: string;
@@ -319,7 +320,7 @@ export function MoviesClient({
             >
               <option value="">All movie libraries</option>
               {libraries.map((lib) => (
-                <option key={lib.key ?? lib.title} value={lib.key ?? ""}>
+                <option key={lib.id ?? lib.key ?? lib.title} value={String(lib.id ?? lib.key ?? "")}>
                   {lib.title ?? lib.key ?? "Library"}
                 </option>
               ))}

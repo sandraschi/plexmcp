@@ -1,6 +1,6 @@
 # PlexMCP 🎬
 
-[![FastMCP](https://img.shields.io/badge/FastMCP-3.1-blue)](https://github.com/jlowin/fastmcp)
+[![FastMCP](https://img.shields.io/badge/FastMCP-3.1-blue)](https://gofastmcp.com)
 [![Python](https://img.shields.io/badge/Python-3.11+-green)](https://python.org)
 [![Plex](https://img.shields.io/badge/Plex-Media%20Server-orange)](https://plex.tv)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -109,15 +109,15 @@ pip install git+https://github.com/sandraschi/plex-mcp.git
 
 ### Running the Server
 
+**Stdio (Claude Desktop / MCP clients):**
 ```bash
-# Using the installed script
-plex-mcp --config config/local.yaml
-
-# Or directly with Python
-python -m plex_mcp.mcp_setup --config config/local.yaml
+uv run plex-mcp-advanced
+# or: python -m plex_mcp
 ```
 
-The server will be available at `http://localhost:8000` by default.
+**Webapp (FastAPI backend + Next.js frontend; MCP mounted at `/mcp`):**  
+From repo root run `.\webapp\start.ps1`. Backend: 10740, frontend: 10741. Open `http://localhost:10741`.  
+Backend serves REST at `/api/*` and mounts FastMCP 3.1 at `/mcp`.
 
 ## 📚 API Documentation
 

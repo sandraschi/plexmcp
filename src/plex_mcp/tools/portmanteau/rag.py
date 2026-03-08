@@ -36,7 +36,11 @@ async def plex_rag(
         if not ingestor.is_available:
             return {
                 "success": False,
-                "error": "RAG Core dependencies not found.",
+                "error": (
+                    "RAG Core dependencies not found. "
+                    "Install in-repo RAG: pip install plex-mcp-advanced[rag] "
+                    "(or add mcp-central-docs src to PYTHONPATH for shared vector store)."
+                ),
                 "error_code": "RAG_NOT_AVAILABLE",
             }
 

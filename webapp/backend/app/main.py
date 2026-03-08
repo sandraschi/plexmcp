@@ -3,6 +3,7 @@
 import logging
 import logging.handlers
 import os
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -51,10 +52,32 @@ logging.getLogger("uvicorn.error").addHandler(_handler)
 
 logger = logging.getLogger(__name__)
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Load file overrides and set PLEX/LLM env from .env if not already set."""
+    from .settings_store import load_and_apply
+
+    load_and_apply()
+    if not os.environ.get("PLEX_TOKEN") and settings.PLEX_TOKEN:
+        os.environ["PLEX_TOKEN"] = settings.PLEX_TOKEN
+    if not os.environ.get("PLEX_URL") and settings.PLEX_URL:
+        os.environ["PLEX_URL"] = settings.PLEX_URL
+        os.environ["PLEX_SERVER_URL"] = settings.PLEX_URL
+    if not os.environ.get("LLM_BASE_URL") and settings.LLM_BASE_URL:
+        os.environ["LLM_BASE_URL"] = settings.LLM_BASE_URL
+    if not os.environ.get("LLM_PROVIDER") and settings.LLM_PROVIDER:
+        os.environ["LLM_PROVIDER"] = settings.LLM_PROVIDER
+    if not os.environ.get("LLM_API_KEY") and settings.LLM_API_KEY:
+        os.environ["LLM_API_KEY"] = settings.LLM_API_KEY
+    yield
+
+
 app = FastAPI(
     title=settings.API_TITLE,
     description=settings.API_DESCRIPTION,
     version=settings.API_VERSION,
+    lifespan=lifespan,
 )
 
 try:
@@ -100,25 +123,6 @@ async def root():
         "version": settings.API_VERSION,
         "docs": "/docs",
     }
-
-
-@app.on_event("startup")
-async def startup_event():
-    """Load file overrides then set PLEX/LLM env from .env if not already set."""
-    from .settings_store import load_and_apply
-
-    load_and_apply()
-    if not os.environ.get("PLEX_TOKEN") and settings.PLEX_TOKEN:
-        os.environ["PLEX_TOKEN"] = settings.PLEX_TOKEN
-    if not os.environ.get("PLEX_URL") and settings.PLEX_URL:
-        os.environ["PLEX_URL"] = settings.PLEX_URL
-        os.environ["PLEX_SERVER_URL"] = settings.PLEX_URL
-    if not os.environ.get("LLM_BASE_URL") and settings.LLM_BASE_URL:
-        os.environ["LLM_BASE_URL"] = settings.LLM_BASE_URL
-    if not os.environ.get("LLM_PROVIDER") and settings.LLM_PROVIDER:
-        os.environ["LLM_PROVIDER"] = settings.LLM_PROVIDER
-    if not os.environ.get("LLM_API_KEY") and settings.LLM_API_KEY:
-        os.environ["LLM_API_KEY"] = settings.LLM_API_KEY
 
 
 @app.get("/health")

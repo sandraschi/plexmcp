@@ -175,7 +175,7 @@ export function SettingsClient({ settings }: SettingsClientProps) {
       <section className="rounded-xl glass-panel border border-slate-600/50 p-6">
         <h2 className="text-lg font-semibold text-amber mb-4">RAG / Indexing</h2>
         <p className="text-sm text-slate-400 mb-3">
-          Sync Plex metadata into the semantic search index. Use after adding libraries or when search is stale.
+          Sync Plex metadata into the semantic search index. Use after adding libraries or when search is stale. First run may download the embedding model.
         </p>
         <button
           type="button"
