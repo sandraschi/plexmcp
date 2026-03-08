@@ -19,39 +19,73 @@ interface MoviesClientProps {
   currentPage: number;
   limit: number;
   hasNext: boolean;
+  plexUrl?: string | null;
+}
+
+/** Build poster URL via backend image proxy. item.thumb is Plex path e.g. /library/metadata/1/thumb/2 */
+function getPosterUrl(item: Record<string, unknown>): string | null {
+  const thumb = item?.thumb ?? item?.art;
+  if (typeof thumb !== "string" || !thumb) {
+    const rk = item?.ratingKey ?? item?.rating_key ?? item?.key;
+    if (rk != null) return `/api/image/library/metadata/${rk}/thumb`;
+    return null;
+  }
+  const path = thumb.replace(/^\//, "");
+  return path ? `/api/image/${path}` : null;
 }
 
 function MovieItem({
   item,
   index,
   view,
+  onClick,
 }: {
   item: Record<string, unknown>;
   index: number;
   view: ViewMode;
+  onClick?: () => void;
 }) {
   const title = String(item?.title ?? item?.name ?? "Unknown");
   const year = item?.year ?? (item as { year?: string })?.year?.toString();
   const summary = item?.summary ?? item?.plot;
-  const key = String(item?.key ?? item?.ratingKey ?? index);
+  const key = String(item?.key ?? item?.ratingKey ?? item?.rating_key ?? index);
+  const posterUrl = getPosterUrl(item);
+
+  const cardClass =
+    "rounded-xl glass-panel border border-slate-600/50 overflow-hidden hover:border-amber/40 transition-colors cursor-pointer";
+  const listClass =
+    "flex flex-wrap items-center gap-3 rounded-lg glass-panel border border-slate-600/50 px-4 py-3 hover:border-amber/40 transition-colors cursor-pointer";
 
   if (view === "list") {
     return (
       <div
         key={key}
-        className="flex flex-wrap items-baseline gap-x-3 gap-y-1 rounded-lg glass-panel border border-slate-600/50 px-4 py-3 hover:border-amber/40 transition-colors"
+        role="button"
+        tabIndex={0}
+        onClick={onClick}
+        onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onClick?.()}
+        className={listClass}
       >
-        <p className="font-semibold text-slate-200 shrink-0 min-w-[120px]">
-          {title}
-        </p>
-        {year != null && (
-          <span className="text-sm text-slate-500">{String(year)}</span>
+        {posterUrl && (
+          <img
+            src={posterUrl}
+            alt=""
+            className="w-12 h-12 rounded object-cover shrink-0 bg-slate-800"
+          />
         )}
-        {summary != null && (
-          <p className="text-sm text-slate-400 flex-1 min-w-0 line-clamp-1">
-            {String(summary)}
+        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 min-w-0 flex-1">
+          <p className="font-semibold text-slate-200 shrink-0 min-w-[120px]">
+            {title}
           </p>
-        )}
+          {year != null && (
+            <span className="text-sm text-slate-500">{String(year)}</span>
+          )}
+          {summary != null && (
+            <p className="text-sm text-slate-400 flex-1 min-w-0 line-clamp-1">
+              {String(summary)}
+            </p>
+          )}
+        </div>
       </div>
     );
   }
@@ -59,19 +93,169 @@ function MovieItem({
   return (
     <div
       key={key}
-      className="rounded-xl glass-panel border border-slate-600/50 p-4 hover:border-amber/40 transition-colors"
+      role="button"
+      tabIndex={0}
+      onClick={onClick}
+      onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onClick?.()}
+      className={cardClass}
     >
-      <p className="font-semibold text-slate-200 truncate" title={title}>
-        {title}
-      </p>
-      {year != null && (
-        <p className="text-sm text-slate-500">{String(year)}</p>
+      {posterUrl ? (
+        <img
+          src={posterUrl}
+          alt=""
+          className="w-full aspect-[2/3] object-cover bg-slate-800"
+        />
+      ) : (
+        <div className="w-full aspect-[2/3] bg-slate-800 flex items-center justify-center text-slate-500 text-sm">
+          No image
+        </div>
       )}
-      {summary != null && (
-        <p className="text-xs text-slate-400 mt-1 line-clamp-2">
-          {String(summary)}
+      <div className="p-3">
+        <p className="font-semibold text-slate-200 truncate" title={title}>
+          {title}
         </p>
-      )}
+        {year != null && (
+          <p className="text-sm text-slate-500">{String(year)}</p>
+        )}
+        {summary != null && (
+          <p className="text-xs text-slate-400 mt-1 line-clamp-2">
+            {String(summary)}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function MovieModal({
+  item,
+  plexUrl,
+  onClose,
+}: {
+  item: Record<string, unknown>;
+  plexUrl?: string | null;
+  onClose: () => void;
+}) {
+  const title = String(item?.title ?? item?.name ?? "Unknown");
+  const year = item?.year ?? (item as { year?: string })?.year?.toString();
+  const summary = item?.summary ?? item?.plot;
+  const posterUrl = getPosterUrl(item);
+  const contentRating = item?.content_rating ?? item?.contentRating;
+  const rating = item?.rating ?? item?.audience_rating;
+  const duration = item?.duration;
+  const genres = (item?.genres as string[] | undefined) ?? [];
+  const directors = (item?.directors as string[] | undefined) ?? [];
+  const studio = item?.studio;
+  const tagline = item?.tagline;
+  const key = item?.key ?? item?.rating_key ?? item?.ratingKey;
+  const playUrl =
+    plexUrl && key
+      ? `${plexUrl.replace(/\/$/, "")}/web/index.html#!/details?key=${encodeURIComponent(String(key))}`
+      : null;
+
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", h);
+    return () => document.removeEventListener("keydown", h);
+  }, [onClose]);
+
+  const durationStr =
+    duration != null
+      ? Number(duration) >= 60
+        ? `${Math.floor(Number(duration) / 60)}h ${Number(duration) % 60}m`
+        : `${duration} min`
+      : null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="movie-modal-title"
+    >
+      <div
+        className="rounded-xl glass-panel border border-slate-600/50 max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex flex-1 min-h-0">
+          {/* Poster: fixed width, 2:3 aspect */}
+          <div className="w-48 sm:w-56 shrink-0 aspect-[2/3] bg-slate-900/50 overflow-hidden">
+            {posterUrl ? (
+              <img
+                src={posterUrl}
+                alt=""
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-slate-500 text-sm">
+                No image
+              </div>
+            )}
+          </div>
+
+          {/* Content: scrollable */}
+          <div className="flex-1 min-w-0 overflow-y-auto flex flex-col">
+            <div className="p-6">
+              <h2 id="movie-modal-title" className="text-2xl font-bold text-slate-100 pr-8">
+                {title}
+              </h2>
+              <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-sm text-slate-400">
+                {year != null && <span>{String(year)}</span>}
+                {durationStr && <span>{durationStr}</span>}
+                {contentRating != null && <span>{String(contentRating)}</span>}
+                {rating != null && <span>{Number(rating).toFixed(1)}</span>}
+                {studio && <span>{String(studio)}</span>}
+              </div>
+              {tagline && (
+                <p className="text-amber/90 italic text-sm mt-3">{String(tagline)}</p>
+              )}
+              {genres.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {genres.map((g) => (
+                    <span
+                      key={g}
+                      className="px-2 py-0.5 rounded bg-slate-700/80 text-slate-300 text-xs"
+                    >
+                      {g}
+                    </span>
+                  ))}
+                </div>
+              )}
+              {directors.length > 0 && (
+                <p className="text-slate-400 text-sm mt-2">
+                  Director{directors.length > 1 ? "s" : ""}: {directors.join(", ")}
+                </p>
+              )}
+              {summary && (
+                <p className="text-slate-300 text-sm mt-4 leading-relaxed">{String(summary)}</p>
+              )}
+            </div>
+
+            <div className="mt-auto p-6 pt-0 flex flex-wrap items-center gap-3 border-t border-slate-600/50">
+              {playUrl && (
+                <a
+                  href={playUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-amber text-slate-900 font-semibold hover:bg-amber/90 transition-colors"
+                >
+                  Play in Plex
+                </a>
+              )}
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 rounded-lg bg-slate-700 text-slate-200 hover:bg-slate-600 border border-slate-600/50"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -83,10 +267,12 @@ export function MoviesClient({
   currentPage,
   limit,
   hasNext,
+  plexUrl,
 }: MoviesClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [viewMode, setViewMode] = useState<ViewMode>("card");
+  const [selectedMovie, setSelectedMovie] = useState<Record<string, unknown> | null>(null);
 
   useEffect(() => {
     const stored = localStorage.getItem(VIEW_KEY);
@@ -115,6 +301,13 @@ export function MoviesClient({
 
   return (
     <>
+      {selectedMovie && (
+        <MovieModal
+          item={selectedMovie}
+          plexUrl={plexUrl}
+          onClose={() => setSelectedMovie(null)}
+        />
+      )}
       <div className="mb-6 flex flex-wrap items-center gap-4">
         {libraries.length > 0 && (
           <div className="flex items-center gap-2">
@@ -169,6 +362,7 @@ export function MoviesClient({
                 item={row}
                 index={i}
                 view="card"
+                onClick={() => setSelectedMovie(row)}
               />
             );
           })}
@@ -184,6 +378,7 @@ export function MoviesClient({
                 item={row}
                 index={i}
                 view="list"
+                onClick={() => setSelectedMovie(row)}
               />
             );
           })}

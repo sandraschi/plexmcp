@@ -10,9 +10,9 @@ Browser UI for PlexMCP: connects to the MCP server via the backend (FastAPI), wh
 ## Features
 
 - **Layout**: Glassmorphism panels, retractable sidebar, topbar (Help + Logs buttons, Webapps dropdown)
-- **Pages**: Overview (server status), Libraries, **Search** (keyword), **Semantic search** (RAG; "Sync / Index metadata" button to index, then natural-language search), Movies, **Chat**, Server (raw JSON), Settings
-- **Movies**: Library filter, pagination (page/limit in URL), card vs list view toggle (persisted in browser)
-- **Settings**: Plex API key and URL; LLM provider (ollama/lmstudio/openai), base URL, API key, default model (from backend); saved to backend data/settings.json and applied at runtime (overrides .env when set)
+- **Pages**: Overview (server status), Libraries, **Movies**, **Search** (keyword), **Semantic search** (RAG), **Chat**, Server (raw JSON), Settings
+- **Movies**: Plex poster images (via `/api/image/...` proxy), library filter, pagination, card/list view. **Click a movie** to open detail modal: poster, metadata (year, duration, rating, genres, directors, tagline, summary), **Play in Plex** button (opens Plex Web in new tab when Plex URL is set in Settings)
+- **Settings**: Plex API key and URL; LLM provider, base URL, API key, default model; **RAG / Indexing** section with "Reindex metadata" button (same as Semantic search sync); saved to backend data/settings.json (overrides .env when set)
 - **Modals**: Logger (log tail, level/filter), Help (tiered content)
 - **Chat**: Local LLM (Ollama/LM Studio) with **live system preprompt** (MCP server tools, webapp pages, Plex server name/version, media libraries list, integrations). Personalities, prompt refining, export (MD/JSON). Use `use_context: true` (default) in POST /api/llm/chat to inject context.
 - **RAG**: Keyword context for chat (`GET /api/rag/context`); semantic search (`GET /api/rag/semantic?query=...`); **index from UI** (`POST /api/rag/sync`) or via MCP `plex_rag(operation='sync_metadata')`. Requires mcp-central-docs source on path (see root README RAG dependency).

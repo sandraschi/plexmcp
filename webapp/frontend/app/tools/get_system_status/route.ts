@@ -1,14 +1,14 @@
 import { NextRequest } from "next/server";
-import { proxyGet } from "@/utils/proxy";
+import { proxyGet, proxyPost } from "@/utils/proxy";
 
-/** Handle OPTIONS so MCP clients probing /tools/get_system_status get 200 instead of 404. */
+/** Handle OPTIONS so MCP clients probing /tools/get_system_status get 204 instead of 404. */
 export async function OPTIONS() {
   return new Response(null, {
     status: 204,
     headers: {
-      Allow: "GET, OPTIONS",
+      Allow: "GET, POST, OPTIONS",
       "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, OPTIONS",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type",
     },
   });
@@ -19,6 +19,15 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     return await proxyGet("/api/server/status", searchParams);
+  } catch {
+    return new Response(null, { status: 502 });
+  }
+}
+
+/** POST: same as GET (some MCP clients call this path with POST). */
+export async function POST() {
+  try {
+    return await proxyGet("/api/server/status");
   } catch {
     return new Response(null, { status: 502 });
   }

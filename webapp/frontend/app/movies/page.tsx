@@ -1,4 +1,4 @@
-import { listLibraries, getMovies } from "@/utils/api";
+import { listLibraries, getMovies, getSettings } from "@/utils/api";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { MoviesClient } from "./movies-client";
 
@@ -16,6 +16,15 @@ export default async function MoviesPage({
 
   let libraries: { key?: string; title?: string; type?: string }[] = [];
   let moviesData: { success?: boolean; data?: unknown[]; results?: unknown[]; error?: string } | null = null;
+  let plexUrl: string | null = null;
+
+  try {
+    const settings = await getSettings();
+    const url = settings?.plex_url;
+    plexUrl = typeof url === "string" && url.trim() ? url.trim() : null;
+  } catch {
+    plexUrl = null;
+  }
 
   try {
     const libRes = await listLibraries();
@@ -69,6 +78,7 @@ export default async function MoviesPage({
           currentPage={page}
           limit={limit}
           hasNext={hasNext}
+          plexUrl={plexUrl}
         />
       )}
     </div>

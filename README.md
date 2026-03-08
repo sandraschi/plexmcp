@@ -182,9 +182,9 @@ mypy .
 
 A full webapp provides a browser UI backed by the **FastAPI webapp backend** (`webapp/backend/app/main:app`) on port **10740** and a Next.js 15 frontend on **10741** (fleet reservoir per [mcp-central-docs WEBAPP_PORTS](https://github.com/sandraschi/mcp-central-docs/blob/main/docs/operations/WEBAPP_PORTS.md)). The backend serves all REST routes and mounts the MCP server at `/mcp`. Fleet launch and v1 APIs live on the webapp backend (not on the MCP app).
 
-**Pages**: Overview, Libraries, Movies, **Search** (keyword), **Semantic search** (RAG; index via "Sync / Index metadata" button or `plex_rag(operation='sync_metadata')`), **Chat**, Server, Settings.
+**Pages**: Overview, Libraries, **Movies** (posters from Plex, card/list view, **movie detail modal** with metadata and **Play in Plex**), **Search** (keyword), **Semantic search** (RAG; index via "Sync / Index metadata" or Settings **RAG / Indexing** reindex button), **Chat**, Server, Settings.
 
-**Features**: Glassmorphism UI, retractable sidebar, topbar, Logger modal (log tail), Help modal; local LLM chat (Ollama/LM Studio) with **live preprompt** (MCP server, webapp, Plex server, media libraries, integrations); personalities, prompt refining, chat export; **RAG**: keyword context (`GET /api/rag/context`), semantic search (`GET /api/rag/semantic`), **sync from UI** (`POST /api/rag/sync`); AI workflows; fleet launch (`POST /api/fleet/launch`), v1 search/chat (`POST /api/v1/search`, `POST /api/v1/chat`).
+**Features**: Glassmorphism UI, retractable sidebar, topbar, Logger modal (log tail), Help modal; **Movies**: Plex poster images via image proxy, click-to-open detail modal (year, duration, rating, genres, directors, summary, **Play in Plex** link when Plex URL is set); **Settings**: RAG/Indexing section with Reindex metadata button; local LLM chat (Ollama/LM Studio) with **live preprompt**; **RAG**: keyword context, semantic search, sync from UI or Settings; AI workflows; fleet launch, v1 search/chat.
 
 **Start**: From repo root, `cd webapp` then `powershell -ExecutionPolicy Bypass -File .\start.ps1`. The script starts the FastAPI backend (via the project venv’s `python -m uvicorn app.main:app`) and the Next.js dev server. Set `PLEX_TOKEN` and `PLEX_URL` in `webapp/backend/.env`. See [webapp/README.md](webapp/README.md) and [webapp/SETUP.md](webapp/SETUP.md).
 

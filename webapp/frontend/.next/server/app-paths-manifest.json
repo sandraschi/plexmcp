@@ -1,7 +1,10 @@
 {
   "/tools/get_system_status/route": "app/tools/get_system_status/route.js",
-  "/libraries/page": "app/libraries/page.js",
-  "/chat/page": "app/chat/page.js",
-  "/search/page": "app/search/page.js",
-  "/page": "app/page.js"
+  "/api/server/status/route": "app/api/server/status/route.js",
+  "/api/system/settings/route": "app/api/system/settings/route.js",
+  "/api/image/[...path]/route": "app/api/image/[...path]/route.js",
+  "/api/movies/route": "app/api/movies/route.js",
+  "/api/libraries/route": "app/api/libraries/route.js",
+  "/page": "app/page.js",
+  "/movies/page": "app/movies/page.js"
 }

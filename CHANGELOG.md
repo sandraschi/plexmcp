@@ -25,6 +25,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased] - ALPHA
 
 ### Added
+- **Movies webapp**: Plex poster images on movie cards and list (via Next.js image proxy `/api/image/...` to backend). Movie detail modal on card/list click: wider layout (max-w-4xl), full poster, metadata (year, duration, content rating, rating, studio, genres, directors, tagline, summary), **Play in Plex** button (opens Plex Web in new tab when Plex URL is set in Settings), Close and Escape to dismiss.
+- **Settings RAG section**: **RAG / Indexing** block with "Reindex metadata" button calling `POST /api/rag/sync`; shows indexed count or error so reindexing is visible without going to Semantic search.
+- **In-repo RAG fallback**: When mcp-central-docs vector store is unavailable, optional LanceDB + sentence-transformers fallback (install with `pip install plex-mcp-advanced[rag]`); see `src/plex_mcp/services/rag_ingestor.py`.
 - **FastMCP 3.1 alignment**: Transport docstrings and help updated to 3.1; fleet launch and v1 search/chat routes moved from MCP app to webapp backend (`POST /api/fleet/launch`, `POST /api/v1/search`, `POST /api/v1/chat`). Prompt `plex_media_guide` for agentic workflows.
 - **Semantic search page**: Webapp page `/search/semantic` with natural-language search over RAG index; **Sync / Index metadata** button to start RAG indexing from the UI (`POST /api/rag/sync`). Backend `GET /api/rag/semantic` and `plex_rag` in MCP client tool map.
 - **Chat preprompt**: LLM chat receives a live system preprompt (MCP server tools, webapp pages, Plex server name/version, media libraries, integrations). Built in `webapp/backend/app/chat_context.py`; injected when `use_context: true` (default) in `POST /api/llm/chat`.

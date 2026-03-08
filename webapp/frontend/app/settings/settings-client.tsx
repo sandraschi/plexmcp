@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getSettings, updateSettings, getLlmModels } from '@/utils/api';
+import { getSettings, updateSettings, getLlmModels, syncRag } from "@/utils/api";
 
 const DEFAULT_MOVIES_LIBRARY_KEY = "plex-webapp-default-movies-library";
 const DEFAULT_LLM_MODEL_KEY = "plex-webapp-default-llm-model";
@@ -30,6 +30,8 @@ export function SettingsClient({ settings }: SettingsClientProps) {
   const [models, setModels] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+  const [ragReindexing, setRagReindexing] = useState(false);
+  const [ragReindexResult, setRagReindexResult] = useState<{ count: number; error?: string } | null>(null);
 
   useEffect(() => {
     setPlexUrl(settings.plex_url ?? "");
@@ -43,6 +45,23 @@ export function SettingsClient({ settings }: SettingsClientProps) {
       .then((d: { models?: string[] }) => setModels(d.models ?? []))
       .catch(() => setModels([]));
   }, [settings]);
+
+  const handleRagReindex = async () => {
+    setRagReindexing(true);
+    setRagReindexResult(null);
+    try {
+      const data = await syncRag();
+      if (data.success) {
+        setRagReindexResult({ count: data.indexed_count ?? 0 });
+      } else {
+        setRagReindexResult({ count: 0, error: data.error ?? "Reindex failed" });
+      }
+    } catch (e) {
+      setRagReindexResult({ count: 0, error: e instanceof Error ? e.message : "Request failed" });
+    } finally {
+      setRagReindexing(false);
+    }
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -151,6 +170,28 @@ export function SettingsClient({ settings }: SettingsClientProps) {
             <p className="text-xs text-slate-500 mt-1">Fetched from LLM endpoint. Save to store preference.</p>
           </div>
         </div>
+      </section>
+
+      <section className="rounded-xl glass-panel border border-slate-600/50 p-6">
+        <h2 className="text-lg font-semibold text-amber mb-4">RAG / Indexing</h2>
+        <p className="text-sm text-slate-400 mb-3">
+          Sync Plex metadata into the semantic search index. Use after adding libraries or when search is stale.
+        </p>
+        <button
+          type="button"
+          onClick={handleRagReindex}
+          disabled={ragReindexing}
+          className="px-4 py-2 rounded-lg bg-slate-700 text-slate-200 font-medium hover:bg-slate-600 disabled:opacity-50 border border-slate-600/50"
+        >
+          {ragReindexing ? "Reindexing..." : "Reindex metadata"}
+        </button>
+        {ragReindexResult && (
+          <p className="text-sm mt-2 text-slate-400">
+            {ragReindexResult.error
+              ? `Error: ${ragReindexResult.error}`
+              : `Indexed ${ragReindexResult.count} items.`}
+          </p>
+        )}
       </section>
 
       <section className="rounded-xl glass-panel border border-slate-600/50 p-6">

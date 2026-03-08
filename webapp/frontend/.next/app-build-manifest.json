@@ -21,40 +21,30 @@
       "static/chunks/main-app.js",
       "static/chunks/app/api/server/status/route.js"
     ],
-    "/libraries/page": [
+    "/movies/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/libraries/page.js"
+      "static/chunks/app/movies/page.js"
+    ],
+    "/api/system/settings/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/system/settings/route.js"
     ],
     "/api/libraries/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/libraries/route.js"
     ],
-    "/search/page": [
+    "/api/movies/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/search/page.js"
+      "static/chunks/app/api/movies/route.js"
     ],
-    "/api/search/route": [
+    "/api/image/[...path]/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/search/route.js"
-    ],
-    "/chat/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/chat/page.js"
-    ],
-    "/api/llm/models/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/llm/models/route.js"
-    ],
-    "/api/llm/chat/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/llm/chat/route.js"
+      "static/chunks/app/api/image/[...path]/route.js"
     ]
   }
 }
