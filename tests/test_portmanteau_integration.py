@@ -55,17 +55,20 @@ class TestPortmanteauToolsIntegration:
     async def test_all_tools_have_operation_parameter(self, mock_plex_service):
         """Test that all tools accept operation parameter."""
         with patch(
-            "plex_mcp.tools.portmanteau.library._get_plex_service", return_value=mock_plex_service
+            "plex_mcp.tools.portmanteau.library._get_plex_service",
+            return_value=mock_plex_service,
         ):
             # Test that operation parameter is required
             with pytest.raises((TypeError, KeyError)):
-                await plex_library.fn()  # Missing operation
+                _fn = plex_library.fn if hasattr(plex_library, "fn") else plex_library
+                await _fn()  # Missing operation
 
     @pytest.mark.asyncio
     async def test_error_response_structure(self):
         """Test that all tools return consistent error response structure."""
         # Test with invalid operation or missing required params
-        result = await plex_library.fn(operation="get")  # Missing library_id
+        _fn = plex_library.fn if hasattr(plex_library, "fn") else plex_library
+        result = await _fn(operation="get")  # Missing library_id
 
         assert "success" in result
         assert result["success"] is False
@@ -77,9 +80,11 @@ class TestPortmanteauToolsIntegration:
     async def test_success_response_structure(self, mock_plex_service):
         """Test that all tools return consistent success response structure."""
         with patch(
-            "plex_mcp.tools.portmanteau.library._get_plex_service", return_value=mock_plex_service
+            "plex_mcp.tools.portmanteau.library._get_plex_service",
+            return_value=mock_plex_service,
         ):
-            result = await plex_library.fn(operation="list")
+            _fn = plex_library.fn if hasattr(plex_library, "fn") else plex_library
+            result = await _fn(operation="list")
 
             assert "success" in result
             assert result["success"] is True

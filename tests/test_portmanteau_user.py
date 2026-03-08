@@ -16,7 +16,9 @@ class TestPlexUser:
         with patch(
             "plex_mcp.tools.portmanteau.user._get_plex_service", return_value=mock_plex_service
         ):
-            result = await plex_user.fn(operation="list")
+            result = await (plex_user.fn if hasattr(plex_user, "fn") else plex_user)(
+                operation="list"
+            )
 
             assert result["success"] is True
             assert result["operation"] == "list"
@@ -28,7 +30,9 @@ class TestPlexUser:
         with patch(
             "plex_mcp.tools.portmanteau.user._get_plex_service", return_value=mock_plex_service
         ):
-            result = await plex_user.fn(operation="get", user_id="user123")
+            result = await (plex_user.fn if hasattr(plex_user, "fn") else plex_user)(
+                operation="get", user_id="user123"
+            )
 
             assert result["success"] is True
             assert result["operation"] == "get"
@@ -36,7 +40,7 @@ class TestPlexUser:
     @pytest.mark.asyncio
     async def test_get_operation_missing_id(self):
         """Test get operation requires user_id."""
-        result = await plex_user.fn(operation="get")
+        result = await (plex_user.fn if hasattr(plex_user, "fn") else plex_user)(operation="get")
 
         assert result["success"] is False
         assert "user_id" in result["error"].lower()
@@ -47,7 +51,7 @@ class TestPlexUser:
         with patch(
             "plex_mcp.tools.portmanteau.user._get_plex_service", return_value=mock_plex_service
         ):
-            result = await plex_user.fn(
+            result = await (plex_user.fn if hasattr(plex_user, "fn") else plex_user)(
                 operation="create",
                 username="newuser",
                 email="newuser@example.com",
@@ -60,7 +64,7 @@ class TestPlexUser:
     @pytest.mark.asyncio
     async def test_create_operation_missing_required(self):
         """Test create operation requires username, email, password."""
-        result = await plex_user.fn(operation="create")
+        result = await (plex_user.fn if hasattr(plex_user, "fn") else plex_user)(operation="create")
 
         assert result["success"] is False
 
@@ -70,7 +74,7 @@ class TestPlexUser:
         with patch(
             "plex_mcp.tools.portmanteau.user._get_plex_service", return_value=mock_plex_service
         ):
-            result = await plex_user.fn(
+            result = await (plex_user.fn if hasattr(plex_user, "fn") else plex_user)(
                 operation="update", user_id="user123", username="updateduser"
             )
 
@@ -83,7 +87,9 @@ class TestPlexUser:
         with patch(
             "plex_mcp.tools.portmanteau.user._get_plex_service", return_value=mock_plex_service
         ):
-            result = await plex_user.fn(operation="delete", user_id="user123")
+            result = await (plex_user.fn if hasattr(plex_user, "fn") else plex_user)(
+                operation="delete", user_id="user123"
+            )
 
             assert result["success"] is True
             assert result["operation"] == "delete"
@@ -94,7 +100,7 @@ class TestPlexUser:
         with patch(
             "plex_mcp.tools.portmanteau.user._get_plex_service", return_value=mock_plex_service
         ):
-            result = await plex_user.fn(
+            result = await (plex_user.fn if hasattr(plex_user, "fn") else plex_user)(
                 operation="update_permissions", user_id="user123", permissions={"allowSync": True}
             )
 

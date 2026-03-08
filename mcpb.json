@@ -3,11 +3,13 @@
   "version": "2.0.0",
   "type": "server",
   "runtime": "python",
-  "entry_point": "src/plex_mcp/main.py",
+  "entry_point": "src/plex_mcp/server.py",
   "dependencies": [
     "fastmcp>=2.14.4,<3.0.0",
     "plexapi>=4.15.0",
-    "requests>=2.31.0"
+    "requests>=2.31.0",
+    "pytz>=2024.1",
+    "jsonschema>=4.21.0"
   ],
   "build": {
     "include": [

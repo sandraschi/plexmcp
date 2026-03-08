@@ -1,9 +1,7 @@
 {
-  "/api/server/status/route": "app/api/server/status/route.js",
-  "/api/system/settings/route": "app/api/system/settings/route.js",
-  "/page": "app/page.js",
-  "/search/page": "app/search/page.js",
+  "/tools/get_system_status/route": "app/tools/get_system_status/route.js",
   "/libraries/page": "app/libraries/page.js",
-  "/settings/page": "app/settings/page.js",
-  "/movies/page": "app/movies/page.js"
+  "/chat/page": "app/chat/page.js",
+  "/search/page": "app/search/page.js",
+  "/page": "app/page.js"
 }

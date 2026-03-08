@@ -1,0 +1,158 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.11, pytest-8.4.2, pluggy-1.6.0 -- C:\Users\sandr\miniconda3\python.exe
+cachedir: .pytest_cache
+metadata: {'Python': '3.13.11', 'Platform': 'Windows-11-10.0.28020-SP0', 'Packages': {'pytest': '8.4.2', 'pluggy': '1.6.0'}, 'Plugins': {'langsmith': '0.3.42', 'asyncio': '0.23.8', 'html': '4.1.1', 'metadata': '3.1.1', 'mock': '3.14.1', 'cov': '2.12.1', 'anyio': '4.12.1', 'hypothesis': '6.151.5', 'httpx': '0.35.0'}, 'JAVA_HOME': 'C:\\Program Files\\Eclipse Adoptium\\jdk-25.0.1.8-hotspot'}
+hypothesis profile 'default'
+rootdir: d:\Dev\repos\plex-mcp
+configfile: pytest.ini
+plugins: langsmith-0.3.42, asyncio-0.23.8, html-4.1.1, metadata-3.1.1, mock-3.14.1, cov-2.12.1, anyio-4.12.1, hypothesis-6.151.5, httpx-0.35.0
+asyncio: mode=Mode.AUTO
+collecting ... collected 10 items / 13 errors
+
+=================================== ERRORS ====================================
+____________________ ERROR collecting tests/test_config.py ____________________
+ImportError while importing test module 'd:\Dev\repos\plex-mcp\tests\test_config.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Users\sandr\miniconda3\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_config.py:8: in <module>
+    from plex_mcp.config import PlexConfig, setup_logging
+E   ModuleNotFoundError: No module named 'plex_mcp'
+____________ ERROR collecting tests/test_integration_real_plex.py _____________
+ImportError while importing test module 'd:\Dev\repos\plex-mcp\tests\test_integration_real_plex.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Users\sandr\miniconda3\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_integration_real_plex.py:16: in <module>
+    from plex_mcp.tools.portmanteau.library import plex_library
+E   ModuleNotFoundError: No module named 'plex_mcp'
+___________ ERROR collecting tests/test_portmanteau_collections.py ____________
+ImportError while importing test module 'd:\Dev\repos\plex-mcp\tests\test_portmanteau_collections.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Users\sandr\miniconda3\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_portmanteau_collections.py:7: in <module>
+    from plex_mcp.tools.portmanteau.collections import plex_collections
+E   ModuleNotFoundError: No module named 'plex_mcp'
+___________ ERROR collecting tests/test_portmanteau_integration.py ____________
+ImportError while importing test module 'd:\Dev\repos\plex-mcp\tests\test_portmanteau_integration.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Users\sandr\miniconda3\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_portmanteau_integration.py:7: in <module>
+    from plex_mcp.tools.portmanteau import (
+E   ModuleNotFoundError: No module named 'plex_mcp'
+_____________ ERROR collecting tests/test_portmanteau_library.py ______________
+ImportError while importing test module 'd:\Dev\repos\plex-mcp\tests\test_portmanteau_library.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Users\sandr\miniconda3\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_portmanteau_library.py:7: in <module>
+    from plex_mcp.tools.portmanteau.library import plex_library
+E   ModuleNotFoundError: No module named 'plex_mcp'
+______________ ERROR collecting tests/test_portmanteau_media.py _______________
+ImportError while importing test module 'd:\Dev\repos\plex-mcp\tests\test_portmanteau_media.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Users\sandr\miniconda3\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_portmanteau_media.py:7: in <module>
+    from plex_mcp.tools.portmanteau.media import plex_media
+E   ModuleNotFoundError: No module named 'plex_mcp'
+_____________ ERROR collecting tests/test_portmanteau_metadata.py _____________
+ImportError while importing test module 'd:\Dev\repos\plex-mcp\tests\test_portmanteau_metadata.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Users\sandr\miniconda3\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_portmanteau_metadata.py:7: in <module>
+    from plex_mcp.tools.portmanteau.metadata import plex_metadata
+E   ModuleNotFoundError: No module named 'plex_mcp'
+___________ ERROR collecting tests/test_portmanteau_performance.py ____________
+ImportError while importing test module 'd:\Dev\repos\plex-mcp\tests\test_portmanteau_performance.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Users\sandr\miniconda3\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_portmanteau_performance.py:7: in <module>
+    from plex_mcp.tools.portmanteau.performance import plex_performance
+E   ModuleNotFoundError: No module named 'plex_mcp'
+_____________ ERROR collecting tests/test_portmanteau_playlist.py _____________
+ImportError while importing test module 'd:\Dev\repos\plex-mcp\tests\test_portmanteau_playlist.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Users\sandr\miniconda3\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_portmanteau_playlist.py:7: in <module>
+    from plex_mcp.tools.portmanteau.playlist import plex_playlist
+E   ModuleNotFoundError: No module named 'plex_mcp'
+______________ ERROR collecting tests/test_portmanteau_search.py ______________
+ImportError while importing test module 'd:\Dev\repos\plex-mcp\tests\test_portmanteau_search.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Users\sandr\miniconda3\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_portmanteau_search.py:7: in <module>
+    from plex_mcp.tools.portmanteau.search import plex_search
+E   ModuleNotFoundError: No module named 'plex_mcp'
+______________ ERROR collecting tests/test_portmanteau_server.py ______________
+ImportError while importing test module 'd:\Dev\repos\plex-mcp\tests\test_portmanteau_server.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Users\sandr\miniconda3\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_portmanteau_server.py:7: in <module>
+    from plex_mcp.tools.portmanteau.server import plex_server
+E   ModuleNotFoundError: No module named 'plex_mcp'
+____________ ERROR collecting tests/test_portmanteau_streaming.py _____________
+ImportError while importing test module 'd:\Dev\repos\plex-mcp\tests\test_portmanteau_streaming.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Users\sandr\miniconda3\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_portmanteau_streaming.py:7: in <module>
+    from plex_mcp.tools.portmanteau.streaming import plex_streaming
+E   ModuleNotFoundError: No module named 'plex_mcp'
+_______________ ERROR collecting tests/test_portmanteau_user.py _______________
+ImportError while importing test module 'd:\Dev\repos\plex-mcp\tests\test_portmanteau_user.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Users\sandr\miniconda3\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_portmanteau_user.py:7: in <module>
+    from plex_mcp.tools.portmanteau.user import plex_user
+E   ModuleNotFoundError: No module named 'plex_mcp'
+=========================== short test summary info ===========================
+ERROR tests/test_config.py
+ERROR tests/test_integration_real_plex.py
+ERROR tests/test_portmanteau_collections.py
+ERROR tests/test_portmanteau_integration.py
+ERROR tests/test_portmanteau_library.py
+ERROR tests/test_portmanteau_media.py
+ERROR tests/test_portmanteau_metadata.py
+ERROR tests/test_portmanteau_performance.py
+ERROR tests/test_portmanteau_playlist.py
+ERROR tests/test_portmanteau_search.py
+ERROR tests/test_portmanteau_server.py
+ERROR tests/test_portmanteau_streaming.py
+ERROR tests/test_portmanteau_user.py
+!!!!!!!!!!!!!!!!!! Interrupted: 13 errors during collection !!!!!!!!!!!!!!!!!!!
+============================= 13 errors in 0.71s ==============================

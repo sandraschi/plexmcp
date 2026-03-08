@@ -16,7 +16,9 @@ class TestPlexSearch:
         with patch(
             "plex_mcp.tools.portmanteau.search._get_plex_service", return_value=mock_plex_service
         ):
-            result = await plex_search.fn(operation="search", query="test")
+            result = await (plex_search.fn if hasattr(plex_search, "fn") else plex_search)(
+                operation="search", query="test"
+            )
 
             assert result["success"] is True
             assert result["operation"] == "search"
@@ -25,7 +27,9 @@ class TestPlexSearch:
     @pytest.mark.asyncio
     async def test_search_operation_missing_query(self):
         """Test search operation requires query."""
-        result = await plex_search.fn(operation="search")
+        result = await (plex_search.fn if hasattr(plex_search, "fn") else plex_search)(
+            operation="search"
+        )
 
         assert result["success"] is False
         assert "query" in result["error"].lower()
@@ -36,7 +40,9 @@ class TestPlexSearch:
         with patch(
             "plex_mcp.tools.portmanteau.search._get_plex_service", return_value=mock_plex_service
         ):
-            result = await plex_search.fn(operation="advanced_search", query="test", genre="Action")
+            result = await (plex_search.fn if hasattr(plex_search, "fn") else plex_search)(
+                operation="advanced_search", query="test", genre="Action"
+            )
 
             assert result["success"] is True
             assert result["operation"] == "advanced_search"
@@ -47,7 +53,9 @@ class TestPlexSearch:
         with patch(
             "plex_mcp.tools.portmanteau.search._get_plex_service", return_value=mock_plex_service
         ):
-            result = await plex_search.fn(operation="suggest", query="test")
+            result = await (plex_search.fn if hasattr(plex_search, "fn") else plex_search)(
+                operation="suggest", query="test"
+            )
 
             assert result["success"] is True
             assert result["operation"] == "suggest"
@@ -58,7 +66,9 @@ class TestPlexSearch:
         with patch(
             "plex_mcp.tools.portmanteau.search._get_plex_service", return_value=mock_plex_service
         ):
-            result = await plex_search.fn(operation="recent_searches")
+            result = await (plex_search.fn if hasattr(plex_search, "fn") else plex_search)(
+                operation="recent_searches"
+            )
 
             assert result["success"] is True
             assert result["operation"] == "recent_searches"

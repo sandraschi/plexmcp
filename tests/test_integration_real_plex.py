@@ -35,7 +35,9 @@ class TestRealPlexIntegration:
         with patch(
             "plex_mcp.tools.portmanteau.library._get_plex_service", return_value=real_plex_service
         ):
-            result = await plex_library.fn(operation="list")
+            result = await (plex_library.fn if hasattr(plex_library, "fn") else plex_library)(
+                operation="list"
+            )
 
             assert result["success"] is True
             assert result["operation"] == "list"
@@ -59,7 +61,9 @@ class TestRealPlexIntegration:
         with patch(
             "plex_mcp.tools.portmanteau.library._get_plex_service", return_value=real_plex_service
         ):
-            result = await plex_library.fn(operation="get", library_id=test_library_id)
+            result = await (plex_library.fn if hasattr(plex_library, "fn") else plex_library)(
+                operation="get", library_id=test_library_id
+            )
 
             assert result["success"] is True
             assert result["operation"] == "get"
@@ -76,7 +80,9 @@ class TestRealPlexIntegration:
         with patch(
             "plex_mcp.tools.portmanteau.server._get_plex_service", return_value=real_plex_service
         ):
-            result = await plex_server.fn(operation="status")
+            result = await (plex_server.fn if hasattr(plex_server, "fn") else plex_server)(
+                operation="status"
+            )
 
             assert result["success"] is True
             assert result["operation"] == "status"
@@ -94,7 +100,9 @@ class TestRealPlexIntegration:
         with patch(
             "plex_mcp.tools.portmanteau.media._get_plex_service", return_value=real_plex_service
         ):
-            result = await plex_media.fn(operation="browse", library_id=test_library_id, limit=10)
+            result = await (plex_media.fn if hasattr(plex_media, "fn") else plex_media)(
+                operation="browse", library_id=test_library_id, limit=10
+            )
 
             assert result["success"] is True
             assert result["operation"] == "browse"
@@ -115,7 +123,9 @@ class TestRealPlexIntegration:
             "plex_mcp.tools.portmanteau.media._get_plex_service", return_value=real_plex_service
         ):
             # Search for something common (empty string searches all)
-            result = await plex_media.fn(operation="search", query="", limit=5)
+            result = await (plex_media.fn if hasattr(plex_media, "fn") else plex_media)(
+                operation="search", query="", limit=5
+            )
 
             assert result["success"] is True
             assert result["operation"] == "search"

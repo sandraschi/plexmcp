@@ -11,7 +11,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-from pydantic import BaseModel, ValidationError, validator
+from pydantic import BaseModel, ConfigDict, ValidationError, field_validator
 
 # Default configuration
 DEFAULT_CONFIG = {
@@ -52,8 +52,9 @@ class ServerConfig(BaseModel):
     verify_ssl: bool = True
     timeout: int = 30
 
-    @validator("port")
-    def validate_port(cls, v):
+    @field_validator("port")
+    @classmethod
+    def validate_port(cls, v: int) -> int:
         if not 1 <= v <= 65535:
             raise ValueError("Port must be between 1 and 65535")
         return v
@@ -67,15 +68,17 @@ class LoggingConfig(BaseModel):
     max_size_mb: int = 10
     backup_count: int = 5
 
-    @validator("level")
-    def validate_level(cls, v):
+    @field_validator("level")
+    @classmethod
+    def validate_level(cls, v: str) -> str:
         valid_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
         if v.upper() not in valid_levels:
             raise ValueError(f"Log level must be one of {valid_levels}")
         return v.upper()
 
-    @validator("file")
-    def validate_file(cls, v):
+    @field_validator("file")
+    @classmethod
+    def validate_file(cls, v: Path | str | None) -> Path | None:
         if v is not None:
             return Path(v).resolve()
         return None
@@ -88,8 +91,9 @@ class CacheConfig(BaseModel):
     ttl: int = 300  # 5 minutes in seconds
     max_size: int = 1000
 
-    @validator("ttl")
-    def validate_ttl(cls, v):
+    @field_validator("ttl")
+    @classmethod
+    def validate_ttl(cls, v: int) -> int:
         if v < 0:
             raise ValueError("TTL must be a positive number")
         return v
@@ -101,8 +105,9 @@ class SecurityConfig(BaseModel):
     secret_key: str | None = None
     password_salt_rounds: int = 10
 
-    @validator("password_salt_rounds")
-    def validate_salt_rounds(cls, v):
+    @field_validator("password_salt_rounds")
+    @classmethod
+    def validate_salt_rounds(cls, v: int) -> int:
         if v < 4 or v > 31:
             raise ValueError("Password salt rounds must be between 4 and 31")
         return v
@@ -119,14 +124,13 @@ class FeaturesConfig(BaseModel):
 class AppConfig(BaseModel):
     """Application configuration model."""
 
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     server: ServerConfig = ServerConfig()
     logging: LoggingConfig = LoggingConfig()
     cache: CacheConfig = CacheConfig()
     security: SecurityConfig = SecurityConfig()
     features: FeaturesConfig = FeaturesConfig()
-
-    class Config:
-        json_encoders = {Path: str}
 
 
 def load_config(config_file: str | Path = None) -> dict[str, Any]:

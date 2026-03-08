@@ -16,7 +16,9 @@ class TestPlexMedia:
         with patch(
             "plex_mcp.tools.portmanteau.media._get_plex_service", return_value=mock_plex_service
         ):
-            result = await plex_media.fn(operation="browse", library_id="1")
+            result = await (plex_media.fn if hasattr(plex_media, "fn") else plex_media)(
+                operation="browse", library_id="1"
+            )
 
             assert result["success"] is True
             assert result["operation"] == "browse"
@@ -28,7 +30,9 @@ class TestPlexMedia:
         with patch(
             "plex_mcp.tools.portmanteau.media._get_plex_service", return_value=mock_plex_service
         ):
-            result = await plex_media.fn(operation="search", query="test")
+            result = await (plex_media.fn if hasattr(plex_media, "fn") else plex_media)(
+                operation="search", query="test"
+            )
 
             assert result["success"] is True
             assert result["operation"] == "search"
@@ -40,7 +44,9 @@ class TestPlexMedia:
         with patch(
             "plex_mcp.tools.portmanteau.media._get_plex_service", return_value=mock_plex_service
         ):
-            result = await plex_media.fn(operation="search")
+            result = await (plex_media.fn if hasattr(plex_media, "fn") else plex_media)(
+                operation="search"
+            )
             # The search operation doesn't require query if other params are provided
             # But if all params are None, it will still try to search with empty query
             # So we check that it either fails or succeeds with empty results
@@ -52,7 +58,9 @@ class TestPlexMedia:
         with patch(
             "plex_mcp.tools.portmanteau.media._get_plex_service", return_value=mock_plex_service
         ):
-            result = await plex_media.fn(operation="get_details", media_key="12345")
+            result = await (plex_media.fn if hasattr(plex_media, "fn") else plex_media)(
+                operation="get_details", media_key="12345"
+            )
 
             assert result["success"] is True
             assert result["operation"] == "get_details"
@@ -63,7 +71,9 @@ class TestPlexMedia:
         with patch(
             "plex_mcp.tools.portmanteau.media._get_plex_service", return_value=mock_plex_service
         ):
-            result = await plex_media.fn(operation="get_recent", library_id="1")
+            result = await (plex_media.fn if hasattr(plex_media, "fn") else plex_media)(
+                operation="get_recent", library_id="1"
+            )
 
             assert result["success"] is True
             assert result["operation"] == "get_recent"
@@ -74,7 +84,7 @@ class TestPlexMedia:
         with patch(
             "plex_mcp.tools.portmanteau.media._get_plex_service", return_value=mock_plex_service
         ):
-            result = await plex_media.fn(
+            result = await (plex_media.fn if hasattr(plex_media, "fn") else plex_media)(
                 operation="update_metadata", media_key="12345", metadata={"title": "New Title"}
             )
 

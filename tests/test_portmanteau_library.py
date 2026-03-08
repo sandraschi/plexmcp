@@ -16,7 +16,9 @@ class TestPlexLibrary:
         with patch(
             "plex_mcp.tools.portmanteau.library._get_plex_service", return_value=mock_plex_service
         ):
-            result = await plex_library.fn(operation="list")
+            result = await (plex_library.fn if hasattr(plex_library, "fn") else plex_library)(
+                operation="list"
+            )
 
             assert result["success"] is True
             assert result["operation"] == "list"
@@ -29,7 +31,9 @@ class TestPlexLibrary:
         with patch(
             "plex_mcp.tools.portmanteau.library._get_plex_service", return_value=mock_plex_service
         ):
-            result = await plex_library.fn(operation="get", library_id="1")
+            result = await (plex_library.fn if hasattr(plex_library, "fn") else plex_library)(
+                operation="get", library_id="1"
+            )
 
             assert result["success"] is True
             assert result["operation"] == "get"
@@ -38,7 +42,9 @@ class TestPlexLibrary:
     @pytest.mark.asyncio
     async def test_get_operation_missing_id(self):
         """Test get operation requires library_id."""
-        result = await plex_library.fn(operation="get")
+        result = await (plex_library.fn if hasattr(plex_library, "fn") else plex_library)(
+            operation="get"
+        )
 
         assert result["success"] is False
         assert "library_id" in result["error"].lower()
@@ -49,7 +55,9 @@ class TestPlexLibrary:
         with patch(
             "plex_mcp.tools.portmanteau.library._get_plex_service", return_value=mock_plex_service
         ):
-            result = await plex_library.fn(operation="scan", library_id="1")
+            result = await (plex_library.fn if hasattr(plex_library, "fn") else plex_library)(
+                operation="scan", library_id="1"
+            )
 
             assert result["success"] is True
             assert result["operation"] == "scan"
@@ -60,7 +68,9 @@ class TestPlexLibrary:
         with patch(
             "plex_mcp.tools.portmanteau.library._get_plex_service", return_value=mock_plex_service
         ):
-            result = await plex_library.fn(operation="refresh", library_id="1")
+            result = await (plex_library.fn if hasattr(plex_library, "fn") else plex_library)(
+                operation="refresh", library_id="1"
+            )
 
             assert result["success"] is True
             assert result["operation"] == "refresh"
@@ -71,7 +81,9 @@ class TestPlexLibrary:
         with patch(
             "plex_mcp.tools.portmanteau.library._get_plex_service", return_value=mock_plex_service
         ):
-            result = await plex_library.fn(operation="optimize", library_id="1")
+            result = await (plex_library.fn if hasattr(plex_library, "fn") else plex_library)(
+                operation="optimize", library_id="1"
+            )
 
             assert result["success"] is True
             assert result["operation"] == "optimize"
@@ -82,7 +94,9 @@ class TestPlexLibrary:
         with patch(
             "plex_mcp.tools.portmanteau.library._get_plex_service", return_value=mock_plex_service
         ):
-            result = await plex_library.fn(operation="empty_trash", library_id="1")
+            result = await (plex_library.fn if hasattr(plex_library, "fn") else plex_library)(
+                operation="empty_trash", library_id="1"
+            )
 
             assert result["success"] is True
             assert result["operation"] == "empty_trash"
@@ -94,7 +108,9 @@ class TestPlexLibrary:
             "plex_mcp.tools.portmanteau.library._get_plex_service",
             side_effect=Exception("Connection failed"),
         ):
-            result = await plex_library.fn(operation="list")
+            result = await (plex_library.fn if hasattr(plex_library, "fn") else plex_library)(
+                operation="list"
+            )
 
             assert result["success"] is False
             assert "error" in result

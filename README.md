@@ -1,6 +1,6 @@
 # PlexMCP 🎬
 
-[![FastMCP](https://img.shields.io/badge/FastMCP-2.13+-blue)](https://github.com/jlowin/fastmcp)
+[![FastMCP](https://img.shields.io/badge/FastMCP-3.1-blue)](https://github.com/jlowin/fastmcp)
 [![Python](https://img.shields.io/badge/Python-3.11+-green)](https://python.org)
 [![Plex](https://img.shields.io/badge/Plex-Media%20Server-orange)](https://plex.tv)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -8,16 +8,21 @@
 
 > **⚠️ ALPHA STATUS**: This project is in alpha development. Some features may be incomplete or unstable. **Playback control (`plex play`, `plex pause`) is currently non-functional for ALL clients**, including GDM-discoverable clients (PlexAmp) and non-GDM clients (Plex Web, Plex for Windows). See [STATUS_2026-01-08.md](STATUS_2026-01-08.md) for detailed status.
 
-A FastMCP 2.13+ server implementation for managing Plex Media Server with a clean, type-safe API.
+A FastMCP 3.1 server for Plex Media Server with sampling, agentic workflows, skills, and prompts.
 
 ## ✨ Features
 
+- **Neural Media RAG**: Semantic search over **movie, show, and music (artist)** descriptions from Plex. LanceDB-backed retrieval via the `plex_rag` tool (`sync_metadata` to index, `semantic_search` to query). Data from Plex server API (title, plot/summary, genres, directors; artist summaries for music).
 - **Server Management**: Monitor and manage Plex server status
 - **Media Browsing**: Browse and search across all libraries
 - **Playback Control**: Control playback on connected clients
 - **Session Management**: View and manage active sessions
 - **Type-Safe API**: Built with Pydantic for robust data validation
 - **Async I/O**: High-performance async implementation
+
+### RAG / Semantic search dependency
+
+Semantic search (LanceDB, `plex_rag` tool) requires the **mcp-central-docs source** to be importable by this project: the `docs_mcp.backend.rag_core` module must be on the Python path (e.g. clone mcp-central-docs and add its `src` to `PYTHONPATH`, or install that package). The **mcp-central-docs MCP server does not need to be running**; RAG uses the shared vector-store code as a library. If the import fails, `plex_rag` returns no results and the webapp semantic search page shows "RAG unavailable". Run `plex_rag(operation='sync_metadata')` once to index before querying.
 
 ## 🚀 Quick Start
 
@@ -27,8 +32,28 @@ A FastMCP 2.13+ server implementation for managing Plex Media Server with a clea
 - Plex Media Server with network access
 - Plex authentication token
 
-### Installation
+## 🚀 Installation
 
+### Prerequisites
+- [uv](https://docs.astral.sh/uv/) installed (RECOMMENDED)
+- Python 3.12+
+
+### 📦 Quick Start
+Run immediately via `uvx`:
+```bash
+uvx plex-mcp-advanced
+```
+
+### 🎯 Claude Desktop Integration
+Add to your `claude_desktop_config.json`:
+```json
+"mcpServers": {
+  "plex-mcp-advanced": {
+    "command": "uv",
+    "args": ["--directory", "D:/Dev/repos/plex-mcp", "run", "plex-mcp-advanced"]
+  }
+}
+```
 #### From PyPI (Recommended)
 
 ```bash
@@ -155,11 +180,13 @@ mypy .
 
 ## Webapp (Browser UI)
 
-A full webapp provides a browser UI that talks to the MCP server via a FastAPI backend (reservoir ports **10740** backend, **10741** frontend per [mcp-central-docs WEBAPP_PORTS](https://github.com/sandraschi/mcp-central-docs/blob/main/docs/operations/WEBAPP_PORTS.md)).
+A full webapp provides a browser UI backed by the **FastAPI webapp backend** (`webapp/backend/app/main:app`) on port **10740** and a Next.js 15 frontend on **10741** (fleet reservoir per [mcp-central-docs WEBAPP_PORTS](https://github.com/sandraschi/mcp-central-docs/blob/main/docs/operations/WEBAPP_PORTS.md)). The backend serves all REST routes and mounts the MCP server at `/mcp`. Fleet launch and v1 APIs live on the webapp backend (not on the MCP app).
 
-**Features**: Glassmorphism UI, retractable sidebar, topbar, Logger modal (log tail), Help modal, local LLM chat (Ollama/LM Studio), personalities, prompt refining, chat export, light RAG context, AI workflows (e.g. search-and-summarize), semantic-style search.
+**Pages**: Overview, Libraries, Movies, **Search** (keyword), **Semantic search** (RAG; index via "Sync / Index metadata" button or `plex_rag(operation='sync_metadata')`), **Chat**, Server, Settings.
 
-**Start**: From repo root, `cd webapp` then `powershell -ExecutionPolicy Bypass -File .\start.ps1`. Set `PLEX_TOKEN` and `PLEX_URL` in `webapp/backend/.env`. See [webapp/README.md](webapp/README.md) and [webapp/SETUP.md](webapp/SETUP.md).
+**Features**: Glassmorphism UI, retractable sidebar, topbar, Logger modal (log tail), Help modal; local LLM chat (Ollama/LM Studio) with **live preprompt** (MCP server, webapp, Plex server, media libraries, integrations); personalities, prompt refining, chat export; **RAG**: keyword context (`GET /api/rag/context`), semantic search (`GET /api/rag/semantic`), **sync from UI** (`POST /api/rag/sync`); AI workflows; fleet launch (`POST /api/fleet/launch`), v1 search/chat (`POST /api/v1/search`, `POST /api/v1/chat`).
+
+**Start**: From repo root, `cd webapp` then `powershell -ExecutionPolicy Bypass -File .\start.ps1`. The script starts the FastAPI backend (via the project venv’s `python -m uvicorn app.main:app`) and the Next.js dev server. Set `PLEX_TOKEN` and `PLEX_URL` in `webapp/backend/.env`. See [webapp/README.md](webapp/README.md) and [webapp/SETUP.md](webapp/SETUP.md).
 
 ---
 
@@ -273,28 +300,72 @@ Control your Plex server using natural language with Claude Desktop:
 - **Privacy-Focused** - Your media library stays private
 - **Professional Packaging** - One-click installation
 
-## 📦 Installation & Setup
+## 🚀 Installation
 
-### **MCPB Package Installation**
+### Prerequisites
+- [uv](https://docs.astral.sh/uv/) installed (RECOMMENDED)
+- Python 3.12+
 
-1. **Install MCPB CLI** (if not already installed):
-   ```bash
-   npm install -g @anthropic-ai/mcpb
-   ```
+### 📦 Quick Start
+Run immediately via `uvx`:
+```bash
+uvx plex-mcp-advanced
+```
 
-2. **Build the MCPB package**:
-   ```powershell
-   .\scripts\build-mcpb-package.ps1 -NoSign
-   ```
+### 🎯 Claude Desktop Integration
+Add to your `claude_desktop_config.json`:
+```json
+"mcpServers": {
+  "plex-mcp-advanced": {
+    "command": "uv",
+    "args": ["--directory", "D:/Dev/repos/plex-mcp", "run", "plex-mcp-advanced"]
+  }
+}
+```
+## 🚀 Installation
 
-3. **Install the package in Claude Desktop**:
-   - Drag `dist/plex-mcp.mcpb` to Claude Desktop
-   - Configure Plex URL and authentication token when prompted
+### Prerequisites
+- [uv](https://docs.astral.sh/uv/) installed (RECOMMENDED)
+- Python 3.12+
 
-4. **Start using PlexMCP** with natural language commands
+### 📦 Quick Start
+Run immediately via `uvx`:
+```bash
+uvx plex-mcp-advanced
+```
 
-### **Traditional Installation (Manual Setup)
+### 🎯 Claude Desktop Integration
+Add to your `claude_desktop_config.json`:
+```json
+"mcpServers": {
+  "plex-mcp-advanced": {
+    "command": "uv",
+    "args": ["--directory", "D:/Dev/repos/plex-mcp", "run", "plex-mcp-advanced"]
+  }
+}
+```
+## 🚀 Installation
 
+### Prerequisites
+- [uv](https://docs.astral.sh/uv/) installed (RECOMMENDED)
+- Python 3.12+
+
+### 📦 Quick Start
+Run immediately via `uvx`:
+```bash
+uvx plex-mcp-advanced
+```
+
+### 🎯 Claude Desktop Integration
+Add to your `claude_desktop_config.json`:
+```json
+"mcpServers": {
+  "plex-mcp-advanced": {
+    "command": "uv",
+    "args": ["--directory", "D:/Dev/repos/plex-mcp", "run", "plex-mcp-advanced"]
+  }
+}
+```
 ### **Prerequisites**
 
 - **Python 3.11+** with pip
@@ -340,7 +411,7 @@ Standardized installation uses the system Python environment for maximum reliabi
 # Install in system environment (SOTA 2026 pattern)
 pip install fastmcp aiohttp plexapi pydantic requests
 cd d:\dev\repos\plex-mcp
-pip install -e .
+uv pip install -e .
 ```
 
 ### **Step 3: Environment Configuration**

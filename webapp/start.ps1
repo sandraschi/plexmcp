@@ -1,50 +1,41 @@
-# PlexMCP Webapp Start - Reservoir ports 10740 (backend), 10741 (frontend)
-# Run: powershell -ExecutionPolicy Bypass -File start.ps1
-
+# Webapp Start - Standardized SOTA (Auto-Repaired V2.5)
+$WebPort = 10741
 $BackendPort = 10740
-$FrontendPort = 10741
-$WebappRoot = $PSScriptRoot
-$ProjectRoot = Split-Path -Parent $WebappRoot
-$SrcPath = Join-Path $ProjectRoot "src"
+$ProjectRoot = Split-Path -Parent $PSScriptRoot
 
-# 1. Clear ports (kill-port preferred)
-$frontendDir = Join-Path $WebappRoot "frontend"
-Set-Location $frontendDir
-try {
-    npx --yes kill-port $BackendPort $FrontendPort 2>$null
-} catch { }
-Set-Location $WebappRoot
-Start-Sleep -Seconds 1
-
-# 2. Env for backend
-$env:PYTHONPATH = $SrcPath
-$env:PORT = $BackendPort
-$env:CORS_ORIGINS = "http://localhost:$FrontendPort,http://127.0.0.1:$FrontendPort"
-
-# 3. Start backend
-if (-not (Test-Path $SrcPath)) {
-    Write-Host "[ERROR] Source path not found: $SrcPath" -ForegroundColor Red
+# 0. Ensure we run npm from the dir that has package.json (webapp or webapp/frontend)
+$NpmRoot = $PSScriptRoot
+if (-not (Test-Path (Join-Path $NpmRoot "package.json"))) {
+    $NpmRoot = Join-Path $PSScriptRoot "frontend"
+}
+if (-not (Test-Path (Join-Path $NpmRoot "package.json"))) {
+    Write-Host "ERROR: package.json not found in $PSScriptRoot or $PSScriptRoot\frontend. Run this script from plex-mcp\webapp (e.g. use webapp\start.bat)." -ForegroundColor Red
     exit 1
 }
-$backendDir = Join-Path $WebappRoot "backend"
-$backendEnvPath = Join-Path $backendDir ".env"
-$plexEnv = ""
-if (Test-Path $backendEnvPath) {
-    Get-Content $backendEnvPath | ForEach-Object {
-        if ($_ -match "^\s*PLEX_TOKEN=(.+)$") { $plexEnv += "`$env:PLEX_TOKEN='$($matches[1].Trim())'; " }
-        if ($_ -match "^\s*PLEX_URL=(.+)$")    { $plexEnv += "`$env:PLEX_URL='$($matches[1].Trim())'; " }
-    }
+
+# 1. Kill any process squatting on the ports
+Write-Host "Checking for port squatters on $WebPort and $BackendPort..." -ForegroundColor Yellow
+$pids = Get-NetTCPConnection -LocalPort $WebPort, $BackendPort -ErrorAction SilentlyContinue | Where-Object { $_.OwningProcess -gt 4 } | Select-Object -ExpandProperty OwningProcess -Unique
+foreach ($p in $pids) {
+    Write-Host "Found squatter (PID: $p). Terminating..." -ForegroundColor Red
+    try { Stop-Process -Id $p -Force -ErrorAction Stop } catch { Write-Host "Warning: Could not terminate PID $p." -ForegroundColor Gray }
 }
-Write-Host "[INFO] Backend http://localhost:$BackendPort  Frontend http://localhost:$FrontendPort" -ForegroundColor Green
-$backendCmd = "Set-Location '$backendDir'; `$env:PYTHONPATH='$SrcPath'; `$env:PORT='$BackendPort'; `$env:CORS_ORIGINS='http://localhost:$FrontendPort,http://127.0.0.1:$FrontendPort'; $plexEnv python -m uvicorn app.main:app --reload --host 0.0.0.0 --port $BackendPort"
-Start-Process powershell -ArgumentList "-NoExit", "-Command", $backendCmd
 
-Start-Sleep -Seconds 2
+# 2. Setup (npm from dir that has package.json)
+Set-Location $NpmRoot
+if (-not (Test-Path "node_modules")) { npm install }
 
-# 4. Start frontend
-$apiUrl = "http://127.0.0.1:$BackendPort"
-$appUrl = "http://127.0.0.1:$FrontendPort"
-$frontendCmd = "Set-Location '$frontendDir'; `$env:API_URL='$apiUrl'; `$env:NEXT_PUBLIC_API_URL='$apiUrl'; `$env:NEXT_PUBLIC_APP_URL='$appUrl'; npx next dev -p $FrontendPort"
-Start-Process powershell -ArgumentList "-NoExit", "-Command", $frontendCmd
+# 3. Start the Python backend (FastAPI with /api/* and MCP at /mcp)
+Write-Host "Starting Python backend on port $BackendPort ..." -ForegroundColor Cyan
 
-Write-Host "Backend and frontend started. Close their windows to stop."
+$BackendDir = Join-Path $ProjectRoot "webapp\backend"
+$VenvPython = Join-Path $ProjectRoot ".venv\Scripts\python.exe"
+$backendCmd = "`$env:PYTHONPATH = '$ProjectRoot\src;$BackendDir'; Set-Location '$BackendDir'; & '$VenvPython' -m uvicorn app.main:app --host 127.0.0.1 --port $BackendPort --log-level info"
+
+Start-Process powershell -ArgumentList "-NoExit", "-Command", $backendCmd -WindowStyle Normal
+
+# 4. Run server (Vite dev) from same npm root
+Set-Location $NpmRoot
+Write-Host "Starting Vite frontend on port $WebPort ..." -ForegroundColor Green
+npm run dev -- --port $WebPort
+

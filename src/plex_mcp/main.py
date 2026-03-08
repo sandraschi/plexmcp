@@ -10,9 +10,10 @@ import logging
 from fastmcp import FastMCP
 from mcp.server.stdio import stdio_server
 
-# Import all tool modules
-from .transport import run_server, run_server_async
 from .config import get_settings, setup_logging
+
+# Import all tool modules
+from .transport import run_server_async
 
 # Setup logging
 setup_logging()
@@ -25,7 +26,7 @@ async def main() -> None:
     get_settings()
 
     # Create FastMCP app
-    app = FastMCP("PlexMCP", description="Production Plex Media Server MCP integration")
+    app = FastMCP("PlexMCP")
 
     # Register all tools from modules
     # Tools are auto-registered via @app.tool() decorators

@@ -4,11 +4,10 @@ Media models for PlexMCP.
 This module contains Pydantic models for representing media items and related data.
 """
 
-from datetime import datetime
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class MediaType(str, Enum):
@@ -124,13 +123,11 @@ class MediaItem(BaseModel):
     rating_key: str | None = Field(None, description="Plex rating key")
     key: str | None = Field(None, description="Plex key")
 
-    class Config:
-        json_encoders = {
-            # Handle datetime serialization
-            datetime: lambda v: v.timestamp() if v else None
-        }
-        use_enum_values = True
-        allow_population_by_field_name = True
+    model_config = ConfigDict(
+        use_enum_values=True,
+        populate_by_name=True,
+        ser_json_timedelta="float",
+    )
 
 
 class LibrarySection(BaseModel):

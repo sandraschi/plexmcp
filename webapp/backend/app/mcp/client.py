@@ -37,6 +37,7 @@ _tool_map = {
     "plex_search": ("plex_mcp.tools.portmanteau.search", "plex_search"),
     "plex_media": ("plex_mcp.tools.portmanteau.media", "plex_media"),
     "plex_streaming": ("plex_mcp.tools.portmanteau.streaming", "plex_streaming"),
+    "plex_rag": ("plex_mcp.tools.portmanteau.rag", "plex_rag"),
 }
 
 
@@ -44,10 +45,11 @@ def _get_tool_function(tool_name: str) -> Any:
     """Load tool on demand (after env vars are set at startup)."""
     if tool_name not in _tool_map:
         return None
-    
+
     module_path, func_name = _tool_map[tool_name]
     try:
         import importlib
+
         module = importlib.import_module(module_path)
         # Force reload to pick up changes
         importlib.reload(module)
@@ -58,7 +60,7 @@ def _get_tool_function(tool_name: str) -> Any:
             return tool_obj
     except Exception as e:
         logger.error("Failed to load tool %s: %s", tool_name, e)
-    
+
     return None
 
 

@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] - 2026-02-26
+
+### Added
+- **Neural Media RAG Portmanteau** (`tools/portmanteau/plex_rag.py`): New unified search and synthesis tool for accessing context vectorized by LanceDB.
+- **Agentic Synthesis API**: Expanded the webapp FastAPI backend with `POST /api/v1/search` and `POST /api/v1/chat` to expose backend capabilities directly to the Unified Search Hub in `mcp-central-docs` without necessitating MCP protocol bridging.
+
 ## [2.2.0] - 2026-02-04
 
 ### Added
@@ -19,6 +25,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased] - ALPHA
 
 ### Added
+- **FastMCP 3.1 alignment**: Transport docstrings and help updated to 3.1; fleet launch and v1 search/chat routes moved from MCP app to webapp backend (`POST /api/fleet/launch`, `POST /api/v1/search`, `POST /api/v1/chat`). Prompt `plex_media_guide` for agentic workflows.
+- **Semantic search page**: Webapp page `/search/semantic` with natural-language search over RAG index; **Sync / Index metadata** button to start RAG indexing from the UI (`POST /api/rag/sync`). Backend `GET /api/rag/semantic` and `plex_rag` in MCP client tool map.
+- **Chat preprompt**: LLM chat receives a live system preprompt (MCP server tools, webapp pages, Plex server name/version, media libraries, integrations). Built in `webapp/backend/app/chat_context.py`; injected when `use_context: true` (default) in `POST /api/llm/chat`.
+- **RAG over movie and music descriptions** - Metadata RAG (LanceDB) now indexes movie, show, and **music (artist)** libraries from Plex API. Searchable content includes title, plot/summary, year, genres, directors (movies/shows) and artist title/summary (music). Use `plex_rag(operation="sync_metadata")` then `plex_rag(operation="semantic_search", query="...")`. Data sourced from Plex server via API (no local DB).
 - **Webapp (reservoir 10740/10741)**: Full browser UI with FastAPI backend and Next.js 15 frontend
   - **Glassmorphism UI**: Backdrop-blur panels, retractable sidebar, topbar
   - **Logger modal**: Tail of webapp log with level/filter (topbar)
@@ -32,6 +42,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Settings page**: Plex API key and URL, LLM provider (ollama/lmstudio/openai), base URL, API key, default model (from /api/llm/models); persisted via GET/PATCH /api/system/settings and backend data/settings.json (file overrides .env at runtime)
   - **Start**: webapp/start.ps1 and start.bat; see webapp/SETUP.md
 - **Port reservoir**: Backend 10740, frontend 10741 (mcp-central-docs WEBAPP_PORTS.md)
+- **Next.js route /tools/get_system_status**: OPTIONS returns 204 (stops 404 from MCP clients probing); GET proxies to backend /api/server/status.
+
+### Changed
+- **RAG dependency** documented in README and Semantic search page: semantic search requires mcp-central-docs **source** on path (not the mcp-central-docs MCP server running). Sync available from UI.
+- **Webapp backend**: start.ps1 now runs the **FastAPI webapp backend** (`webapp/backend/app/main:app`) on 10740 instead of the MCP-only app. Backend exposes all REST routes (`/api/server/*`, `/api/libraries/*`, `/api/search`, `/api/movies`, `/api/system/*`, `/api/logs`, `/api/help`, `/api/llm/*`, `/api/webapp-launch`, etc.) and mounts FastMCP at `/mcp`. Fixes 404/502 when frontend proxies to backend.
+- **Start script**: Backend is launched with `.venv\Scripts\python.exe -m uvicorn app.main:app` (PYTHONPATH includes repo `src` and `webapp/backend`) so the venv is used directly and `uv sync` is not run at start (avoids "file in use" when venv is locked).
+- **Fleet ports**: Frontend proxy default `BACKEND_URL` is `http://127.0.0.1:10740`; start.ps1 uses backend 10740, frontend 10741.
+- **Next.js 15**: Removed invalid `--host` from npm dev script (Next 15 uses `--hostname`; default binds all interfaces). Removed invalid `turbopack` key from next.config.js (clears config warning).
+- **CORS**: Added Starlette CORSMiddleware to FastMCP `http_app()` (allowed origins: localhost:10741, 127.0.0.1:10741, and 10740 variants) so browser/WebSocket connections from the frontend no longer get 403.
+- **Dependencies**: Added `fastapi`, `uvicorn[standard]`, `pydantic-settings`, `httpx`, `python-multipart` to root pyproject.toml so the webapp backend runs with the project venv.
+- Updated project status to ALPHA in README; alpha status badge and warning notice.
+- Next.js frontend pinned to 15.2.0 (webpack dev); turbopack config removed for Next 15 compatibility.
+- Backend config loads .env from webapp/backend path (not cwd) so token is found when started from any directory.
+- Backend data/ and settings.json in .gitignore (secrets not committed).
 
 ### Status
 - **Project Status**: ALPHA - Active development, some features incomplete
@@ -39,13 +63,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - GDM clients (PlexAmp): Discoverable but playback commands fail
   - Non-GDM clients (Plex Web, Plex for Windows): Not controllable via tested API endpoints
 - **See**: [STATUS_2026-01-08.md](STATUS_2026-01-08.md) for detailed status
-
-### Changed
-- Updated project status to ALPHA in README
-- Added alpha status badge and warning notice
-- Next.js frontend pinned to 15.2.0 (webpack dev); turbopack.root set for Next 16 compatibility
-- Backend config loads .env from webapp/backend path (not cwd) so token is found when started from any directory
-- Backend data/ and settings.json in .gitignore (secrets not committed)
 
 ### Fixed
 - Client discovery now finds all client types (PlexAmp, Plex Web, Plex for Windows)

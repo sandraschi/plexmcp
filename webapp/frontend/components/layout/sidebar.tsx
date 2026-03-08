@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Library, Search, Server, MessageSquare, Film, Settings, ChevronLeft, ChevronRight } from "lucide-react";
+import { LayoutDashboard, Library, Search, Server, MessageSquare, Film, Settings, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 
 const navItems = [
   { href: "/", label: "Overview", icon: LayoutDashboard },
   { href: "/libraries", label: "Libraries", icon: Library },
   { href: "/movies", label: "Movies", icon: Film },
   { href: "/search", label: "Search", icon: Search },
+  { href: "/search/semantic", label: "Semantic search", icon: Sparkles },
   { href: "/chat", label: "Chat", icon: MessageSquare },
   { href: "/server", label: "Server", icon: Server },
   { href: "/settings", label: "Settings", icon: Settings },

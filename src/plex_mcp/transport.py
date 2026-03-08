@@ -32,9 +32,10 @@ import argparse
 import asyncio
 import logging
 import os
-from typing import Literal, Optional
+from typing import Literal
 
 logger = logging.getLogger(__name__)
+
 
 TransportType = Literal["stdio", "http", "sse"]
 
@@ -71,7 +72,7 @@ def create_argument_parser(server_name: str) -> argparse.ArgumentParser:
         Configured ArgumentParser instance.
     """
     parser = argparse.ArgumentParser(
-        description=f"{server_name} - FastMCP 2.14.4+ Server",
+        description=f"{server_name} - FastMCP 3.1 Server",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=f"""
 Environment Variables:
@@ -97,20 +98,29 @@ Examples:
         "--stdio", action="store_true", help="Run in STDIO (JSON-RPC) mode (default)"
     )
     transport_group.add_argument(
-        "--http", action="store_true", help="Run in HTTP Streamable mode (FastMCP 2.14.4+)"
+        "--http",
+        action="store_true",
+        help="Run in HTTP Streamable mode (FastMCP 3.1)",
     )
     transport_group.add_argument(
         "--sse", action="store_true", help="Run in SSE mode (deprecated, use --http)"
     )
 
     parser.add_argument(
-        "--host", default=None, help=f"Host to bind to (default: ${ENV_HOST} or 127.0.0.1)"
+        "--host",
+        default=None,
+        help=f"Host to bind to (default: ${ENV_HOST} or 127.0.0.1)",
     )
     parser.add_argument(
-        "--port", type=int, default=None, help=f"Port to listen on (default: ${ENV_PORT} or 8000)"
+        "--port",
+        type=int,
+        default=None,
+        help=f"Port to listen on (default: ${ENV_PORT} or 8000)",
     )
     parser.add_argument(
-        "--path", default=None, help=f"HTTP endpoint path (default: ${ENV_PATH} or /mcp)"
+        "--path",
+        default=None,
+        help=f"HTTP endpoint path (default: ${ENV_PATH} or /mcp)",
     )
     parser.add_argument("--debug", action="store_true", help="Enable debug logging")
 
@@ -178,7 +188,7 @@ def resolve_config(args: argparse.Namespace) -> dict:
 
 
 def run_server(
-    mcp_app, args: Optional[argparse.Namespace] = None, server_name: str = "mcp-server"
+    mcp_app, args: argparse.Namespace | None = None, server_name: str = "mcp-server"
 ) -> None:
     """
     Unified server runner for all transport modes.
@@ -199,7 +209,7 @@ def run_server(
 
 
 async def run_server_async(
-    mcp_app, args: Optional[argparse.Namespace] = None, server_name: str = "mcp-server"
+    mcp_app, args: argparse.Namespace | None = None, server_name: str = "mcp-server"
 ) -> None:
     """
     Asynchronous unified server runner for all transport modes.

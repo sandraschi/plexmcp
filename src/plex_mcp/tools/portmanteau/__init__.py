@@ -27,6 +27,7 @@ from .organization import plex_organization
 from .performance import plex_performance
 from .playlist import plex_playlist
 from .quality import plex_quality
+from .rag import plex_rag
 from .reporting import plex_reporting
 from .search import plex_search
 from .server import plex_server
@@ -50,4 +51,5 @@ __all__ = [
     "plex_collections",
     "plex_quality",
     "plex_help",
+    "plex_rag",
 ]

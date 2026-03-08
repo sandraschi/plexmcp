@@ -5,13 +5,13 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "plex-mcp-advanced"
 version = "2.0.0"
-description = "FastMCP 2.14.3+ & MCPB package for Plex Media Server management with conversational AI and sampling"
+description = "FastMCP 3.1 & MCPB package for Plex Media Server management with conversational AI, sampling, and agentic workflows"
 authors = [
     {name = "Sandra Schipal", email = "sandra@sandraschi.dev"}
 ]
 readme = "README.md"
 license = {text = "MIT"}
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 keywords = ["mcp", "plex", "media", "streaming", "fastmcp", "glama-gold", "mcpb"]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -29,13 +29,26 @@ classifiers = [
 ]
 
 dependencies = [
-    "fastmcp>=2.14.3,<3.0.0",
+    "fastmcp>=3.1",
     "aiohttp>=3.9.0,<4.0.0",
     "aiofiles>=23.2.0,<24.0.0",
-    "plexapi>=4.15.0,<5.0.0",
+    "plexapi>=4.15.0",
     "pydantic>=2.0.0,<3.0.0",
-    "python-dotenv>=1.0.0,<2.0.0",
-    "pyyaml>=6.0.0,<7.0.0"
+    "python-dotenv>=1.0.0",
+    "pyyaml>=6.0.0,<7.0.0",
+    "requests>=2.31.0",
+    "pytz>=2024.1",
+    "jsonschema>=4.21.0",
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+    "pydantic-settings>=2.0.0",
+    "httpx>=0.25.0",
+    "python-multipart>=0.0.6",
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=23.0.0",
+    "rich>=13.0.0",
+    "ruff>=0.14.3",
 ]
 
 [project.optional-dependencies]

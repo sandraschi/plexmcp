@@ -23,7 +23,9 @@ class TestPlexStreaming:
         with patch(
             "plex_mcp.tools.portmanteau.streaming._get_plex_service", return_value=plex_service
         ):
-            result = await plex_streaming.fn(operation="list_sessions")
+            result = await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
+                operation="list_sessions"
+            )
 
             assert result["success"] is True
             assert result["operation"] == "list_sessions"
@@ -42,7 +44,9 @@ class TestPlexStreaming:
         with patch(
             "plex_mcp.tools.portmanteau.streaming._get_plex_service", return_value=plex_service
         ):
-            result = await plex_streaming.fn(operation="list_clients")
+            result = await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
+                operation="list_clients"
+            )
 
             assert result["success"] is True
             assert result["operation"] == "list_clients"
@@ -54,7 +58,7 @@ class TestPlexStreaming:
         with patch(
             "plex_mcp.tools.portmanteau.streaming._get_plex_service", return_value=plex_service
         ):
-            result = await plex_streaming.fn(
+            result = await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
                 operation="play", client_id="client123", media_key="12345"
             )
 
@@ -64,7 +68,9 @@ class TestPlexStreaming:
     @pytest.mark.asyncio
     async def test_play_operation_missing_params(self):
         """Test play operation requires client_id and media_key."""
-        result = await plex_streaming.fn(operation="play")
+        result = await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
+            operation="play"
+        )
 
         assert result["success"] is False
 
@@ -74,7 +80,9 @@ class TestPlexStreaming:
         with patch(
             "plex_mcp.tools.portmanteau.streaming._get_plex_service", return_value=plex_service
         ):
-            result = await plex_streaming.fn(operation="pause", client_id="client123")
+            result = await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
+                operation="pause", client_id="client123"
+            )
 
             assert result["success"] is True
             assert result["operation"] == "pause"
@@ -85,7 +93,9 @@ class TestPlexStreaming:
         with patch(
             "plex_mcp.tools.portmanteau.streaming._get_plex_service", return_value=plex_service
         ):
-            result = await plex_streaming.fn(operation="stop", client_id="client123")
+            result = await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
+                operation="stop", client_id="client123"
+            )
 
             assert result["success"] is True
             assert result["operation"] == "stop"
@@ -96,7 +106,9 @@ class TestPlexStreaming:
         with patch(
             "plex_mcp.tools.portmanteau.streaming._get_plex_service", return_value=plex_service
         ):
-            result = await plex_streaming.fn(operation="seek", client_id="client123", seek_to=60000)
+            result = await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
+                operation="seek", client_id="client123", seek_to=60000
+            )
 
             assert result["success"] is True
             assert result["operation"] == "seek"
@@ -107,7 +119,9 @@ class TestPlexStreaming:
         with patch(
             "plex_mcp.tools.portmanteau.streaming._get_plex_service", return_value=plex_service
         ):
-            result = await plex_streaming.fn(operation="skip_next", client_id="client123")
+            result = await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
+                operation="skip_next", client_id="client123"
+            )
 
             assert result["success"] is True
             assert result["operation"] == "skip_next"
@@ -118,7 +132,9 @@ class TestPlexStreaming:
         with patch(
             "plex_mcp.tools.portmanteau.streaming._get_plex_service", return_value=plex_service
         ):
-            result = await plex_streaming.fn(operation="skip_previous", client_id="client123")
+            result = await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
+                operation="skip_previous", client_id="client123"
+            )
 
             assert result["success"] is True
             assert result["operation"] == "skip_previous"
@@ -129,7 +145,7 @@ class TestPlexStreaming:
         with patch(
             "plex_mcp.tools.portmanteau.streaming._get_plex_service", return_value=plex_service
         ):
-            result = await plex_streaming.fn(
+            result = await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
                 operation="control", client_id="client123", action="play", media_key="12345"
             )
 
@@ -142,7 +158,7 @@ class TestPlexStreaming:
         with patch(
             "plex_mcp.tools.portmanteau.streaming._get_plex_service", return_value=plex_service
         ):
-            result = await plex_streaming.fn(
+            result = await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
                 operation="set_quality", client_id="client123", quality="1080p"
             )
 
@@ -153,7 +169,9 @@ class TestPlexStreaming:
     @pytest.mark.asyncio
     async def test_set_quality_missing_params(self):
         """Test set_quality operation requires quality parameter."""
-        result = await plex_streaming.fn(operation="set_quality", client_id="client123")
+        result = await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
+            operation="set_quality", client_id="client123"
+        )
 
         assert result["success"] is False
         assert result["error_code"] == "MISSING_QUALITY"
@@ -164,7 +182,7 @@ class TestPlexStreaming:
         with patch(
             "plex_mcp.tools.portmanteau.streaming._get_plex_service", return_value=plex_service
         ):
-            result = await plex_streaming.fn(
+            result = await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
                 operation="set_volume", client_id="client123", volume=75
             )
 
@@ -175,7 +193,9 @@ class TestPlexStreaming:
     @pytest.mark.asyncio
     async def test_set_volume_missing_client_id(self):
         """Test set_volume operation requires client_id."""
-        result = await plex_streaming.fn(operation="set_volume", volume=75)
+        result = await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
+            operation="set_volume", volume=75
+        )
 
         assert result["success"] is False
         assert result["error_code"] == "MISSING_CLIENT_ID"
@@ -183,7 +203,9 @@ class TestPlexStreaming:
     @pytest.mark.asyncio
     async def test_set_volume_missing_volume(self):
         """Test set_volume operation requires volume parameter."""
-        result = await plex_streaming.fn(operation="set_volume", client_id="client123")
+        result = await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
+            operation="set_volume", client_id="client123"
+        )
 
         assert result["success"] is False
         assert result["error_code"] == "MISSING_VOLUME"

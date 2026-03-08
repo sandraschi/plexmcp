@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-const BACKEND_URL = "http://127.0.0.1:10740";
+const BACKEND_URL = process.env.BACKEND_URL ?? "http://127.0.0.1:10740";
 const PROXY_TIMEOUT_MS = 15000;
 
 console.error(`[PROXY] Initialized with BACKEND_URL=${BACKEND_URL}`);

@@ -1,8 +1,7 @@
 """
-PlexMCP - FastMCP 2.14.3 Server for Plex Media Server Management
+PlexMCP - FastMCP 3.1 Server for Plex Media Server Management
 
-FastMCP 2.14.3 compliant with conversational tool returns and sampling capabilities.
-Austrian efficiency for Sandra's media streaming needs.
+FastMCP 3.1 with sampling, agentic workflows, skills and prompts.
 """
 
 # Import the shared FastMCP instance
@@ -17,10 +16,16 @@ logger = get_logger(__name__)
 # The @mcp.tool() decorators execute when modules are imported
 from .tools import portmanteau  # noqa: F401, E402
 
-# Import and register agentic workflow tools (FastMCP 2.14.3 sampling features)
-from .tools.agentic import register_agentic_tools  # noqa: E402
+# Import and register agentic workflow tools (FastMCP 3.1 sampling / agentic)
+try:
+    from .tools.agentic import register_agentic_tools  # noqa: E402
 
-register_agentic_tools()
+    register_agentic_tools()
+except ImportError:
+    pass
+
+# ASGI app for uvicorn (webapp/start.ps1): plex_mcp.server:app
+app = mcp.http_app()
 
 # NOTE: Old individual tools (server, media, sessions, users, playlists, organization, quality, library)
 # are deprecated and will be removed in a future version.
@@ -44,13 +49,13 @@ register_agentic_tools()
 
 def main():
     """
-    Main entry point for PlexMCP server with unified transport (FastMCP 2.14.4+).
+    Main entry point for PlexMCP server (FastMCP 3.1).
 
     Supports STDIO (default), HTTP, and SSE transport modes.
     """
     from .transport import run_server
 
-    logger.info("Starting FastMCP 2.14.4+ Server - Austrian efficiency for media streaming!")
+    logger.info("Starting PlexMCP (FastMCP 3.1)")
     run_server(mcp, server_name="plex-mcp")
 
 

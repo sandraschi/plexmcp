@@ -17,7 +17,9 @@ class TestPlexPerformance:
             "plex_mcp.tools.portmanteau.performance._get_plex_service",
             return_value=mock_plex_service,
         ):
-            result = await plex_performance.fn(operation="get_transcode_settings")
+            result = await (
+                plex_performance.fn if hasattr(plex_performance, "fn") else plex_performance
+            )(operation="get_transcode_settings")
 
             assert result["success"] is True
             assert result["operation"] == "get_transcode_settings"
@@ -29,7 +31,9 @@ class TestPlexPerformance:
             "plex_mcp.tools.portmanteau.performance._get_plex_service",
             return_value=mock_plex_service,
         ):
-            result = await plex_performance.fn(operation="get_transcoding_status")
+            result = await (
+                plex_performance.fn if hasattr(plex_performance, "fn") else plex_performance
+            )(operation="get_transcoding_status")
 
             assert result["success"] is True
             assert result["operation"] == "get_transcoding_status"
@@ -41,7 +45,9 @@ class TestPlexPerformance:
             "plex_mcp.tools.portmanteau.performance._get_plex_service",
             return_value=mock_plex_service,
         ):
-            result = await plex_performance.fn(operation="get_bandwidth")
+            result = await (
+                plex_performance.fn if hasattr(plex_performance, "fn") else plex_performance
+            )(operation="get_bandwidth")
 
             assert result["success"] is True
             assert result["operation"] == "get_bandwidth"
@@ -53,7 +59,9 @@ class TestPlexPerformance:
             "plex_mcp.tools.portmanteau.performance._get_plex_service",
             return_value=mock_plex_service,
         ):
-            result = await plex_performance.fn(operation="get_server_status")
+            result = await (
+                plex_performance.fn if hasattr(plex_performance, "fn") else plex_performance
+            )(operation="get_server_status")
 
             assert result["success"] is True
             assert result["operation"] == "get_server_status"
@@ -65,7 +73,9 @@ class TestPlexPerformance:
             "plex_mcp.tools.portmanteau.performance._get_plex_service",
             return_value=mock_plex_service,
         ):
-            result = await plex_performance.fn(operation="get_server_info")
+            result = await (
+                plex_performance.fn if hasattr(plex_performance, "fn") else plex_performance
+            )(operation="get_server_info")
 
             assert result["success"] is True
             assert result["operation"] == "get_server_info"

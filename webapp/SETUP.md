@@ -30,20 +30,24 @@ powershell -ExecutionPolicy Bypass -File .\start.ps1
 
 ## Manual run
 
+From repo root. Backend needs PYTHONPATH so both `plex_mcp` (from `src`) and `app` (from `webapp/backend`) are importable. Replace `REPO_ROOT` with your repo path (e.g. `D:\Dev\repos\plex-mcp`).
+
 ```powershell
-# Terminal 1 - backend
-cd webapp\backend
-$env:PYTHONPATH = "..\..\src"
+# Terminal 1 - backend (use project venv)
+cd REPO_ROOT\webapp\backend
+$env:PYTHONPATH = "REPO_ROOT\src;REPO_ROOT\webapp\backend"
 $env:PLEX_TOKEN = "your-token"
 $env:PLEX_URL = "http://localhost:32400"
-python -m uvicorn app.main:app --reload --port 10740
+& "REPO_ROOT\.venv\Scripts\python.exe" -m uvicorn app.main:app --reload --port 10740
 
 # Terminal 2 - frontend
-cd webapp\frontend
+cd REPO_ROOT\webapp\frontend
 $env:NEXT_PUBLIC_API_URL = "http://127.0.0.1:10740"
 $env:NEXT_PUBLIC_APP_URL = "http://127.0.0.1:10741"
 npm run dev
 ```
+
+Easier: from repo root run `.\webapp\start.ps1` (or `plex-start.bat`); it starts the backend in a new window and the frontend in the current window.
 
 ## Backend .env and Settings
 
@@ -67,6 +71,10 @@ LLM_BASE_URL=http://127.0.0.1:11434
 ```
 
 Settings saved in the webapp (Settings page) are stored in `backend/data/settings.json` and override these env vars at runtime. The `data/` folder is in `.gitignore` so tokens are not committed.
+
+## Semantic search (RAG)
+
+Semantic search (page **Semantic search** in the sidebar) needs the **mcp-central-docs source** on the Python path (e.g. clone that repo and add its `src` to `PYTHONPATH`). The mcp-central-docs MCP server does not need to be running. Use **Sync / Index metadata** on that page (or MCP `plex_rag(operation='sync_metadata')`) once to index; then run natural-language queries. Chat uses a live preprompt (server, libraries, integrations) when `use_context` is true (default).
 
 ## Frontend .env.local
 

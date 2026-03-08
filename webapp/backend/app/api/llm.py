@@ -7,6 +7,7 @@ import httpx
 from fastapi import APIRouter, Body
 from fastapi.responses import StreamingResponse
 
+from ..chat_context import build_chat_preprompt
 from ..config import settings
 
 router = APIRouter()
@@ -58,7 +59,11 @@ async def list_models(
                 return {"models": [], "error": r.text}
             data = r.json()
             items = data.get("data", data.get("models", []))
-            names = [x.get("id") or x.get("name") or str(x) for x in (items or []) if isinstance(x, (dict, str))]
+            names = [
+                x.get("id") or x.get("name") or str(x)
+                for x in (items or [])
+                if isinstance(x, (dict, str))
+            ]
             if not isinstance(items, list):
                 names = []
             return {"models": names, "provider": "openai-compatible"}
@@ -74,8 +79,22 @@ async def chat(
     stream: bool = Body(False),
     provider: str | None = Body(None),
     base_url: str | None = Body(None),
+    use_context: bool = Body(True),
 ):
-    """Chat completion. Supports streaming."""
+    """Chat completion. Supports streaming. Injects MCP/webapp/libraries context when use_context=True."""
+    if use_context and messages:
+        try:
+            preprompt = await build_chat_preprompt()
+            if preprompt:
+                existing_system = ""
+                rest = list(messages)
+                if rest and (rest[0].get("role") or "").lower() == "system":
+                    existing_system = (rest[0].get("content") or "").strip()
+                    rest = rest[1:]
+                system_content = preprompt + ("\n\n" + existing_system if existing_system else "")
+                messages = [{"role": "system", "content": system_content}] + rest
+        except Exception as e:
+            logger.warning("Chat preprompt build failed: %s", e)
     url = _get_base_url(provider, base_url)
     if ":11434" in url or "ollama" in url.lower():
         req_url = f"{url}/api/chat"
@@ -152,5 +171,7 @@ async def refine_prompt(
         if r.status_code != 200:
             return {"refined": text, "error": r.text}
         data = r.json()
-        content = (data.get("choices") or [{}])[0].get("message", {}).get("content", "").strip() or text
+        content = (data.get("choices") or [{}])[0].get("message", {}).get(
+            "content", ""
+        ).strip() or text
         return {"refined": content}

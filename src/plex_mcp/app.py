@@ -100,48 +100,47 @@ if _is_stdio_mode:
 
 from fastmcp import FastMCP
 
-# Create the main FastMCP instance with conversational features
-mcp = FastMCP(
-    name="PlexMCP",
-    version="2.1.0",
-    instructions="""You are PlexMCP, a comprehensive FastMCP 2.14.3 server for Plex Media Server management.
+# Create the main FastMCP instance (FastMCP 3.1: name and version only)
+mcp = FastMCP(name="PlexMCP", version="2.2.0")
 
-FASTMCP 2.14.3 FEATURES:
-- Conversational tool returns for natural AI interaction
-- Sampling capabilities for agentic workflows and complex operations
-- Portmanteau design preventing tool explosion while maintaining full functionality
 
-CORE CAPABILITIES:
-- Media Library Management: Browse, search, and organize your Plex libraries
-- Playback Control: Control media playback across all connected clients
-- Server Management: Monitor and manage Plex server health and performance
-- User Management: Handle user accounts, permissions, and access
-- Content Organization: Manage playlists, collections, and metadata
-
-CONVERSATIONAL FEATURES:
-- Tools return natural language responses alongside structured data
-- Sampling allows autonomous orchestration of complex media workflows
-- Agentic capabilities for intelligent content discovery and playback
-
-RESPONSE FORMAT:
-- All tools return dictionaries with 'success' boolean and 'message' for conversational responses
-- Error responses include 'error' field with descriptive message
-- Success responses include relevant data fields and natural language summaries
-
-PORTMANTEAU DESIGN:
-Tools are consolidated into logical groups to prevent tool explosion while maintaining full functionality.
-Each portmanteau tool handles multiple related operations through an 'operation' parameter.
-""",
-)
+@mcp.prompt()
+def plex_media_guide() -> list[dict]:
+    """Guide for Plex media search and RAG. Use for agentic workflows."""
+    return [
+        {
+            "role": "user",
+            "content": "PlexMCP: Use plex_search for keyword search; use plex_rag(operation='semantic_search', query='...') for natural-language semantic search over indexed metadata. Run plex_rag(operation='sync_metadata') once to index before semantic search.",
+        }
+    ]
 
 
 def http_app():
     """
-    Return FastAPI app for HTTP mode (FastMCP 2.14+).
+    Return ASGI app for HTTP mode (FastMCP 3.1).
 
     This provides the HTTP interface that can be mounted in webapps.
+    CORS allows the frontend (e.g. http://localhost:10741) to use WebSocket and fetch.
     """
-    return mcp.http_app()
+    from starlette.middleware import Middleware
+    from starlette.middleware.cors import CORSMiddleware
+
+    allowed_origins = [
+        "http://localhost:10741",
+        "http://127.0.0.1:10741",
+        "http://localhost:10740",
+        "http://127.0.0.1:10740",
+    ]
+    middleware = [
+        Middleware(
+            CORSMiddleware,
+            allow_origins=allowed_origins,
+            allow_methods=["*"],
+            allow_headers=["*"],
+            expose_headers=["*"],
+        )
+    ]
+    return mcp.http_app(middleware=middleware)
 
 
 # CRITICAL: After server initialization, restore stdout for stdio mode

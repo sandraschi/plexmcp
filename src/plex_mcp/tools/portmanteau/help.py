@@ -276,6 +276,20 @@ async def plex_help(
                     "remove_items",
                 ],
             },
+            "plex_audio_mgr": {
+                "name": "plex_audio_mgr",
+                "category": "audio",
+                "description": "Audio management operations (get_volume, set_volume, mute, unmute, list_streams, select_stream, handover)",
+                "operations": [
+                    "get_volume",
+                    "set_volume",
+                    "mute",
+                    "unmute",
+                    "list_streams",
+                    "select_stream",
+                    "handover",
+                ],
+            },
             "plex_quality": {
                 "name": "plex_quality",
                 "category": "quality",
@@ -288,6 +302,24 @@ async def plex_help(
                     "delete_profile",
                     "set_default",
                 ],
+            },
+            "agentic_plex_workflow": {
+                "name": "agentic_plex_workflow",
+                "category": "sampling",
+                "description": "Autonomous Plex orchestration using LLM sampling (SEP-1577)",
+                "operations": ["workflow", "analyze", "execute"],
+            },
+            "intelligent_media_processing": {
+                "name": "intelligent_media_processing",
+                "category": "sampling",
+                "description": "Intelligent batch processing of media items",
+                "operations": ["adaptive", "parallel", "sequential"],
+            },
+            "conversational_plex_assistant": {
+                "name": "conversational_plex_assistant",
+                "category": "sampling",
+                "description": "Conversational assistant for Plex management",
+                "operations": ["chat", "help", "guide"],
             },
         }
 
@@ -302,6 +334,7 @@ Available Tool Categories:
 - media: Media operations (plex_media)
 - user: User management (plex_user)
 - playlist: Playlist management (plex_playlist)
+- audio: Audio management (plex_audio_mgr)
 - streaming: Playback control (plex_streaming)
 - metadata: Metadata management (plex_metadata)
 - performance: Performance and quality (plex_performance)
@@ -312,6 +345,7 @@ Available Tool Categories:
 - reporting: Reporting and analytics (plex_reporting)
 - collections: Collection management (plex_collections)
 - quality: Quality profiles (plex_quality)
+- sampling: Agentic workflows and LLM sampling (agentic_plex_workflow)
 
 Use list_tools to see all available tools, or tool_info to get details about a specific tool.
 """

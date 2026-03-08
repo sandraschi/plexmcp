@@ -9,6 +9,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .api import (
+    fleet,
     help_api,
     images,
     library,
@@ -20,6 +21,7 @@ from .api import (
     search,
     server,
     system,
+    v1,
     webapp_launch,
     workflows,
 )
@@ -43,9 +45,7 @@ _log_file = _log_dir / "webapp.log"
 _handler = logging.handlers.RotatingFileHandler(
     _log_file, maxBytes=10 * 1024 * 1024, backupCount=5, encoding="utf-8"
 )
-_handler.setFormatter(
-    logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-)
+_handler.setFormatter(logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s"))
 logging.getLogger("uvicorn").addHandler(_handler)
 logging.getLogger("uvicorn.error").addHandler(_handler)
 
@@ -83,6 +83,8 @@ app.include_router(playback.router, prefix="/api/playback", tags=["playback"])
 app.include_router(images.router, prefix="/image", tags=["images"])
 app.include_router(system.router, prefix="/api/system", tags=["system"])
 app.include_router(webapp_launch.router, prefix="/api", tags=["webapp-launch"])
+app.include_router(fleet.router, prefix="/api", tags=["fleet"])
+app.include_router(v1.router, prefix="/api/v1", tags=["v1"])
 app.include_router(logs.router, prefix="/api/logs", tags=["logs"])
 app.include_router(help_api.router, prefix="/api/help", tags=["help"])
 app.include_router(llm.router, prefix="/api/llm", tags=["llm"])

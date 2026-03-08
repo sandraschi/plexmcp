@@ -99,3 +99,33 @@ export async function getLlmModels() {
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
+
+export interface SemanticResult {
+  content?: string;
+  text?: string;
+  metadata?: { title?: string; type?: string; library?: string; year?: number };
+  score?: number;
+}
+
+export async function getSemanticSearch(params: {
+  query: string;
+  limit?: number;
+}): Promise<{ available: boolean; results: SemanticResult[]; error: string | null }> {
+  const sp = new URLSearchParams({ query: params.query });
+  if (params.limit != null) sp.set("limit", String(params.limit));
+  const res = await fetch(`${getBaseUrl()}/api/rag/semantic?${sp}`);
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function syncRag(): Promise<{
+  success: boolean;
+  available: boolean;
+  indexed_count: number;
+  message?: string;
+  error: string | null;
+}> {
+  const res = await fetch(`${getBaseUrl()}/api/rag/sync`, { method: "POST" });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}

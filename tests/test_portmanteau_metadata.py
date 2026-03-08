@@ -16,7 +16,9 @@ class TestPlexMetadata:
         with patch(
             "plex_mcp.tools.portmanteau.metadata._get_plex_service", return_value=mock_plex_service
         ):
-            result = await plex_metadata.fn(operation="refresh", library_id="1")
+            result = await (plex_metadata.fn if hasattr(plex_metadata, "fn") else plex_metadata)(
+                operation="refresh", library_id="1"
+            )
 
             assert result["success"] is True
             assert result["operation"] == "refresh"
@@ -27,7 +29,9 @@ class TestPlexMetadata:
         with patch(
             "plex_mcp.tools.portmanteau.metadata._get_plex_service", return_value=mock_plex_service
         ):
-            result = await plex_metadata.fn(operation="refresh_all")
+            result = await (plex_metadata.fn if hasattr(plex_metadata, "fn") else plex_metadata)(
+                operation="refresh_all"
+            )
 
             assert result["success"] is True
             assert result["operation"] == "refresh_all"
@@ -38,7 +42,7 @@ class TestPlexMetadata:
         with patch(
             "plex_mcp.tools.portmanteau.metadata._get_plex_service", return_value=mock_plex_service
         ):
-            result = await plex_metadata.fn(
+            result = await (plex_metadata.fn if hasattr(plex_metadata, "fn") else plex_metadata)(
                 operation="fix_match", item_id="12345", match_id="67890", media_type="movie"
             )
 
@@ -62,9 +66,9 @@ class TestPlexMetadata:
             with patch(
                 "plex_mcp.tools.portmanteau.media.plex_media", side_effect=mock_plex_media_func
             ):
-                result = await plex_metadata.fn(
-                    operation="update", item_id="12345", metadata={"title": "New Title"}
-                )
+                result = await (
+                    plex_metadata.fn if hasattr(plex_metadata, "fn") else plex_metadata
+                )(operation="update", item_id="12345", metadata={"title": "New Title"})
 
                 assert result["success"] is True
                 assert result["operation"] == "update"

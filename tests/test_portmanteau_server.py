@@ -16,7 +16,9 @@ class TestPlexServer:
         with patch(
             "plex_mcp.tools.portmanteau.server._get_plex_service", return_value=mock_plex_service
         ):
-            result = await plex_server.fn(operation="status")
+            result = await (plex_server.fn if hasattr(plex_server, "fn") else plex_server)(
+                operation="status"
+            )
 
             assert result["success"] is True
             assert result["operation"] == "status"
@@ -28,7 +30,9 @@ class TestPlexServer:
         with patch(
             "plex_mcp.tools.portmanteau.server._get_plex_service", return_value=mock_plex_service
         ):
-            result = await plex_server.fn(operation="info")
+            result = await (plex_server.fn if hasattr(plex_server, "fn") else plex_server)(
+                operation="info"
+            )
 
             assert result["success"] is True
             assert result["operation"] == "info"
@@ -39,7 +43,9 @@ class TestPlexServer:
         with patch(
             "plex_mcp.tools.portmanteau.server._get_plex_service", return_value=mock_plex_service
         ):
-            result = await plex_server.fn(operation="health")
+            result = await (plex_server.fn if hasattr(plex_server, "fn") else plex_server)(
+                operation="health"
+            )
 
             assert result["success"] is True
             assert result["operation"] == "health"
@@ -68,7 +74,7 @@ class TestPlexServer:
                     warnings=[],
                     next_recommended=None,
                 )
-                result = await plex_server.fn(
+                result = await (plex_server.fn if hasattr(plex_server, "fn") else plex_server)(
                     operation="maintenance", maintenance_operation="optimize"
                 )
 

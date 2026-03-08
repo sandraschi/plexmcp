@@ -16,7 +16,9 @@ class TestPlexPlaylist:
         with patch(
             "plex_mcp.tools.portmanteau.playlist._get_plex_service", return_value=mock_plex_service
         ):
-            result = await plex_playlist.fn(operation="list")
+            result = await (plex_playlist.fn if hasattr(plex_playlist, "fn") else plex_playlist)(
+                operation="list"
+            )
 
             assert result["success"] is True
             assert result["operation"] == "list"
@@ -28,7 +30,9 @@ class TestPlexPlaylist:
         with patch(
             "plex_mcp.tools.portmanteau.playlist._get_plex_service", return_value=mock_plex_service
         ):
-            result = await plex_playlist.fn(operation="get", playlist_id="playlist123")
+            result = await (plex_playlist.fn if hasattr(plex_playlist, "fn") else plex_playlist)(
+                operation="get", playlist_id="playlist123"
+            )
 
             assert result["success"] is True
             assert result["operation"] == "get"
@@ -39,7 +43,7 @@ class TestPlexPlaylist:
         with patch(
             "plex_mcp.tools.portmanteau.playlist._get_plex_service", return_value=mock_plex_service
         ):
-            result = await plex_playlist.fn(
+            result = await (plex_playlist.fn if hasattr(plex_playlist, "fn") else plex_playlist)(
                 operation="create", title="My Playlist", items=["12345", "67890"]
             )
 
@@ -49,7 +53,9 @@ class TestPlexPlaylist:
     @pytest.mark.asyncio
     async def test_create_operation_missing_required(self):
         """Test create operation requires title and items."""
-        result = await plex_playlist.fn(operation="create")
+        result = await (plex_playlist.fn if hasattr(plex_playlist, "fn") else plex_playlist)(
+            operation="create"
+        )
 
         assert result["success"] is False
 
@@ -59,7 +65,7 @@ class TestPlexPlaylist:
         with patch(
             "plex_mcp.tools.portmanteau.playlist._get_plex_service", return_value=mock_plex_service
         ):
-            result = await plex_playlist.fn(
+            result = await (plex_playlist.fn if hasattr(plex_playlist, "fn") else plex_playlist)(
                 operation="update", playlist_id="playlist123", title="Updated Playlist"
             )
 
@@ -72,7 +78,9 @@ class TestPlexPlaylist:
         with patch(
             "plex_mcp.tools.portmanteau.playlist._get_plex_service", return_value=mock_plex_service
         ):
-            result = await plex_playlist.fn(operation="delete", playlist_id="playlist123")
+            result = await (plex_playlist.fn if hasattr(plex_playlist, "fn") else plex_playlist)(
+                operation="delete", playlist_id="playlist123"
+            )
 
             assert result["success"] is True
             assert result["operation"] == "delete"
@@ -83,7 +91,7 @@ class TestPlexPlaylist:
         with patch(
             "plex_mcp.tools.portmanteau.playlist._get_plex_service", return_value=mock_plex_service
         ):
-            result = await plex_playlist.fn(
+            result = await (plex_playlist.fn if hasattr(plex_playlist, "fn") else plex_playlist)(
                 operation="add_items", playlist_id="playlist123", items=["54321"]
             )
 
@@ -96,7 +104,7 @@ class TestPlexPlaylist:
         with patch(
             "plex_mcp.tools.portmanteau.playlist._get_plex_service", return_value=mock_plex_service
         ):
-            result = await plex_playlist.fn(
+            result = await (plex_playlist.fn if hasattr(plex_playlist, "fn") else plex_playlist)(
                 operation="remove_items", playlist_id="playlist123", items=["12345"]
             )
 
@@ -109,7 +117,9 @@ class TestPlexPlaylist:
         with patch(
             "plex_mcp.tools.portmanteau.playlist._get_plex_service", return_value=mock_plex_service
         ):
-            result = await plex_playlist.fn(operation="get_analytics", playlist_id="playlist123")
+            result = await (plex_playlist.fn if hasattr(plex_playlist, "fn") else plex_playlist)(
+                operation="get_analytics", playlist_id="playlist123"
+            )
 
             assert result["success"] is True
             assert result["operation"] == "get_analytics"
