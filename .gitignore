@@ -62,6 +62,7 @@ config/secrets.yaml
 config/local_settings.yaml
 
 # Test outputs
+pytest_out.txt
 .pytest_cache/
 .coverage
 htmlcov/

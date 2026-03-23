@@ -1,9 +1,47 @@
+import asyncio
 import logging
 import os
 import sys
+import threading
 from typing import Any
 
 logger = logging.getLogger(__name__)
+
+_progress_lock = threading.Lock()
+_sync_progress: dict[str, Any] = {"phase": "idle", "message": ""}
+
+
+def get_rag_sync_progress() -> dict[str, Any]:
+    """Snapshot of RAG reindex progress for webapp polling (thread-safe)."""
+    with _progress_lock:
+        return dict(_sync_progress)
+
+
+def reset_rag_sync_progress() -> None:
+    with _progress_lock:
+        _sync_progress.clear()
+        _sync_progress.update(
+            {
+                "phase": "idle",
+                "message": "",
+                "libraries_total": 0,
+                "library_index": 0,
+                "library_name": "",
+                "documents_so_far": 0,
+                "documents_total": 0,
+            }
+        )
+
+
+def _report_progress(update: dict[str, Any]) -> None:
+    with _progress_lock:
+        _sync_progress.update(update)
+
+
+def report_rag_sync_error(message: str) -> None:
+    """Mark sync as failed (e.g. tool error before ingestor runs)."""
+    _report_progress({"phase": "error", "message": message, "indexed_count": 0})
+
 
 # 1) Try mcp-central-docs shared RAG (sibling repo)
 _BaseVectorStore = None
@@ -127,18 +165,58 @@ class PlexIngestor:
 
     async def extract_and_index_all(self):
         """Extracts Title, Plot/Summary, Genres, Directors (movies/shows) and artist summaries (music) into LanceDB."""
-        if not self.is_available:
-            logger.error("RAG Core is not available.")
+        reset_rag_sync_progress()
+        try:
+            return await self._extract_and_index_all_impl()
+        except Exception as e:
+            logger.exception("RAG extract_and_index_all failed: %s", e)
+            _report_progress({"phase": "error", "message": str(e), "indexed_count": 0})
             return 0
 
+    async def _extract_and_index_all_impl(self) -> int:
+        """Inner implementation after reset (see extract_and_index_all)."""
+        if not self.is_available:
+            logger.error("RAG Core is not available.")
+            _report_progress(
+                {
+                    "phase": "error",
+                    "message": "RAG dependencies not available. Install RAG extras or configure PYTHONPATH.",
+                }
+            )
+            return 0
+
+        _report_progress({"phase": "starting", "message": "Fetching libraries from Plex..."})
+
         libraries = await self.plex.get_libraries()
+        eligible = [lib for lib in libraries if lib.get("type") in ("movie", "show", "artist")]
+        total_libs = len(eligible)
+        _report_progress(
+            {
+                "phase": "scanning",
+                "libraries_total": total_libs,
+                "library_index": 0,
+                "message": f"Found {total_libs} eligible librar{'y' if total_libs == 1 else 'ies'} (movies, shows, music).",
+            }
+        )
+
         docs = []
 
-        for lib in libraries:
-            if lib.get("type") not in ("movie", "show", "artist"):
-                continue
+        for lib_idx, lib in enumerate(eligible):
             lib_id = str(lib.get("id"))
             lib_name = lib.get("title", "Unknown Library")
+            lib_type = str(lib.get("type", ""))
+
+            _report_progress(
+                {
+                    "phase": "processing_library",
+                    "libraries_total": total_libs,
+                    "library_index": lib_idx + 1,
+                    "library_name": lib_name,
+                    "library_type": lib_type,
+                    "documents_so_far": len(docs),
+                    "message": f'Reading "{lib_name}" ({lib_idx + 1}/{total_libs})...',
+                }
+            )
 
             try:
                 result = await self.plex.get_library_items(library_id=lib_id, limit=50000)
@@ -189,10 +267,34 @@ class PlexIngestor:
                 logger.error("Error extracting items from library %s: %s", lib_name, e)
 
         if docs:
-            # Overwrite=True will completely replace existing metadata which serves as simple delta-sync
-            # for the entire table. We can add proper diff logic later if efficiency is required.
-            self.vector_store.add_documents(docs, overwrite=True)
+            _report_progress(
+                {
+                    "phase": "embedding",
+                    "documents_total": len(docs),
+                    "documents_so_far": len(docs),
+                    "message": f"Embedding {len(docs)} document(s) and writing index (this can take a while)...",
+                }
+            )
+            # Run blocking encode + LanceDB write in a thread so the event loop can serve /sync/status polls.
+            await asyncio.to_thread(self.vector_store.add_documents, docs, True)
+            _report_progress(
+                {
+                    "phase": "complete",
+                    "indexed_count": len(docs),
+                    "documents_total": len(docs),
+                    "message": f"Indexed {len(docs)} item(s).",
+                }
+            )
             return len(docs)
+
+        _report_progress(
+            {
+                "phase": "complete",
+                "indexed_count": 0,
+                "documents_total": 0,
+                "message": "No documents to index (no eligible metadata).",
+            }
+        )
         return 0
 
     def semantic_search(self, query: str, limit: int = 5):

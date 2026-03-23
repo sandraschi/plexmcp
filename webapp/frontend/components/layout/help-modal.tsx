@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { getHelp } from "@/utils/api";
 
 interface HelpModalProps {
@@ -49,6 +50,15 @@ export function HelpModal({ onClose }: HelpModalProps) {
         <pre className="p-4 overflow-auto text-sm text-slate-300 whitespace-pre-wrap font-mono flex-1 min-h-0">
           {content}
         </pre>
+        <div className="px-4 pb-4 border-t border-slate-600/50 pt-3">
+          <Link
+            href="/help"
+            className="text-sm text-amber hover:underline"
+            onClick={onClose}
+          >
+            Open full documentation (MCP, webapp, Plex) →
+          </Link>
+        </div>
       </div>
     </div>
   );

@@ -40,11 +40,14 @@ class TestPlexLibrary:
             assert "data" in result
 
     @pytest.mark.asyncio
-    async def test_get_operation_missing_id(self):
+    async def test_get_operation_missing_id(self, mock_plex_service):
         """Test get operation requires library_id."""
-        result = await (plex_library.fn if hasattr(plex_library, "fn") else plex_library)(
-            operation="get"
-        )
+        with patch(
+            "plex_mcp.tools.portmanteau.library._get_plex_service", return_value=mock_plex_service
+        ):
+            result = await (plex_library.fn if hasattr(plex_library, "fn") else plex_library)(
+                operation="get"
+            )
 
         assert result["success"] is False
         assert "library_id" in result["error"].lower()

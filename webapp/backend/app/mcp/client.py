@@ -32,6 +32,7 @@ if src_path.exists():
         sys.path.insert(0, src_str)
 
 _tool_map = {
+    "arr_stack": ("plex_mcp.tools.portmanteau.arr_stack", "arr_stack"),
     "plex_library": ("plex_mcp.tools.portmanteau.library", "plex_library"),
     "plex_server": ("plex_mcp.tools.portmanteau.server", "plex_server"),
     "plex_search": ("plex_mcp.tools.portmanteau.search", "plex_search"),

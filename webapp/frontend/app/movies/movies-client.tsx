@@ -208,11 +208,11 @@ function MovieModal({
                 {durationStr && <span>{durationStr}</span>}
                 {contentRating != null && <span>{String(contentRating)}</span>}
                 {rating != null && <span>{Number(rating).toFixed(1)}</span>}
-                {studio && <span>{String(studio)}</span>}
+                {studio != null ? <span>{String(studio)}</span> : null}
               </div>
-              {tagline && (
+              {tagline != null ? (
                 <p className="text-amber/90 italic text-sm mt-3">{String(tagline)}</p>
-              )}
+              ) : null}
               {genres.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-3">
                   {genres.map((g) => (
@@ -230,9 +230,9 @@ function MovieModal({
                   Director{directors.length > 1 ? "s" : ""}: {directors.join(", ")}
                 </p>
               )}
-              {summary && (
+              {summary != null ? (
                 <p className="text-slate-300 text-sm mt-4 leading-relaxed">{String(summary)}</p>
-              )}
+              ) : null}
             </div>
 
             <div className="mt-auto p-6 pt-0 flex flex-wrap items-center gap-3 border-t border-slate-600/50">
@@ -320,7 +320,10 @@ export function MoviesClient({
             >
               <option value="">All movie libraries</option>
               {libraries.map((lib) => (
-                <option key={lib.id ?? lib.key ?? lib.title} value={String(lib.id ?? lib.key ?? "")}>
+                <option
+                  key={String(lib.id ?? lib.key ?? lib.title)}
+                  value={String(lib.id ?? lib.key ?? "")}
+                >
                   {lib.title ?? lib.key ?? "Library"}
                 </option>
               ))}

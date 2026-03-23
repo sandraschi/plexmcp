@@ -38,9 +38,14 @@ class TestPlexUser:
             assert result["operation"] == "get"
 
     @pytest.mark.asyncio
-    async def test_get_operation_missing_id(self):
+    async def test_get_operation_missing_id(self, mock_plex_service):
         """Test get operation requires user_id."""
-        result = await (plex_user.fn if hasattr(plex_user, "fn") else plex_user)(operation="get")
+        with patch(
+            "plex_mcp.tools.portmanteau.user._get_plex_service", return_value=mock_plex_service
+        ):
+            result = await (plex_user.fn if hasattr(plex_user, "fn") else plex_user)(
+                operation="get"
+            )
 
         assert result["success"] is False
         assert "user_id" in result["error"].lower()
@@ -55,7 +60,7 @@ class TestPlexUser:
                 operation="create",
                 username="newuser",
                 email="newuser@example.com",
-                password="securepass123",
+                password="securepass123",  # noqa: S106
             )
 
             assert result["success"] is True

@@ -65,7 +65,7 @@ This includes:
 - **Media Applications**: Plex, Calibre, Immich
 - **Creative Software**: Blender, GIMP, Unity 3D, VRChat, Reaper
 - **Development Tools**: Notepad++, Typora
-- **System Tools**: HandBrake, Virtual DJ, rTorrent
+- **System Tools**: HandBrake, rTorrent, transcoding helpers
 - **Infrastructure**: Tailscale, virtualization platforms
 - **Any application** that can be automated and controlled programmatically
 

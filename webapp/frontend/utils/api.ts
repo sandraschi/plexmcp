@@ -37,6 +37,31 @@ export async function getSystemStatus() {
   return res.json();
 }
 
+export type ArrServiceStatus = {
+  name: string;
+  configured: boolean;
+  reachable: boolean;
+  version: string | null;
+  queue_count: number | null;
+  error: string | null;
+};
+
+export type ArrStackResponse = {
+  success: boolean;
+  any_configured: boolean;
+  radarr: ArrServiceStatus;
+  sonarr: ArrServiceStatus;
+  lidarr: ArrServiceStatus;
+  hint?: string;
+};
+
+/** Radarr / Sonarr / Lidarr reachability (requires URLs + API keys in Settings or .env). */
+export async function getArrStackStatus(): Promise<ArrStackResponse> {
+  const res = await fetch(`${getBaseUrl()}/api/arr/status`, { cache: "no-store" });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
 export async function getLogs(params?: {
   tail?: number;
   filter?: string;
@@ -84,6 +109,12 @@ export async function updateSettings(body: {
   llm_provider?: string;
   llm_base_url?: string;
   llm_api_key?: string;
+  radarr_url?: string;
+  radarr_api_key?: string;
+  sonarr_url?: string;
+  sonarr_api_key?: string;
+  lidarr_url?: string;
+  lidarr_api_key?: string;
 }) {
   const res = await fetch(`${getBaseUrl()}/api/system/settings`, {
     method: "PATCH",
@@ -118,6 +149,50 @@ export async function getSemanticSearch(params: {
   return res.json();
 }
 
+/** Progress snapshot from GET /api/rag/sync/status (poll while reindex runs). */
+export type RagSyncProgress = {
+  phase: string;
+  message?: string;
+  libraries_total?: number;
+  library_index?: number;
+  library_name?: string;
+  library_type?: string;
+  documents_so_far?: number;
+  documents_total?: number;
+  indexed_count?: number;
+};
+
+export async function getRagSyncStatus(): Promise<RagSyncProgress> {
+  const res = await fetch(`${getBaseUrl()}/api/rag/sync/status`, { cache: "no-store" });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+/** Starts background reindex; poll {@link getRagSyncStatus} until phase is complete or error. */
+export async function startRagSync(): Promise<{
+  success: boolean;
+  started?: boolean;
+  already_running?: boolean;
+  error?: string | null;
+}> {
+  const res = await fetch(`${getBaseUrl()}/api/rag/sync`, { method: "POST" });
+  const data = (await res.json().catch(() => ({}))) as {
+    already_running?: boolean;
+    error?: string;
+    success?: boolean;
+  };
+  if (res.status === 409 && data.already_running) {
+    return { success: false, already_running: true, error: data.error ?? "Already running" };
+  }
+  if (!res.ok) {
+    throw new Error(typeof data.error === "string" ? data.error : (await res.text()) || `HTTP ${res.status}`);
+  }
+  return data as { success: boolean; started?: boolean; error?: string | null };
+}
+
+const SYNC_WAIT_MAX_MS = 30 * 60 * 1000;
+
+/** Wait until background reindex finishes (polls {@link getRagSyncStatus}). Use from pages that do not show a progress UI. */
 export async function syncRag(): Promise<{
   success: boolean;
   available: boolean;
@@ -125,7 +200,42 @@ export async function syncRag(): Promise<{
   message?: string;
   error: string | null;
 }> {
-  const res = await fetch(`${getBaseUrl()}/api/rag/sync`, { method: "POST" });
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
+  const start = await startRagSync();
+  if (!start.success && !start.already_running) {
+    return {
+      success: false,
+      available: false,
+      indexed_count: 0,
+      error: start.error ?? "Could not start reindex",
+    };
+  }
+
+  const deadline = Date.now() + SYNC_WAIT_MAX_MS;
+  while (Date.now() < deadline) {
+    const p = await getRagSyncStatus();
+    if (p.phase === "complete") {
+      return {
+        success: true,
+        available: true,
+        indexed_count: p.indexed_count ?? 0,
+        message: p.message,
+        error: null,
+      };
+    }
+    if (p.phase === "error") {
+      return {
+        success: false,
+        available: true,
+        indexed_count: 0,
+        error: p.message ?? "Reindex failed",
+      };
+    }
+    await new Promise((r) => setTimeout(r, 400));
+  }
+  return {
+    success: false,
+    available: true,
+    indexed_count: 0,
+    error: "Reindex timed out while waiting for completion.",
+  };
 }

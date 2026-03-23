@@ -4,13 +4,31 @@ import json
 import os
 from pathlib import Path
 
-_KEYS = ("plex_token", "plex_url", "llm_provider", "llm_base_url", "llm_api_key")
+_KEYS = (
+    "plex_token",
+    "plex_url",
+    "llm_provider",
+    "llm_base_url",
+    "llm_api_key",
+    "radarr_url",
+    "radarr_api_key",
+    "sonarr_url",
+    "sonarr_api_key",
+    "lidarr_url",
+    "lidarr_api_key",
+)
 _ENV_MAP = {
     "plex_token": "PLEX_TOKEN",
     "plex_url": "PLEX_URL",
     "llm_provider": "LLM_PROVIDER",
     "llm_base_url": "LLM_BASE_URL",
     "llm_api_key": "LLM_API_KEY",
+    "radarr_url": "RADARR_URL",
+    "radarr_api_key": "RADARR_API_KEY",
+    "sonarr_url": "SONARR_URL",
+    "sonarr_api_key": "SONARR_API_KEY",
+    "lidarr_url": "LIDARR_URL",
+    "lidarr_api_key": "LIDARR_API_KEY",
 }
 
 

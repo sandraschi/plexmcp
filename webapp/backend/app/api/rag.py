@@ -1,43 +1,77 @@
 """RAG: keyword context for chat and semantic search (LanceDB when available)."""
 
+import asyncio
+import logging
+
 from fastapi import APIRouter, Query
+from fastapi.responses import JSONResponse
 
 from ..mcp.client import mcp_client
-from ..utils.errors import handle_mcp_error
+
+logger = logging.getLogger(__name__)
+
+try:
+    from plex_mcp.services.rag_ingestor import get_rag_sync_progress, report_rag_sync_error
+except ImportError:
+
+    def get_rag_sync_progress() -> dict:
+        return {"phase": "idle", "message": "PlexMCP RAG module not loaded"}
+
+    def report_rag_sync_error(message: str) -> None:
+        pass
+
 
 router = APIRouter()
+
+_sync_task: asyncio.Task | None = None
+_sync_lock = asyncio.Lock()
+
+
+@router.get("/sync/status")
+async def get_rag_sync_status():
+    """Poll RAG reindex progress while POST /sync runs in the background."""
+    return get_rag_sync_progress()
 
 
 @router.post("/sync")
 async def post_rag_sync() -> dict:
     """
-    Index Plex metadata into the RAG vector store (LanceDB).
-    Run once before semantic search. May take a minute for large libraries.
+    Start indexing Plex metadata into the RAG vector store (background task).
+    Poll GET /sync/status for phase, library name, and document counts.
     """
-    try:
-        result = await mcp_client.call_tool(
-            "plex_rag",
-            {"operation": "sync_metadata"},
-        )
-    except Exception as e:
-        return {
-            "success": False,
-            "available": False,
-            "error": str(e),
-            "indexed_count": 0,
-        }
-    if not result.get("success", True):
-        return {
-            "success": False,
-            "available": False,
-            "error": result.get("error", "RAG not available"),
-            "indexed_count": 0,
-        }
+    global _sync_task
+
+    async def run_sync() -> None:
+        try:
+            result = await mcp_client.call_tool(
+                "plex_rag",
+                {"operation": "sync_metadata"},
+            )
+            if not result.get("success", True):
+                prog = get_rag_sync_progress()
+                if prog.get("phase") != "error":
+                    report_rag_sync_error(str(result.get("error", "Sync failed")))
+        except Exception as e:
+            logger.exception("RAG sync task failed: %s", e)
+            prog = get_rag_sync_progress()
+            if prog.get("phase") != "error":
+                report_rag_sync_error(str(e))
+
+    async with _sync_lock:
+        if _sync_task is not None and not _sync_task.done():
+            return JSONResponse(
+                {
+                    "success": False,
+                    "already_running": True,
+                    "error": "A reindex is already in progress.",
+                },
+                status_code=409,
+            )
+        _sync_task = asyncio.create_task(run_sync())
+
     return {
         "success": True,
-        "available": True,
-        "indexed_count": result.get("indexed_count", 0),
-        "message": result.get("message", ""),
+        "started": True,
         "error": None,
     }
 
@@ -78,10 +112,12 @@ async def get_rag_semantic(
 @router.get("/context")
 async def get_rag_context(
     query: str = Query(..., min_length=1),
-    library_id: str | None = None,
+    library_id: str | None = Query(None),
     limit: int = Query(10, ge=1, le=50),
 ):
     """Retrieve Plex search results as context string for LLM (light RAG)."""
+    from ..utils.errors import handle_mcp_error
+
     try:
         result = await mcp_client.call_tool(
             "plex_search",

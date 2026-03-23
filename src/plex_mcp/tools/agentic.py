@@ -1,194 +1,255 @@
 """
-Agentic Workflow Tools for PlexMCP
+FastMCP 3.1 — SEP-1577 agentic tools for PlexMCP.
 
-FastMCP 2.14.3 sampling capabilities for autonomous media management workflows.
-Provides conversational tool returns and intelligent orchestration.
+Uses Context.sample_step (tools) and Context.sample (single-turn text). Requires
+sampling support (local Ollama via PlexSamplingHandler or client-side sampling).
 """
 
+from __future__ import annotations
+
+import logging
 from typing import Any
 
-from ..app import mcp
+from fastmcp import Context
+
+logger = logging.getLogger(__name__)
 
 
-def register_agentic_tools():
-    """Register agentic workflow tools with sampling capabilities."""
+def _ok(**kwargs: Any) -> dict[str, Any]:
+    return {
+        "success": True,
+        "operation": kwargs.get("operation", "unknown"),
+        "message": kwargs.get("message", ""),
+        "result": kwargs.get("result", {}),
+        "recommendations": kwargs.get("recommendations", []),
+    }
 
-    @mcp.tool()
+
+def _err(
+    *,
+    error: str,
+    error_code: str,
+    message: str,
+    recovery_options: list[str] | None = None,
+) -> dict[str, Any]:
+    return {
+        "success": False,
+        "error": error,
+        "error_code": error_code,
+        "message": message,
+        "recovery_options": recovery_options or [],
+    }
+
+
+def register_agentic_plex_tools(app: Any) -> None:
+    """Register real sampling-based tools on the FastMCP app."""
+
+    @app.tool()
     async def agentic_plex_workflow(
         workflow_prompt: str,
         available_tools: list[str],
-        max_iterations: int = 5,
+        max_iterations: int = 8,
+        context: Context | None = None,
     ) -> dict[str, Any]:
-        """Execute agentic Plex workflows using FastMCP 2.14.3 sampling with tools.
+        """
+        Multi-step Plex workflows via FastMCP sampling with tool execution (SEP-1577).
 
-        This tool demonstrates SEP-1577 by enabling the server's LLM to autonomously
-        orchestrate complex Plex media operations without client round-trips.
-
-        MASSIVE EFFICIENCY GAINS:
-        - LLM autonomously decides tool usage and sequencing
-        - No client mediation for multi-step workflows
-        - Structured validation and error recovery
-        - Parallel processing capabilities
+        The model chooses plex_* tool calls; the server runs them and feeds results back
+        until the model returns a final text answer or max_iterations is reached.
 
         Args:
-            workflow_prompt: Description of the workflow to execute
-            available_tools: List of tool names to make available to the LLM
-            max_iterations: Maximum LLM-tool interaction loops (default: 5)
+            workflow_prompt: Natural-language goal (e.g. "List movie libraries, then search for Nolan films").
+            available_tools: Tool names registered on this server (e.g. plex_library, plex_search, plex_media).
+            max_iterations: Maximum sample_step rounds (default 8).
 
         Returns:
-            Structured response with workflow execution results
+            success, result with final_output, iterations, executed_tools, or structured error.
         """
-        try:
-            # Parse workflow prompt and determine optimal tool sequence
-            workflow_analysis = {
-                "prompt": workflow_prompt,
-                "available_tools": available_tools,
-                "max_iterations": max_iterations,
-                "analysis": "LLM will autonomously orchestrate Plex media operations",
-            }
-
-            # This would use FastMCP 2.14.3 sampling to execute complex workflows
-            # For now, return a conversational response about capabilities
-            result = {
-                "success": True,
-                "operation": "agentic_workflow",
-                "message": "Agentic workflow initiated. The LLM can now autonomously orchestrate complex Plex media operations using the specified tools.",
-                "workflow_prompt": workflow_prompt,
-                "available_tools": available_tools,
-                "max_iterations": max_iterations,
-                "capabilities": [
-                    "Autonomous tool orchestration",
-                    "Complex multi-step workflows",
-                    "Conversational responses",
-                    "Error recovery and validation",
-                    "Parallel processing support",
+        if not workflow_prompt.strip():
+            return _err(
+                error="Missing workflow_prompt",
+                error_code="MISSING_PROMPT",
+                message="workflow_prompt is required",
+                recovery_options=["Describe the Plex task in natural language"],
+            )
+        if not available_tools:
+            return _err(
+                error="No tools specified",
+                error_code="EMPTY_TOOLS",
+                message="available_tools must name at least one registered tool",
+                recovery_options=[
+                    "Example: ['plex_library', 'plex_search', 'plex_media']",
                 ],
-            }
-
-            return result
-
-        except Exception as e:
-            return {
-                "success": False,
-                "error": f"Failed to execute agentic workflow: {str(e)}",
-                "message": "An error occurred while setting up the agentic workflow.",
-            }
-
-    @mcp.tool()
-    async def intelligent_media_processing(
-        media_items: list[dict[str, Any]],
-        processing_goal: str,
-        available_operations: list[str],
-        processing_strategy: str = "adaptive",
-    ) -> dict[str, Any]:
-        """Intelligent batch media processing using FastMCP 2.14.3 sampling with tools.
-
-        This tool uses the client's LLM to intelligently decide how to process batches
-        of media items, choosing the right operations and sequencing for optimal results.
-
-        SMART PROCESSING:
-        - LLM analyzes each media item to determine optimal processing approach
-        - Automatic operation selection based on content characteristics
-        - Adaptive batching strategies (parallel, sequential, conditional)
-        - Quality validation and error recovery
-
-        Args:
-            media_items: List of media objects to process
-            processing_goal: What you want to achieve (e.g., "organize my movie collection")
-            available_operations: Operations the LLM can choose from
-            processing_strategy: How to process items (adaptive, parallel, sequential)
-
-        Returns:
-            Intelligent batch processing results
-        """
-        try:
-            processing_plan = {
-                "goal": processing_goal,
-                "item_count": len(media_items),
-                "available_operations": available_operations,
-                "strategy": processing_strategy,
-                "analysis": "LLM will analyze each media item and choose optimal processing operations",
-            }
-
-            result = {
-                "success": True,
-                "operation": "intelligent_batch_processing",
-                "message": "Intelligent media processing initiated. The LLM will analyze each media item and apply optimal operations based on content characteristics.",
-                "processing_goal": processing_goal,
-                "item_count": len(media_items),
-                "available_operations": available_operations,
-                "processing_strategy": processing_strategy,
-                "capabilities": [
-                    "Content-aware processing",
-                    "Automatic operation selection",
-                    "Adaptive batching strategies",
-                    "Quality validation",
-                    "Error recovery",
+            )
+        if context is None:
+            return _err(
+                error="No MCP context",
+                error_code="NO_CONTEXT",
+                message="Agentic workflow requires a FastMCP Context (run from an MCP client)",
+                recovery_options=["Invoke this tool from a client that passes Context"],
+            )
+        if not hasattr(context, "sample_step"):
+            return _err(
+                error="Sampling unavailable",
+                error_code="SAMPLING_UNAVAILABLE",
+                message="Context has no sample_step (need FastMCP 3.1+ with sampling)",
+                recovery_options=[
+                    "Install fastmcp>=3.1",
+                    "Configure PLEX_SAMPLING_BASE_URL / Ollama or PLEX_SAMPLING_USE_CLIENT_LLM=1",
                 ],
-            }
+            )
 
-            return result
-
+        try:
+            all_tools = await app.list_tools()
         except Exception as e:
-            return {
-                "success": False,
-                "error": f"Failed to initiate intelligent processing: {str(e)}",
-                "message": "An error occurred while setting up intelligent media processing.",
-            }
+            logger.exception("list_tools failed")
+            return _err(
+                error="list_tools failed",
+                error_code="LIST_TOOLS_FAILED",
+                message=str(e),
+                recovery_options=["Check server logs"],
+            )
 
-    @mcp.tool()
-    async def conversational_plex_assistant(
+        name_to_tool = {t.name: t for t in all_tools if getattr(t, "name", None)}
+        tools_for_sampling = [name_to_tool[n] for n in available_tools if n in name_to_tool]
+        missing = [n for n in available_tools if n not in name_to_tool]
+        if missing:
+            logger.warning("agentic_plex_workflow: unknown tool names: %s", missing)
+        if not tools_for_sampling:
+            return _err(
+                error="No matching tools",
+                error_code="TOOLS_NOT_FOUND",
+                message=f"None of available_tools matched. Registered include: {sorted(name_to_tool.keys())[:40]}",
+                recovery_options=[
+                    "Use exact portmanteau names: plex_library, plex_media, plex_search, ..."
+                ],
+            )
+
+        system_prompt = (
+            "You are a Plex Media Server assistant with access to the listed tools only. "
+            "Call tools to inspect libraries, browse or search media, sessions, users, etc. "
+            "When done, reply with a concise summary for the user and any follow-up suggestions."
+        )
+        messages: list = [{"role": "user", "content": workflow_prompt}]
+        executed_tools: list[str] = []
+        iterations = 0
+        step: Any = None
+
+        while iterations < max_iterations:
+            iterations += 1
+            logger.info("agentic_plex_workflow step %s/%s", iterations, max_iterations)
+            step = await context.sample_step(
+                messages,
+                system_prompt=system_prompt,
+                tools=tools_for_sampling,
+                execute_tools=True,
+                max_tokens=4096,
+            )
+            if hasattr(step, "history") and step.history:
+                messages = list(step.history)
+            if hasattr(step, "tool_calls") and step.tool_calls:
+                for tc in step.tool_calls:
+                    name = getattr(tc, "name", None) or getattr(tc, "tool_name", str(tc))
+                    if name:
+                        executed_tools.append(str(name))
+            is_tool_use = getattr(step, "is_tool_use", True)
+            if not is_tool_use:
+                final_text = getattr(step, "text", "") or ""
+                return _ok(
+                    operation="agentic_plex_workflow",
+                    message="Workflow completed.",
+                    result={
+                        "final_output": final_text,
+                        "iterations": iterations,
+                        "executed_tools": list(dict.fromkeys(executed_tools)),
+                        "missing_tool_names": missing,
+                    },
+                    recommendations=[
+                        "Narrow available_tools for faster runs or raise max_iterations."
+                    ],
+                )
+
+        return _ok(
+            operation="agentic_plex_workflow",
+            message="Stopped at max_iterations without a final non-tool reply.",
+            result={
+                "final_output": getattr(step, "text", "") if step else "",
+                "iterations": iterations,
+                "executed_tools": list(dict.fromkeys(executed_tools)),
+                "missing_tool_names": missing,
+            },
+            recommendations=["Increase max_iterations or simplify the workflow_prompt."],
+        )
+
+    @app.tool()
+    async def plex_natural_assistant(
         user_query: str,
-        context_level: str = "comprehensive",
+        context: Context | None = None,
+        detail_level: str = "standard",
     ) -> dict[str, Any]:
-        """Conversational Plex assistant with natural language responses.
+        """
+        Single-turn natural-language help about Plex (sampling, no tool execution).
 
-        Provides human-like interaction for Plex media management with detailed
-        explanations and suggestions for next steps.
+        Uses the configured sampling endpoint (Ollama / client). For actions that
+        change server state or need live data, use portmanteau tools or agentic_plex_workflow.
 
         Args:
-            user_query: Natural language query about Plex operations
-            context_level: Amount of context to provide (basic, comprehensive, detailed)
+            user_query: User question.
+            detail_level: brief | standard | detailed — adjusts system instructions.
 
         Returns:
-            Conversational response with actionable guidance
+            success and assistant reply text, or structured error.
         """
+        if not user_query.strip():
+            return _err(
+                error="Empty query",
+                error_code="EMPTY_QUERY",
+                message="user_query is required",
+            )
+        if context is None or not hasattr(context, "sample"):
+            return _err(
+                error="Sampling unavailable",
+                error_code="SAMPLING_UNAVAILABLE",
+                message="plex_natural_assistant requires Context.sample (FastMCP 3.1+)",
+                recovery_options=["Configure PLEX_SAMPLING_* or use portmanteau tools directly"],
+            )
+
+        level = (detail_level or "standard").lower()
+        if level == "brief":
+            sys = "You are a concise Plex Media Server expert. Answer in short bullets. If unsure, say what info you need."
+        elif level == "detailed":
+            sys = (
+                "You are an expert on Plex Media Server: libraries, agents, transcoding, "
+                "remote access, users, and discovery. Give structured, accurate answers. "
+                "If the user needs live server data, say they should use MCP tools (plex_library, plex_search, etc.)."
+            )
+        else:
+            sys = (
+                "You are a helpful Plex Media Server assistant. Be clear and accurate. "
+                "For live library or playback data, remind the user that tools like plex_library "
+                "or plex_search must be used via the agentic workflow or client."
+            )
+
         try:
-            # Analyze the query and provide conversational guidance
-            response_templates = {
-                "basic": "I can help you manage your Plex media server.",
-                "comprehensive": "I'm your Plex Media Server assistant. I can help you browse libraries, control playback, manage users, organize content, and monitor server performance.",
-                "detailed": "Welcome to PlexMCP! I'm equipped with advanced media management capabilities including library browsing, playback control across multiple devices, user management, content organization, server monitoring, and intelligent media processing workflows.",
-            }
-
-            result = {
-                "success": True,
-                "operation": "conversational_assistance",
-                "message": response_templates.get(
-                    context_level, response_templates["comprehensive"]
-                ),
-                "user_query": user_query,
-                "context_level": context_level,
-                "suggestions": [
-                    "Browse your media libraries",
-                    "Control playback on connected devices",
-                    "Manage user accounts and permissions",
-                    "Organize content with playlists and collections",
-                    "Monitor server performance and health",
+            result = await context.sample(
+                user_query.strip(),
+                system_prompt=sys,
+                max_tokens=2048,
+            )
+            text = getattr(result, "text", None) or str(result)
+            return _ok(
+                operation="plex_natural_assistant",
+                message=text,
+                result={"reply": text, "detail_level": level},
+                recommendations=[
+                    "For real library/search data, call agentic_plex_workflow with plex_* tools.",
                 ],
-                "next_steps": [
-                    "Use 'plex_library' to browse your media",
-                    "Use 'plex_streaming' to control playback",
-                    "Use 'plex_user' to manage accounts",
-                    "Use 'plex_performance' to check server status",
-                ],
-            }
-
-            return result
-
+            )
         except Exception as e:
-            return {
-                "success": False,
-                "error": f"Failed to provide conversational assistance: {str(e)}",
-                "message": "I encountered an error while processing your request.",
-            }
+            logger.exception("plex_natural_assistant failed")
+            return _err(
+                error="Sampling failed",
+                error_code="SAMPLING_FAILED",
+                message=str(e),
+                recovery_options=["Verify Ollama or PLEX_SAMPLING_BASE_URL", "See server logs"],
+            )

@@ -7,7 +7,7 @@ Semantic search and ingestion for Plex Media.
 from typing import Any, Literal
 
 from ...app import mcp
-from ...services.rag_ingestor import PlexIngestor
+from ...services.rag_ingestor import PlexIngestor, report_rag_sync_error, reset_rag_sync_progress
 from ...utils import get_logger
 from .search import _get_plex_service
 
@@ -34,13 +34,16 @@ async def plex_rag(
         ingestor = PlexIngestor(plex)
 
         if not ingestor.is_available:
+            reset_rag_sync_progress()
+            err = (
+                "RAG Core dependencies not found. "
+                "Install in-repo RAG: pip install plex-mcp-advanced[rag] "
+                "(or add mcp-central-docs src to PYTHONPATH for shared vector store)."
+            )
+            report_rag_sync_error(err)
             return {
                 "success": False,
-                "error": (
-                    "RAG Core dependencies not found. "
-                    "Install in-repo RAG: pip install plex-mcp-advanced[rag] "
-                    "(or add mcp-central-docs src to PYTHONPATH for shared vector store)."
-                ),
+                "error": err,
                 "error_code": "RAG_NOT_AVAILABLE",
             }
 
@@ -75,4 +78,6 @@ async def plex_rag(
 
     except Exception as e:
         logger.error(f"Error in plex_rag operation '{operation}': {e}", exc_info=True)
+        if operation == "sync_metadata":
+            report_rag_sync_error(str(e))
         return {"success": False, "error": str(e), "error_code": "RAG_EXECUTION_ERROR"}

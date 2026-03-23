@@ -1,7 +1,5 @@
 """Tests for PlexMCP main module and server entry point."""
 
-import pytest
-
 
 class TestMainModule:
     """Test cases for the main module and server entry point."""
@@ -12,14 +10,13 @@ class TestMainModule:
 
         assert callable(main)
 
-    @pytest.mark.asyncio
-    async def test_main_is_async(self):
-        """Test that main is an async function."""
+    def test_main_is_sync(self):
+        """CLI main is synchronous; it delegates to server transport."""
         import inspect
 
         from plex_mcp.main import main
 
-        assert inspect.iscoroutinefunction(main)
+        assert not inspect.iscoroutinefunction(main)
 
     def test_module_imports(self):
         """Test that all required modules can be imported."""

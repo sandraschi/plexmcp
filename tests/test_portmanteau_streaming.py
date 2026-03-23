@@ -1,5 +1,6 @@
 """Tests for plex_streaming portmanteau tool."""
 
+import contextlib
 from unittest.mock import patch
 
 import pytest
@@ -15,10 +16,8 @@ class TestPlexStreaming:
         """Test list_sessions operation (uses real server if available, otherwise mocks)."""
         # Ensure connected if using real service
         if hasattr(plex_service, "_initialized") and not plex_service._initialized:
-            try:
-                await plex_service.connect()
-            except Exception:
-                pass  # Will use mocked behavior
+            with contextlib.suppress(Exception):
+                await plex_service.connect()  # real server optional; mocks otherwise
 
         with patch(
             "plex_mcp.tools.portmanteau.streaming._get_plex_service", return_value=plex_service
@@ -36,10 +35,8 @@ class TestPlexStreaming:
         """Test list_clients operation (uses real server if available, otherwise mocks)."""
         # Ensure connected if using real service
         if hasattr(plex_service, "_initialized") and not plex_service._initialized:
-            try:
-                await plex_service.connect()
-            except Exception:
-                pass  # Will use mocked behavior
+            with contextlib.suppress(Exception):
+                await plex_service.connect()  # real server optional; mocks otherwise
 
         with patch(
             "plex_mcp.tools.portmanteau.streaming._get_plex_service", return_value=plex_service
@@ -167,11 +164,14 @@ class TestPlexStreaming:
             assert result["error_code"] == "NOT_IMPLEMENTED"
 
     @pytest.mark.asyncio
-    async def test_set_quality_missing_params(self):
+    async def test_set_quality_missing_params(self, mock_plex_service):
         """Test set_quality operation requires quality parameter."""
-        result = await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
-            operation="set_quality", client_id="client123"
-        )
+        with patch(
+            "plex_mcp.tools.portmanteau.streaming._get_plex_service", return_value=mock_plex_service
+        ):
+            result = await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
+                operation="set_quality", client_id="client123"
+            )
 
         assert result["success"] is False
         assert result["error_code"] == "MISSING_QUALITY"
@@ -191,21 +191,27 @@ class TestPlexStreaming:
             assert result["volume"] == 75
 
     @pytest.mark.asyncio
-    async def test_set_volume_missing_client_id(self):
+    async def test_set_volume_missing_client_id(self, mock_plex_service):
         """Test set_volume operation requires client_id."""
-        result = await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
-            operation="set_volume", volume=75
-        )
+        with patch(
+            "plex_mcp.tools.portmanteau.streaming._get_plex_service", return_value=mock_plex_service
+        ):
+            result = await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
+                operation="set_volume", volume=75
+            )
 
         assert result["success"] is False
         assert result["error_code"] == "MISSING_CLIENT_ID"
 
     @pytest.mark.asyncio
-    async def test_set_volume_missing_volume(self):
+    async def test_set_volume_missing_volume(self, mock_plex_service):
         """Test set_volume operation requires volume parameter."""
-        result = await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
-            operation="set_volume", client_id="client123"
-        )
+        with patch(
+            "plex_mcp.tools.portmanteau.streaming._get_plex_service", return_value=mock_plex_service
+        ):
+            result = await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
+                operation="set_volume", client_id="client123"
+            )
 
         assert result["success"] is False
         assert result["error_code"] == "MISSING_VOLUME"

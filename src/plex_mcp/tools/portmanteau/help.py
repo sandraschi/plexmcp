@@ -2,7 +2,7 @@
 PlexMCP Help & Discovery Portmanteau Tool
 
 Provides help, tool discovery, and usage examples for PlexMCP.
-FastMCP 2.13+ compliant with comprehensive docstrings and AI-friendly error messages.
+FastMCP 3.1+ compliant with comprehensive docstrings and AI-friendly error messages.
 """
 
 from typing import Any, Literal
@@ -28,7 +28,7 @@ async def plex_help(
     - Improves discoverability by grouping related operations together
     - Reduces cognitive load when working with help tasks
     - Enables consistent help interface across all operations
-    - Follows FastMCP 2.13+ best practices for feature-rich MCP servers
+    - Follows FastMCP 3.1+ best practices for feature-rich MCP servers
 
     SUPPORTED OPERATIONS:
     - help: Get general help and overview of PlexMCP
@@ -306,20 +306,14 @@ async def plex_help(
             "agentic_plex_workflow": {
                 "name": "agentic_plex_workflow",
                 "category": "sampling",
-                "description": "Autonomous Plex orchestration using LLM sampling (SEP-1577)",
-                "operations": ["workflow", "analyze", "execute"],
+                "description": "Multi-step Plex tasks via FastMCP sample_step with real tool execution (SEP-1577); requires sampling",
+                "operations": ["orchestrate"],
             },
-            "intelligent_media_processing": {
-                "name": "intelligent_media_processing",
+            "plex_natural_assistant": {
+                "name": "plex_natural_assistant",
                 "category": "sampling",
-                "description": "Intelligent batch processing of media items",
-                "operations": ["adaptive", "parallel", "sequential"],
-            },
-            "conversational_plex_assistant": {
-                "name": "conversational_plex_assistant",
-                "category": "sampling",
-                "description": "Conversational assistant for Plex management",
-                "operations": ["chat", "help", "guide"],
+                "description": "Single-turn Plex Q&A via sampling (no tools); use portmanteau tools for live data",
+                "operations": ["answer"],
             },
         }
 
@@ -345,7 +339,7 @@ Available Tool Categories:
 - reporting: Reporting and analytics (plex_reporting)
 - collections: Collection management (plex_collections)
 - quality: Quality profiles (plex_quality)
-- sampling: Agentic workflows and LLM sampling (agentic_plex_workflow)
+- sampling: agentic_plex_workflow (tools + sample_step), plex_natural_assistant (sample only)
 
 Use list_tools to see all available tools, or tool_info to get details about a specific tool.
 """

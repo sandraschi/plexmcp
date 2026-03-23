@@ -25,11 +25,14 @@ class TestPlexSearch:
             assert "results" in result or "data" in result
 
     @pytest.mark.asyncio
-    async def test_search_operation_missing_query(self):
+    async def test_search_operation_missing_query(self, mock_plex_service):
         """Test search operation requires query."""
-        result = await (plex_search.fn if hasattr(plex_search, "fn") else plex_search)(
-            operation="search"
-        )
+        with patch(
+            "plex_mcp.tools.portmanteau.search._get_plex_service", return_value=mock_plex_service
+        ):
+            result = await (plex_search.fn if hasattr(plex_search, "fn") else plex_search)(
+                operation="search"
+            )
 
         assert result["success"] is False
         assert "query" in result["error"].lower()

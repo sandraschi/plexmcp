@@ -1,8 +1,12 @@
+import Link from "next/link";
 import { listLibraries, getMovies, getSettings } from "@/utils/api";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { MoviesClient } from "./movies-client";
 
 const DEFAULT_LIMIT = 24;
+
+/** Ensure library filter and movie list refetch when search params change (Next fetch cache). */
+export const dynamic = "force-dynamic";
 
 export default async function MoviesPage({
   searchParams,
@@ -57,6 +61,17 @@ export default async function MoviesPage({
       <h1 className="text-3xl font-bold mb-2 text-slate-100">Movies</h1>
       <p className="text-slate-500 mb-6">
         Browse movies from your Plex library. Filter by library below.
+        {params.library_id ? (
+          <>
+            {" "}
+            <Link
+              href={`/libraries?library_id=${encodeURIComponent(params.library_id)}`}
+              className="text-amber/90 hover:text-amber underline underline-offset-2"
+            >
+              Back to libraries
+            </Link>
+          </>
+        ) : null}
       </p>
       {moviesData === null ? (
         <ErrorBanner

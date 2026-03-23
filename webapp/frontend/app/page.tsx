@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { Library, Search, Server } from "lucide-react";
-import { getServerStatus } from "@/utils/api";
+import { getServerStatus, getArrStackStatus, type ArrStackResponse } from "@/utils/api";
 import { ErrorBanner } from "@/components/ui/error-banner";
+import { ArrStackCard } from "@/components/overview/arr-stack-card";
 
 const BACKEND_HINT =
   "Set PLEX_TOKEN in webapp/backend/.env. Run: cd webapp; powershell -ExecutionPolicy Bypass -File .\\start.ps1";
@@ -12,6 +13,13 @@ export default async function Home() {
     status = await getServerStatus();
   } catch {
     status = null;
+  }
+
+  let arrStatus: ArrStackResponse | null = null;
+  try {
+    arrStatus = await getArrStackStatus();
+  } catch {
+    arrStatus = null;
   }
 
   const cards = [
@@ -46,6 +54,10 @@ export default async function Home() {
               <span className="text-slate-200 font-medium">{label}</span>
             </Link>
           ))}
+        </div>
+
+        <div className="mt-8 max-w-lg">
+          <ArrStackCard data={arrStatus} />
         </div>
       </div>
     </main>

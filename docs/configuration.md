@@ -1,83 +1,37 @@
-# Configuration Guide
+# Configuration
 
-This document explains how to configure Plex MCP to work with your Plex Media Server.
+## Plex (required)
 
-## Environment Variables
+| Variable | Description |
+|----------|-------------|
+| `PLEX_TOKEN` | X-Plex-Token (required) |
+| `PLEX_URL` / `PLEX_SERVER_URL` | Base URL of Plex (default `http://127.0.0.1:32400`) |
 
-Plex MCP can be configured using environment variables or a `.env` file in the project root.
+## Sampling (optional)
 
-### Required Settings
+Server-side LLM for `plex_natural_assistant` / agentic flows when the host does not sample:
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `PLEX_URL` | Base URL of your Plex server | `http://localhost:32400` |
-| `PLEX_TOKEN` | Plex authentication token | `your_plex_token_here` |
+| Variable | Description |
+|----------|-------------|
+| `PLEX_SAMPLING_BASE_URL` | OpenAI-compatible API base (e.g. Ollama `http://127.0.0.1:11434/v1`) |
+| `PLEX_SAMPLING_USE_CLIENT_LLM` | Set to `1` to prefer the MCP client’s LLM when supported |
 
-### Optional Settings
+## RAG / semantic search
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `LOG_LEVEL` | `INFO` | Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL) |
-| `HOST` | `0.0.0.0` | Host to bind the server to |
-| `PORT` | `8000` | Port to run the server on |
-| `DEBUG` | `False` | Enable debug mode |
-| `CORS_ORIGINS` | `["*"]` | List of allowed CORS origins |
+The `plex_rag` tool (LanceDB + embeddings) needs shared vector code importable as `docs_mcp.backend.rag_core` (e.g. clone [mcp-central-docs](https://github.com/sandraschi/mcp-central-docs) and add its `src` to `PYTHONPATH`). See [RAG.md](RAG.md).
 
-## Configuration File
+## *arr stack (optional)
 
-You can also use a `config.yaml` file in the project root:
+Read-only HTTP status for Radarr / Sonarr / Lidarr when set:
 
-```yaml
-# config.yaml
-server:
-  host: 0.0.0.0
-  port: 8000
-  debug: false
+| Variable | Description |
+|----------|-------------|
+| `RADARR_URL`, `RADARR_API_KEY` | Base URL + API key |
+| `SONARR_URL`, `SONARR_API_KEY` | Same |
+| `LIDARR_URL`, `LIDARR_API_KEY` | Same |
 
-plex:
-  url: http://localhost:32400
-  token: your_plex_token_here
+Usually set via the **webapp Settings** page (stored in `webapp/backend/data/settings.json` and applied to the process environment).
 
-logging:
-  level: INFO
-  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-```
+## Webapp overrides
 
-## Authentication
-
-To get your Plex authentication token:
-
-1. Sign in to [Plex Web](https://app.plex.tv)
-2. Open Developer Tools (F12)
-3. Go to the Application tab
-4. Under Storage > Local Storage, find the `authToken` value
-
-## Security Considerations
-
-- Never commit your `PLEX_TOKEN` to version control
-- Use environment variables for sensitive information
-- Restrict CORS origins in production
-- Run the server behind a reverse proxy with HTTPS in production
-
-## Example Configuration for Production
-
-```bash
-# .env.production
-PLEX_URL=https://your-plex-server.com
-PLEX_TOKEN=your_production_token
-LOG_LEVEL=WARNING
-HOST=127.0.0.1
-PORT=8000
-```
-
-## Testing Your Configuration
-
-To verify your configuration:
-
-```powershell
-# Check environment variables
-echo $env:PLEX_URL
-
-# Test Plex connection
-python -c "from plexapi.server import PlexServer; PlexServer('$env:PLEX_URL', '$env:PLEX_TOKEN').library.sections()"
-```
+The FastAPI backend loads `webapp/backend/data/settings.json` at startup and merges Plex, LLM, and *arr keys into `os.environ`. See [WEBAPP.md](WEBAPP.md).

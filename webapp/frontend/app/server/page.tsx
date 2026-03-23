@@ -1,17 +1,23 @@
 import { getServerInfo } from "@/utils/api";
 import { ErrorBanner } from "@/components/ui/error-banner";
+import { ServerInfoView } from "@/components/server/server-info-view";
 
 export default async function ServerPage() {
   let data: Record<string, unknown> | null = null;
   try {
-    data = await getServerInfo();
+    data = (await getServerInfo()) as Record<string, unknown>;
   } catch {
     data = null;
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6 text-slate-100">Server</h1>
+    <div className="container mx-auto p-6 max-w-5xl">
+      <h1 className="text-3xl font-bold mb-2 text-slate-100">Server</h1>
+      <p className="text-slate-500 text-sm mb-6">
+        Plex Media Server summary from the MCP <code className="text-amber text-xs">plex_server</code> tool (
+        <code className="text-amber text-xs">info</code>). Use <strong className="text-slate-400">Overview</strong> for
+        readable fields or <strong className="text-slate-400">Raw JSON</strong> for the full response.
+      </p>
       {data === null ? (
         <ErrorBanner
           title="Could not load server info"
@@ -19,9 +25,7 @@ export default async function ServerPage() {
           hint="Set PLEX_TOKEN in webapp/backend/.env"
         />
       ) : (
-        <pre className="p-4 rounded-lg bg-slate-800 text-sm text-slate-300 overflow-auto max-h-[70vh]">
-          {JSON.stringify(data, null, 2)}
-        </pre>
+        <ServerInfoView payload={data} />
       )}
     </div>
   );

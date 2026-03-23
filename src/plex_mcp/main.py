@@ -1,40 +1,22 @@
 #!/usr/bin/env python3
 """
-PlexMCP Main Entry Point
-Proper MCP stdio protocol implementation
+PlexMCP CLI entry — delegates to the shared FastMCP app in ``server`` (tools on ``mcp`` from ``app``).
+
+Do not construct a separate ``FastMCP`` here; that would start stdio with no registered tools.
 """
 
-import asyncio
-import logging
 
-from fastmcp import FastMCP
-from mcp.server.stdio import stdio_server
+def main() -> None:
+    """Start PlexMCP using fleet transport (stdio / http / sse)."""
+    from .config import get_settings, setup_logging
 
-from .config import get_settings, setup_logging
-
-# Import all tool modules
-from .transport import run_server_async
-
-# Setup logging
-setup_logging()
-logger = logging.getLogger(__name__)
-
-
-async def main() -> None:
-    """Main entry point for MCP stdio server."""
-    # Settings loaded via environment variables, no need to store
+    setup_logging()
     get_settings()
 
-    # Create FastMCP app
-    app = FastMCP("PlexMCP")
+    from .server import main as server_main
 
-    # Register all tools from modules
-    # Tools are auto-registered via @app.tool() decorators
-
-    # Run stdio server
-    async with stdio_server() as (read_stream, write_stream):
-        await run_server_async(app, server_name="PlexMCP")
+    server_main()
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

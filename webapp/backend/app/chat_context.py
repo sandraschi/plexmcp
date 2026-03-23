@@ -13,7 +13,8 @@ MCP_TOOLS = (
     "plex_search (keyword search), "
     "plex_media (item details, metadata), "
     "plex_streaming (sessions, playback), "
-    "plex_rag (sync_metadata to index, semantic_search for natural-language search)"
+    "plex_rag (sync_metadata to index, semantic_search for natural-language search), "
+    "arr_stack (status: optional Radarr/Sonarr/Lidarr HTTP snapshot when RADARR_* / SONARR_* / LIDARR_* env set)"
 )
 WEBAPP_PAGES = (
     "Overview, Libraries, Movies, Search (keyword), Semantic search (RAG; run Sync/Index metadata first), "
@@ -22,7 +23,8 @@ WEBAPP_PAGES = (
 INTEGRATIONS = (
     "Plex Media Server (PLEX_URL, PLEX_TOKEN), "
     "optional RAG (LanceDB via mcp-central-docs source on path; index from Semantic search page or plex_rag sync_metadata), "
-    "LLM (Ollama/LM Studio via Settings)."
+    "LLM (Ollama/LM Studio via Settings), "
+    "optional *arr read-only status (Docker/media stack URLs + API keys in Settings or .env; arr_stack tool, Overview card)."
 )
 
 

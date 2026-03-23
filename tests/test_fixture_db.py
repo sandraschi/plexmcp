@@ -103,17 +103,12 @@ class TestFixtureDatabase:
         assert size > 0, "Video file should not be empty"
         assert size < 1024 * 1024, "Video should be < 1MB (minimal test file)"
 
-    def test_fixture_library_structure(self, plex_fixture_db):
+    def test_fixture_library_structure(self, plex_library_dir):
         """Test that library directory structure matches database."""
-        from tests.fixtures import LIBRARY_DIR
+        assert plex_library_dir.exists(), "Library directory should exist"
 
-        # Check that library directory exists
-        assert LIBRARY_DIR.exists(), "Library directory should exist"
-
-        # Check for movie directory
-        movie_dir = LIBRARY_DIR / "Movies" / "Test Movie (2024)"
+        movie_dir = plex_library_dir / "Movies" / "Test Movie (2024)"
         assert movie_dir.exists(), "Test movie directory should exist"
 
-        # Check for video file in library
         video_file = movie_dir / "Test Movie (2024).mp4"
         assert video_file.exists(), "Test video should be in library structure"

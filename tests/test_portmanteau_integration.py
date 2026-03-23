@@ -48,8 +48,10 @@ class TestPortmanteauToolsIntegration:
         ]
 
         for tool in tools:
-            assert hasattr(tool, "fn"), f"{tool} has no fn attribute"
-            assert callable(tool.fn), f"{tool}.fn is not callable"
+            fn = getattr(tool, "fn", tool)
+            assert callable(fn), (
+                f"{tool} is not a callable tool (FastMCP may expose .fn or the raw function)"
+            )
 
     @pytest.mark.asyncio
     async def test_all_tools_have_operation_parameter(self, mock_plex_service):
@@ -64,11 +66,13 @@ class TestPortmanteauToolsIntegration:
                 await _fn()  # Missing operation
 
     @pytest.mark.asyncio
-    async def test_error_response_structure(self):
+    async def test_error_response_structure(self, mock_plex_service):
         """Test that all tools return consistent error response structure."""
-        # Test with invalid operation or missing required params
-        _fn = plex_library.fn if hasattr(plex_library, "fn") else plex_library
-        result = await _fn(operation="get")  # Missing library_id
+        with patch(
+            "plex_mcp.tools.portmanteau.library._get_plex_service", return_value=mock_plex_service
+        ):
+            _fn = getattr(plex_library, "fn", plex_library)
+            result = await _fn(operation="get")  # Missing library_id
 
         assert "success" in result
         assert result["success"] is False

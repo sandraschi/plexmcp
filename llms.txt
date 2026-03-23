@@ -1,0 +1,40 @@
+# PlexMCP (plex-mcp-advanced)
+
+> FastMCP 3.1 MCP server for Plex Media Server: portmanteau tools (libraries, media, search, streaming, RAG), server-side sampling (`PLEX_SAMPLING_BASE_URL` / Ollama), agentic workflows (`agentic_plex_workflow`, `plex_natural_assistant`), optional webapp (FastAPI + Next.js). Transports: stdio and HTTP; web UI uses backend + frontend on fleet ports **10740** / **10741**.
+
+**Full detail (tools, env, architecture, troubleshooting): see [`llms-full.txt`](llms-full.txt).**
+
+## Quick links
+
+- [README.md](README.md) — overview and doc index
+- [docs/](docs/) — [README hub](docs/README.md); [INSTALL](docs/INSTALL.md), [CONFIGURATION](docs/CONFIGURATION.md), [TOOLS](docs/TOOLS.md), [RAG](docs/RAG.md), [WEBAPP](docs/WEBAPP.md), [DEVELOPMENT](docs/DEVELOPMENT.md), [TROUBLESHOOTING](docs/TROUBLESHOOTING.md), [PRD](docs/PRD.md)
+- [CHANGELOG.md](CHANGELOG.md) — version history
+- [pyproject.toml](pyproject.toml) — package name `plex-mcp-advanced`, Python ≥3.12, `fastmcp>=3.1`
+- Webapp: [webapp/README.md](webapp/README.md), [webapp/SETUP.md](webapp/SETUP.md) if present
+
+## Tools (summary)
+
+Portmanteau tools include `plex_library`, `plex_media`, `plex_search`, `plex_streaming`, `plex_user`, `plex_playlist`, `plex_metadata`, `plex_server`, `plex_performance`, `plex_rag`, `plex_help`, `agentic_plex_workflow`, `plex_natural_assistant`, and others. Discovery: `plex_help(operation="list_tools")`.
+
+See **§ Tools** in [`llms-full.txt`](llms-full.txt).
+
+## Sampling & RAG
+
+- Sampling: configure `PLEX_SAMPLING_BASE_URL`, `PLEX_SAMPLING_MODEL`; optional `PLEX_SAMPLING_USE_CLIENT_LLM=1`; aligns with `LLM_BASE_URL` when unset.
+- RAG: `plex_rag` — LanceDB metadata index; optional bridge to mcp-central-docs vector code — see README “RAG / Semantic search”.
+
+## Ports (webapp)
+
+| Service   | Port   |
+|-----------|--------|
+| Backend   | 10740  |
+| Frontend  | 10741  |
+
+## Fleet commands
+
+- `uv sync` / `just sync` — install from lockfile
+- `just run` — MCP server
+- `just webapp` — browser UI
+- `just check` — ruff + pytest
+
+See [`justfile`](justfile).

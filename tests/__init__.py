@@ -1,1 +1,1 @@
-# Test package for PlexMCP
+"""Test package."""

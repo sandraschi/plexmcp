@@ -24,7 +24,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ALPHA
 
+### Documentation
+- **Hub layout:** Root [README.md](README.md) stays short; specialized guides live under [docs/](docs/) ([INSTALL](docs/INSTALL.md), [CONFIGURATION](docs/CONFIGURATION.md), [TOOLS](docs/TOOLS.md), [RAG](docs/RAG.md), [WEBAPP](docs/WEBAPP.md), [DEVELOPMENT](docs/DEVELOPMENT.md), [TROUBLESHOOTING](docs/TROUBLESHOOTING.md), [docs/README.md](docs/README.md)).
+- **[docs/PRD.md](docs/PRD.md):** Product scope, in/out of scope, PyPI conditional on registration, playback caveat.
+- **Install doc:** [docs/INSTALL.md](docs/INSTALL.md) documents **uv** on Windows (`uv.exe` on PATH), pipe-free installer script, and **PyPI** only after publish.
+- **Legacy stubs:** [docs/installation.md](docs/installation.md), [docs/development.md](docs/development.md), [docs/troubleshooting.md](docs/troubleshooting.md) redirect to canonical UPPERCASE filenames; [docs/index.md](docs/index.md) points at the hub.
+
 ### Changed
+- **Fleet packaging**: Root **`justfile`** (uv sync, lock, run, lint, fmt, test, check, webapp, pack-mcpb), **`llms.txt`** + **`llms-full.txt`** (LLM index + corpus), committed **`uv.lock`** (`uv lock`).
+- **Sampling (2026)**: Server-side `PlexSamplingHandler` (OpenAI-compatible chat/completions; default Ollama at `PLEX_SAMPLING_BASE_URL`, inherits from `LLM_BASE_URL` when unset). `agentic_plex_workflow` uses real `Context.sample_step` with tool execution; `plex_natural_assistant` uses `Context.sample`. Removed stub agentic tools. MCP resources `resource://plex/skills` and `resource://plex/capabilities`; prompts `prompt://plex/rag-workflow`, `prompt://plex/agentic-pattern`, `prompt://plex/library-tour`. `PLEXMCP_ALLOW_LOGGING` / pytest `conftest` avoid global logger suppression breaking FastMCP under test runners.
 - **FastMCP 3.1 alignment**: Constructor updated to 3.1 style: `FastMCP("PlexMCP", instructions="...")` (no `name=`, `version=` kwargs). Prompt `plex_media_guide` now returns `list[Message]` via `fastmcp.prompts.Message` instead of raw dicts. Webapp backend replaced deprecated `@app.on_event("startup")` with a lifespan context manager.
 
 ### Added

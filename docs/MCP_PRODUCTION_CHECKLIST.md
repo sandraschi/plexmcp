@@ -45,7 +45,7 @@ Use this checklist to audit any MCP server repo before marking it production-rea
 ## 📚 DOCUMENTATION
 
 - [ ] README.md updated: features, installation, usage, troubleshooting
-- [ ] PRD updated with current capabilities
+- [ ] [PRD](PRD.md) updated with current capabilities (repo: `docs/PRD.md`)
 - [ ] API documentation for all tools
 - [ ] `CHANGELOG.md` following Keep a Changelog format
 - [ ] Wiki pages: architecture, development guide, FAQ

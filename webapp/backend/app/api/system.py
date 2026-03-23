@@ -34,7 +34,19 @@ async def patch_settings(
     body: dict = Body(...),
 ):
     """Update settings (Plex token, LLM provider/URL/API key). Saved to data/settings.json."""
-    allowed = {"plex_token", "plex_url", "llm_provider", "llm_base_url", "llm_api_key"}
+    allowed = {
+        "plex_token",
+        "plex_url",
+        "llm_provider",
+        "llm_base_url",
+        "llm_api_key",
+        "radarr_url",
+        "radarr_api_key",
+        "sonarr_url",
+        "sonarr_api_key",
+        "lidarr_url",
+        "lidarr_api_key",
+    }
     payload = {k: v for k, v in body.items() if k in allowed and v is not None}
     save_overrides(payload)
     out = get_current()

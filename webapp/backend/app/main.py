@@ -10,6 +10,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .api import (
+    arr_stack,
     fleet,
     help_api,
     images,
@@ -112,6 +113,7 @@ app.include_router(logs.router, prefix="/api/logs", tags=["logs"])
 app.include_router(help_api.router, prefix="/api/help", tags=["help"])
 app.include_router(llm.router, prefix="/api/llm", tags=["llm"])
 app.include_router(rag.router, prefix="/api/rag", tags=["rag"])
+app.include_router(arr_stack.router, prefix="/api/arr", tags=["arr"])
 app.include_router(workflows.router, prefix="/api/workflows", tags=["workflows"])
 
 

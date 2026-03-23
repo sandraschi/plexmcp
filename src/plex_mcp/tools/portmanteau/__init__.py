@@ -5,7 +5,7 @@ This package contains all portmanteau tools that consolidate related operations
 into single, user-friendly interfaces. Each tool uses an `operation` parameter
 with Literal types to specify the action to perform.
 
-Portmanteau tools follow the FastMCP 2.13+ standards with:
+Portmanteau tools follow the FastMCP 3.1+ standards with:
 - Comprehensive multiline docstrings
 - AI-friendly error messages
 - Proper type hints with Literal operation parameters
@@ -16,6 +16,7 @@ after thorough testing and user migration.
 """
 
 # Import implemented portmanteau tools
+from .arr_stack import arr_stack
 from .audio_mgr import plex_audio_mgr
 from .collections import plex_collections
 from .help import plex_help
@@ -35,6 +36,7 @@ from .streaming import plex_streaming
 from .user import plex_user
 
 __all__ = [
+    "arr_stack",
     "plex_audio_mgr",
     "plex_media",
     "plex_library",

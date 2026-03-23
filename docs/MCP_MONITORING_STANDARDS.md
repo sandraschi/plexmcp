@@ -23,7 +23,6 @@ Based on analysis of existing repositories, the following MCP servers have monit
 - **Advanced-Memory-MCP** - Health checks only
 - **Basic-Memory** - Health checks only
 - **Nest-Protect-MCP** - Enhanced logging mentioned
-- **VirtualDJ-MCP** - Performance monitoring mentioned
 - **VRChat-MCP** - Performance monitoring planned
 
 ## Standard Monitoring Stack Architecture

@@ -2,7 +2,16 @@ import Link from "next/link";
 import { listLibraries } from "@/utils/api";
 import { ErrorBanner } from "@/components/ui/error-banner";
 
-export default async function LibrariesPage() {
+function librarySectionId(lib: { id?: string; key?: string }): string {
+  return String(lib.id ?? lib.key ?? "");
+}
+
+export default async function LibrariesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ library_id?: string }>;
+}) {
+  const { library_id: activeLibraryId } = await searchParams;
   let data: { success?: boolean; data?: { key?: string; title?: string; type?: string }[]; error?: string } | null =
     null;
   try {
@@ -30,16 +39,36 @@ export default async function LibrariesPage() {
         />
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {libraries.map((lib: { key?: string; title?: string; type?: string }) => (
-            <Link
-              key={lib.key ?? lib.title ?? String(Math.random())}
-              href={`/search?library_id=${lib.key ?? ""}`}
-              className="block p-6 rounded-xl glass-panel border-slate-600/50 hover:border-amber/40 transition-colors"
-            >
-              <p className="text-xl font-semibold text-slate-100">{lib.title ?? "Library"}</p>
-              <p className="text-sm text-slate-400">{lib.type ?? ""}</p>
-            </Link>
-          ))}
+          {libraries.map((lib: { id?: string; key?: string; title?: string; type?: string }, index: number) => {
+            const sid = librarySectionId(lib);
+            const isMovie = (lib.type ?? "").toLowerCase() === "movie";
+            const href = isMovie
+              ? `/movies?library_id=${encodeURIComponent(sid)}`
+              : `/search?library_id=${encodeURIComponent(sid)}`;
+            const isActive =
+              activeLibraryId != null &&
+              activeLibraryId !== "" &&
+              activeLibraryId === sid;
+            return (
+              <Link
+                key={sid || `lib-${index}`}
+                href={href}
+                className={`relative block p-6 rounded-xl glass-panel border transition-colors ${
+                  isActive
+                    ? "border-amber/50 ring-1 ring-amber/30"
+                    : "border-slate-600/50 hover:border-amber/40"
+                }`}
+              >
+                {isActive && (
+                  <span className="absolute top-3 right-3 text-xs font-semibold uppercase tracking-wide px-2 py-0.5 rounded-md bg-amber/20 text-amber border border-amber/40">
+                    Active
+                  </span>
+                )}
+                <p className="text-xl font-semibold text-slate-100 pr-16">{lib.title ?? "Library"}</p>
+                <p className="text-sm text-slate-400">{lib.type ?? ""}</p>
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>

@@ -16,13 +16,13 @@ logger = get_logger(__name__)
 # The @mcp.tool() decorators execute when modules are imported
 from .tools import portmanteau  # noqa: F401, E402
 
-# Import and register agentic workflow tools (FastMCP 3.1 sampling / agentic)
+# SEP-1577 agentic tools (sample_step + sample); requires FastMCP 3.1 sampling
 try:
-    from .tools.agentic import register_agentic_tools  # noqa: E402
+    from .tools.agentic import register_agentic_plex_tools  # noqa: E402
 
-    register_agentic_tools()
-except ImportError:
-    pass
+    register_agentic_plex_tools(mcp)
+except ImportError as e:
+    logger.warning("Agentic tools not registered: %s", e)
 
 # ASGI app for uvicorn (webapp/start.ps1): plex_mcp.server:app
 app = mcp.http_app()

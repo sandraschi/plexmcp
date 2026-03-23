@@ -1,0 +1,119 @@
+# PlexMCP — LLM corpus (fleet)
+
+Curated reference for tools, environment, run modes, and troubleshooting. Index: `llms.txt`.
+
+## Tools
+
+Each entry is a FastMCP `@mcp.tool()` portmanteau unless noted. Use `plex_help(operation="list_tools")` for the live list.
+
+| Tool | Purpose |
+|------|---------|
+| plex_library | Library sections: list, get, scan, refresh, optimize, trash, paths, etc. |
+| plex_media | Browse, search, get_details, get_recent, update_metadata |
+| plex_user | Users: list, get, create, update, delete, permissions |
+| plex_playlist | Playlists: CRUD, items, analytics |
+| plex_streaming | Sessions, clients, play/pause/stop/seek/skip |
+| plex_metadata | Refresh, fix match, analyze, organize |
+| plex_performance | Transcode, bandwidth, throttling, profiles, server status |
+| plex_organization | Organize, analyze, clean_bundles, optimize_database |
+| plex_server | status, info, health, maintenance, restart, update |
+| plex_integration | Integrations, Vienna/EU/anime helpers, configure, sync |
+| plex_search | search, advanced_search, suggest, recent_searches, save_search |
+| plex_reporting | library_stats, usage, content, user_activity, performance, export |
+| plex_collections | Collections CRUD and items |
+| plex_audio_mgr | Volume, mute, streams, handover |
+| plex_quality | Quality profiles CRUD and default |
+| plex_rag | sync_metadata, semantic_search (LanceDB; requires indexing setup) |
+| plex_help | help, list_tools, tool_info, examples |
+| agentic_plex_workflow | Multi-step: `sample_step` + named tools (requires sampling) |
+| plex_natural_assistant | Single-turn `sample()` text only (no live Plex API unless tools used separately) |
+
+### Prompts & resources (FastMCP 3.1)
+
+- Prompts: `plex_media_guide`, `prompt://plex/rag-workflow`, `prompt://plex/agentic-pattern`, `prompt://plex/library-tour`
+- Resources: `resource://plex/skills`, `resource://plex/capabilities`
+
+## Environment
+
+| Variable | Purpose |
+|----------|---------|
+| PLEX_TOKEN | Plex auth token (required for server API) |
+| PLEX_URL / PLEX_SERVER_URL | Plex server base URL |
+| MCP_TRANSPORT | stdio (default for CLI) or http |
+| MCP_HOST / MCP_PORT / MCP_PATH | HTTP MCP bind (e.g. 127.0.0.1:10740, /mcp) |
+| PLEX_SAMPLING_BASE_URL | OpenAI-compatible base for MCP sampling (default aligns with Ollama `/v1`) |
+| PLEX_SAMPLING_MODEL | Model id for sampling |
+| PLEX_SAMPLING_API_KEY | Optional; cloud OpenAI-compatible |
+| PLEX_SAMPLING_USE_CLIENT_LLM | `1` / true: prefer host sampling |
+| LLM_BASE_URL | Webapp + fallback for sampling base derivation |
+| LLM_PROVIDER / LLM_API_KEY | Webapp chat backend |
+| PLEXMCP_ALLOW_LOGGING | `1` when stdout is not a TTY (tests, tooling) to avoid logger suppression issues |
+
+Webapp `.env` (backend): see `webapp/backend` — typically `PLEX_TOKEN`, `PLEX_URL`, LLM settings.
+
+## Run
+
+### MCP (stdio)
+
+```text
+uv sync
+uv run python -m plex_mcp.server --stdio
+```
+
+Or `just run` (uses `python -m plex_mcp.server`; set `MCP_TRANSPORT` via env if needed).
+
+### MCP (HTTP)
+
+```text
+set MCP_TRANSPORT=http
+set MCP_PORT=10740
+uv run python -m plex_mcp.server --http --port 10740
+```
+
+### Webapp
+
+```text
+cd webapp
+powershell -ExecutionPolicy Bypass -File .\start.ps1
+```
+
+Backend: http://127.0.0.1:10740 — Frontend: http://127.0.0.1:10741  
+FastMCP ASGI may be mounted at `/mcp` on the backend when `plex_mcp.app` loads.
+
+### MCP config (Claude Desktop example)
+
+```json
+"mcpServers": {
+  "plex-mcp": {
+    "command": "uv",
+    "args": ["run", "python", "-m", "plex_mcp.server", "--stdio"],
+    "cwd": "D:/Dev/repos/plex-mcp"
+  }
+}
+```
+
+Adjust `cwd` and use full path to `uv` if needed.
+
+## Architecture
+
+- `src/plex_mcp/app.py` — `FastMCP` instance, instructions, lifespan, **sampling_handler**, prompts, resources
+- `src/plex_mcp/sampling/` — `PlexSamplingHandler` (OpenAI-compatible chat/completions for sampling)
+- `src/plex_mcp/tools/portmanteau/` — portmanteau tools (`plex_*`)
+- `src/plex_mcp/tools/agentic.py` — `agentic_plex_workflow`, `plex_natural_assistant`
+- `src/plex_mcp/transport.py` — stdio / HTTP / SSE runner
+- `src/plex_mcp/services/rag_ingestor.py` — LanceDB indexing (optional mcp-central-docs bridge)
+- `webapp/backend` — FastAPI REST, LLM chat, proxies; mounts MCP HTTP app at `/mcp` when import succeeds
+- `webapp/frontend` — Next.js 15 UI
+
+## Troubleshooting
+
+1. **401 / Plex unreachable** — Check `PLEX_TOKEN`, `PLEX_URL`, firewall, and that Plex is reachable from the host running MCP.
+2. **RAG empty / unavailable** — Run `plex_rag(operation='sync_metadata')`; ensure optional `docs_mcp` / LanceDB path per README; HF token if embedding downloads rate-limit.
+3. **Sampling errors** — Start Ollama (or set `PLEX_SAMPLING_BASE_URL`); for tool loops use `agentic_plex_workflow` only when the sampling endpoint returns valid chat/completions.
+4. **Import / pytest failures** — Set `PLEXMCP_ALLOW_LOGGING=1` or use `tests/conftest.py` (sets it for pytest).
+5. **Webapp 502** — Backend not running or wrong `NEXT_PUBLIC` proxy; confirm ports 10740/10741 per fleet registry.
+
+## Related
+
+- Fleet standards: MCP Central Docs `PACKAGING_STANDARDS.md` (uv, justfile, llms.txt, glama)
+- Upstream: [FastMCP](https://github.com/jlowin/fastmcp), [Plex API](https://python-plexapi.readthedocs.io/)

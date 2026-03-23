@@ -1,13 +1,7 @@
 {
-  "/api/system/settings/route": "app/api/system/settings/route.js",
-  "/api/movies/route": "app/api/movies/route.js",
-  "/api/libraries/route": "app/api/libraries/route.js",
-  "/api/image/[...path]/route": "app/api/image/[...path]/route.js",
-  "/api/server/status/route": "app/api/server/status/route.js",
-  "/movies/page": "app/movies/page.js",
-  "/search/semantic/page": "app/search/semantic/page.js",
-  "/chat/page": "app/chat/page.js",
   "/libraries/page": "app/libraries/page.js",
-  "/page": "app/page.js",
-  "/settings/page": "app/settings/page.js"
+  "/settings/page": "app/settings/page.js",
+  "/movies/page": "app/movies/page.js",
+  "/help/page": "app/help/page.js",
+  "/server/page": "app/server/page.js"
 }
