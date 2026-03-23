@@ -81,6 +81,11 @@ docs/_build/
 # Private documentation (internal dev notes, not for public)
 docs-private/
 
-# Node modules
+# Node / Next.js
 node_modules/
 .next/
+webapp/frontend/.next/
+webapp/backend/.next/
+
+# Rust (if present at repo root)
+target/

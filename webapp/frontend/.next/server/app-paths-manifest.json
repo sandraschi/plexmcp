@@ -1,7 +1,0 @@
-{
-  "/libraries/page": "app/libraries/page.js",
-  "/settings/page": "app/settings/page.js",
-  "/movies/page": "app/movies/page.js",
-  "/help/page": "app/help/page.js",
-  "/server/page": "app/server/page.js"
-}
