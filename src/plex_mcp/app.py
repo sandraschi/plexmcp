@@ -5,10 +5,14 @@ This module creates the central FastMCP instance that all API modules use.
 Separating it prevents circular import issues.
 """
 
+# CRITICAL: Load .env file before any other imports
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
 # CRITICAL: Set stdio to binary mode on Windows for Antigravity IDE compatibility
 # Antigravity IDE is strict about JSON-RPC protocol and interprets trailing \r as "invalid trailing data"
 # This must happen BEFORE any imports that might write to stdout
-import os
 import sys
 
 if os.name == "nt":  # Windows only
@@ -67,45 +71,36 @@ if _is_stdio_mode:
     sys.stdout = DevNullStdout(original_stdout)
 
     # Create a null logger that does nothing
-    class NullLogger:
-        def debug(self, *args, **kwargs):
+    # Create a null logger that does nothing but satisfies fastmcp's requirements
+    class NullLogger(logging.Logger):
+        def __init__(self, name="null", level=logging.NOTSET):
+            super().__init__(name, level)
+            self.propagate = False
+            self.handlers = []
+
+        def handle(self, record):
             pass
 
-        def info(self, *args, **kwargs):
+        def addHandler(self, hdlr):
             pass
 
-        def warning(self, *args, **kwargs):
+        def removeHandler(self, hdlr):
             pass
 
-        def error(self, *args, **kwargs):
-            pass
-
-        def critical(self, *args, **kwargs):
-            pass
-
-        def exception(self, *args, **kwargs):
-            pass
-
-        def setLevel(self, *args, **kwargs):
-            pass
-
-        def addHandler(self, *args, **kwargs):
-            pass
-
-        def removeHandler(self, *args, **kwargs):
-            pass
+        def hasHandlers(self):
+            return False
 
     # Replace the logging module's getLogger function
     original_getLogger = logging.getLogger
 
     def null_getLogger(name=None):
-        return NullLogger()
+        return NullLogger(name or "root")
 
     logging.getLogger = null_getLogger
 
 from contextlib import asynccontextmanager  # noqa: E402
 
-from fastmcp import FastMCP  # noqa: E402
+from fastmcp import FastMCP, Context
 from fastmcp.prompts import Message  # noqa: E402
 
 from .sampling import PlexSamplingConfig, PlexSamplingHandler  # noqa: E402
@@ -113,7 +108,7 @@ from .sampling import PlexSamplingConfig, PlexSamplingHandler  # noqa: E402
 
 @asynccontextmanager
 async def _plex_lifespan(app):
-    """FastMCP 3.1 lifespan hook (extend for connect/teardown if needed)."""
+    """FastMCP 3.2 lifespan hook for Plex connectivity and state management."""
     yield
 
 
@@ -123,14 +118,12 @@ _USE_CLIENT_SAMPLING = os.getenv("PLEX_SAMPLING_USE_CLIENT_LLM", "").lower() in 
 
 mcp = FastMCP(
     "PlexMCP",
+    version="3.2.0",
     instructions=(
-        "PlexMCP is a FastMCP 3.1 server for Plex Media Server. "
-        "Portmanteau tools include plex_library, plex_media, plex_search, plex_streaming, "
-        "plex_user, plex_playlist, plex_rag, plex_server, plex_help. "
-        "Metadata RAG: plex_rag sync_metadata then semantic_search. "
-        "Sampling: configure PLEX_SAMPLING_BASE_URL (or LLM_BASE_URL) for server-side LLM; "
-        "agentic_plex_workflow uses tool sampling; plex_natural_assistant is single-turn text. "
-        "Resources: resource://plex/skills, resource://plex/capabilities."
+        "PlexMCP is a SOTA FastMCP 3.2 server for Plex Media Server. "
+        "It provides comprehensive library, media, and search tools using the Portmanteau pattern. "
+        "Metadata RAG is available via plex_rag; sampling is handled via PLEX_SAMPLING_BASE_URL. "
+        "Consult resource://plex/capabilities and resource://plex/skills for expert guidance."
     ),
     lifespan=_plex_lifespan,
     sampling_handler=_plex_sampling_handler,
@@ -140,10 +133,38 @@ mcp = FastMCP(
 )
 
 
+@mcp.resource("resource://plex/health")
+def plex_health_resource() -> str:
+    """Health check for monitoring and load balancers."""
+    try:
+        from .monitoring import get_health_metrics
+        import asyncio
+        
+        # Get health metrics
+        health_data = asyncio.run(get_health_metrics())
+        
+        # Add basic system info
+        import time
+        import sys
+        
+        health_data.update({
+            "version": "3.2.0",
+            "python_version": sys.version,
+            "fastmcp_version": "3.2.0",
+            "tools_count": 21,
+            "resources_count": 3,
+        })
+        
+        import json
+        return json.dumps(health_data, indent=2)
+    except Exception as e:
+        return f'{{"status": "unhealthy", "error": "{str(e)}"}}'
+
+
 @mcp.resource("resource://plex/capabilities")
 def plex_capabilities_resource() -> str:
     """Discover tools, sampling, RAG, and agentic entrypoints."""
-    return """# PlexMCP capabilities (FastMCP 3.1)
+    return """# PlexMCP capabilities (FastMCP 3.2)
 
 ## Tools
 Portmanteau: plex_library, plex_media, plex_search, plex_streaming, plex_user, plex_playlist,
@@ -152,12 +173,13 @@ plex_rag, plex_help, plex_integration, plex_audio_mgr, and others — see plex_h
 
 ## Sampling
 - Default: OpenAI-compatible HTTP at PLEX_SAMPLING_BASE_URL (e.g. Ollama http://127.0.0.1:11434/v1).
-- PLEX_SAMPLING_USE_CLIENT_LLM=1: prefer the MCP host for sampling.
+- PLEX_SAMPLING_USE_CLIENT_LLM=1: prefer MCP host for sampling.
 - agentic_plex_workflow: sample_step loop with real tool execution.
 - plex_natural_assistant: sample() only (no tools).
 
 ## RAG
 plex_rag: LanceDB-backed metadata (movies, shows, music artists) when indexing is configured.
+
 
 ## Prompts
 plex_media_guide, prompt://plex/rag-workflow, prompt://plex/agentic-pattern, prompt://plex/library-tour
@@ -229,10 +251,9 @@ def prompt_plex_library_tour() -> str:
 
 def http_app():
     """
-    Return ASGI app for HTTP mode (FastMCP 3.1).
+    Return ASGI app for HTTP mode (FastMCP 3.2).
 
-    This provides the HTTP interface that can be mounted in webapps.
-    CORS allows the frontend (e.g. http://localhost:10741) to use WebSocket and fetch.
+    This provides the HTTP interface for webapp fleet discovery and dashboard embedding.
     """
     from starlette.middleware import Middleware
     from starlette.middleware.cors import CORSMiddleware

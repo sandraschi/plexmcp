@@ -51,120 +51,24 @@ async def plex_integration(
     integration_name: str | None = None,
     config: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Comprehensive third-party integration operations for Plex Media Server.
+    """
+    Comprehensive third-party integration operations for Plex Media Server.
 
     PORTMANTEAU PATTERN RATIONALE:
-    Instead of creating 6+ separate tools (one per operation), this tool consolidates related
-    third-party integration operations into a single interface. This design:
-    - Prevents tool explosion (6+ tools -> 1 tool) while maintaining full functionality
-    - Improves discoverability by grouping related operations together
-    - Reduces cognitive load when working with integration tasks
-    - Enables consistent integration interface across all operations
-    - Follows FastMCP 2.13+ best practices for feature-rich MCP servers
+    Consolidates 6 external API integrations into a single tool to provide
+    unified access to regional recommendations and niche metadata providers.
 
-    SUPPORTED OPERATIONS:
-    - list_integrations: List all available integrations
-    - vienna_recommendations: Get Vienna-specific content recommendations
-    - european_content: Get European content with Vienna-specific metadata
-    - anime_season_info: Get information about anime seasons
-    - configure: Configure an integration
-    - sync: Sync data from an integration
-
-    OPERATIONS DETAIL:
-
-    list_integrations: List all available integrations
-    - Parameters: None required
-    - Returns: List of available integrations
-    - Example: plex_integration(operation="list_integrations")
-    - Use when: Viewing available third-party integrations
-
-    vienna_recommendations: Get Vienna-specific content recommendations
-    - Parameters: content_type (required), limit (optional), include_european (optional)
-    - Returns: List of recommended items
-    - Example: plex_integration(operation="vienna_recommendations", content_type="movie", limit=20)
-    - Use when: Getting local content recommendations
-
-    european_content: Get European content with Vienna-specific metadata
-    - Parameters: country (optional), content_type (optional), limit (optional)
-    - Returns: List of European content items
-    - Example: plex_integration(operation="european_content", country="Austria", content_type="movie")
-    - Use when: Finding European content
-
-    anime_season_info: Get information about anime seasons
-    - Parameters: year (required), season (required)
-    - Returns: Anime season information
-    - Example: plex_integration(operation="anime_season_info", year=2024, season="spring")
-    - Use when: Getting anime season data
-
-    configure: Configure an integration
-    - Parameters: integration_name (required), config (required)
-    - Returns: Configuration confirmation
-    - Example: plex_integration(operation="configure", integration_name="vienna", config={"enabled": True})
-    - Use when: Setting up or modifying integration settings
-
-    sync: Sync data from an integration
-    - Parameters: integration_name (required)
-    - Returns: Sync results
-    - Example: plex_integration(operation="sync", integration_name="vienna")
-    - Use when: Synchronizing data from a third-party service
-
-    Prerequisites:
-        - Plex Media Server running and accessible
-        - Valid PLEX_TOKEN environment variable set
-        - Integrations may require additional API keys or configuration
-
-    Args:
-        operation (str): The integration operation to perform. Required. Must be one of: "list_integrations", "vienna_recommendations", "european_content", "anime_season_info", "configure", "sync"
-        content_type (str | None): Type of content (required for vienna_recommendations, optional for european_content).
-        limit (int): Maximum number of results (default: 10).
-        include_european (bool): Include European content (for vienna_recommendations, default: True).
-        country (str | None): Country filter (optional for european_content).
-        year (int | None): Year for anime season (required for anime_season_info).
-        season (str | None): Season name: "winter", "spring", "summer", "fall" (required for anime_season_info).
-        integration_name (str | None): Name of the integration (required for configure, sync).
-        config (dict | None): Configuration dictionary (required for configure).
+    OPERATIONS:
+    - list_integrations: Audit all active and available external service bridges.
+    - vienna_recommendations: Specialized Alsergrund-tuned local content suggestions.
+    - european_content: Filter for EU-origin media with localized Vienna metadata.
+    - anime_season_info: Retrieval of seasonal metadata from specialized anime databases.
+    - configure: Manage API keys and synchronization preferences for integrations.
+    - sync: Trigger a manual state refresh from an external provider.
 
     Returns:
-        Dictionary containing:
-            - success: Boolean indicating operation success
-            - operation: The operation that was performed
-            - data: Operation-specific result data
-            - count: Number of items returned (for list operations)
-            - error: Error message if success is False
-            - error_code: Specific error code for programmatic handling
-            - suggestions: List of suggested fixes (on error)
-
-    Examples:
-        # List integrations
-        result = await plex_integration(operation="list_integrations")
-        # Returns: {'success': True, 'operation': 'list_integrations', 'data': [...]}
-
-        # Get Vienna recommendations
-        result = await plex_integration(
-            operation="vienna_recommendations",
-            content_type="movie",
-            limit=20
-        )
-        # Returns: {'success': True, 'operation': 'vienna_recommendations', 'data': [...]}
-
-        # Get anime season info
-        result = await plex_integration(
-            operation="anime_season_info",
-            year=2024,
-            season="spring"
-        )
-        # Returns: {'success': True, 'operation': 'anime_season_info', 'data': {...}}
-
-    Errors:
-        Common errors and solutions:
-        - "PLEX_TOKEN not set": Set PLEX_TOKEN environment variable with your auth token
-        - "content_type required": Provide content_type for vienna_recommendations
-        - "year and season required": Provide both year and season for anime_season_info
-        - "integration_name required": Provide integration name for configure/sync operations
-
-    See Also:
-        - plex_media: For browsing and searching media
-        - plex_library: For library management operations
+    FastMCP 3.1+ dialogic response with external metadata and integration status.
+    Enables autonomous regional content curation and seasonal discovery.
     """
     try:
         # Import Vienna API functions

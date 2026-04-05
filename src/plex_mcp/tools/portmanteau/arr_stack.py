@@ -17,22 +17,19 @@ logger = get_logger(__name__)
 async def arr_stack(
     operation: Literal["status"],
 ) -> dict[str, Any]:
-    """Query Radarr, Sonarr, and Lidarr HTTP APIs (optional integration).
+    """
+    Query Radarr, Sonarr, and Lidarr HTTP APIs for media stack health.
 
-    PORTMANTEAU PATTERN RATIONALE: One tool for the whole *arr snapshot instead of three
-    separate tools, matching how operators think about the stack.
+    PORTMANTEAU PATTERN RATIONALE:
+    Consolidates 3 synchronization services into a single tool to match established
+    industry patterns for managing "the stack" as a unified metadata pipeline.
 
-    Prerequisites:
-        Environment variables (or webapp Settings file that sets them):
-        - RADARR_URL, RADARR_API_KEY
-        - SONARR_URL, SONARR_API_KEY
-        - LIDARR_URL, LIDARR_API_KEY
-
-    Operations:
-        status: GET /system/status and /queue on each configured service (API v3 for Radarr/Sonarr, v1 for Lidarr).
+    OPERATIONS:
+    - status: Probe HTTP reachability, version strings, and active download queue counts.
 
     Returns:
-        success, data with radarr/sonarr/lidarr objects (configured, reachable, version, queue_count, error).
+    FastMCP 3.1+ dialogic response with stack reachability and pipeline status.
+    Enables autonomous synchronization monitoring and reachability auditing.
     """
     try:
         data = await get_arr_stack_status()

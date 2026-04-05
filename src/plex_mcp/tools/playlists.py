@@ -393,9 +393,7 @@ async def get_playlist_analytics(request: GetPlaylistAnalyticsRequest) -> Playli
 
         # Get view counts and other metrics (simplified example)
         total_plays = sum(getattr(item, "viewCount", 0) for item in items)
-        unique_users = len(
-            set(item.lastViewedAt for item in items if hasattr(item, "lastViewedAt"))
-        )
+        unique_users = len({item.lastViewedAt for item in items if hasattr(item, "lastViewedAt")})
 
         # Get popular items (top 3 most played)
         popular_items = sorted(

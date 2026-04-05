@@ -1,6 +1,6 @@
 """PlexMCP - Production Plex Media Server MCP Integration"""
 
-__version__ = "2.0.0"
+__version__ = "3.2.0"
 __author__ = "Sandra Schipal"
 
 # Single source of truth for imports

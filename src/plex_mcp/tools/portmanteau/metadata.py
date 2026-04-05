@@ -52,132 +52,25 @@ async def plex_metadata(
     force: bool = False,
     patterns: dict[str, str] | None = None,
 ) -> dict[str, Any]:
-    """Comprehensive metadata management operations for Plex Media Server.
+    """
+    Comprehensive metadata management operations for Plex Media Server.
 
     PORTMANTEAU PATTERN RATIONALE:
-    Instead of creating 7+ separate tools (one per operation), this tool consolidates related
-    metadata management operations into a single interface. This design:
-    - Prevents tool explosion (7+ tools -> 1 tool) while maintaining full functionality
-    - Improves discoverability by grouping related operations together
-    - Reduces cognitive load when working with metadata management tasks
-    - Enables consistent metadata interface across all operations
-    - Follows FastMCP 2.13+ best practices for feature-rich MCP servers
+    Consolidates 7 metadata lifecycle operations into a single tool to ensure
+    consistent identifier handling and improved discovery of library maintenance tasks.
 
-    SUPPORTED OPERATIONS:
-    - refresh: Refresh metadata for an item or library
-    - refresh_all: Refresh metadata for all libraries
-    - fix_match: Fix an incorrect media match
-    - update: Update metadata for a media item (uses plex_media internally)
-    - analyze: Analyze metadata quality and issues
-    - match: Match media to correct metadata
-    - organize: Organize library according to best practices
-
-    OPERATIONS DETAIL:
-
-    refresh: Refresh metadata for an item or library
-    - Parameters: item_id (optional), library_id (optional), force (optional)
-    - Returns: Refresh results
-    - Example: plex_metadata(operation="refresh", library_id="1", force=True)
-    - Use when: Updating metadata from online sources
-
-    refresh_all: Refresh metadata for all libraries
-    - Parameters: force (optional)
-    - Returns: Refresh results for all libraries
-    - Example: plex_metadata(operation="refresh_all", force=True)
-    - Use when: Updating all metadata across the server
-
-    fix_match: Fix an incorrect media match
-    - Parameters: item_id (required), match_id (required), media_type (required)
-    - Returns: Success confirmation
-    - Example: plex_metadata(operation="fix_match", item_id="12345", match_id="67890", media_type="movie")
-    - Use when: Correcting incorrect metadata matches
-
-    update: Update metadata for a media item
-    - Parameters: item_id (required), metadata (required)
-    - Returns: Success confirmation
-    - Example: plex_metadata(operation="update", item_id="12345", metadata={"title": "New Title"})
-    - Use when: Manually updating metadata fields
-    - Note: This operation uses plex_media internally
-
-    analyze: Analyze metadata quality and issues
-    - Parameters: library_id (optional)
-    - Returns: Analysis results with issues found
-    - Example: plex_metadata(operation="analyze", library_id="1")
-    - Use when: Checking metadata quality
-
-    match: Match media to correct metadata
-    - Parameters: item_id (required), match_id (optional)
-    - Returns: Match results
-    - Example: plex_metadata(operation="match", item_id="12345")
-    - Use when: Finding and applying correct metadata matches
-
-    organize: Organize library according to best practices
-    - Parameters: library_id (required), patterns (optional)
-    - Returns: Organization results
-    - Example: plex_metadata(operation="organize", library_id="1")
-    - Use when: Organizing library structure
-
-    Prerequisites:
-        - Plex Media Server running and accessible
-        - Valid PLEX_TOKEN environment variable set
-        - Media items must exist for item-specific operations
-
-    Args:
-        operation (str): The metadata operation to perform. Required. Must be one of: "refresh", "refresh_all", "fix_match", "update", "analyze", "match", "organize"
-        item_id (str | None): Media item identifier. Required for: fix_match, update, match. Optional for: refresh, analyze.
-        library_id (str | None): Library identifier. Required for: organize. Optional for: refresh, analyze.
-        match_id (str | None): Correct match identifier. Required for: fix_match. Optional for: match.
-        media_type (str | None): Type of media. Required for: fix_match. Valid: "movie", "show", "season", "episode", "artist", "album", "track", "photo".
-        metadata (dict | None): Metadata dictionary. Required for: update.
-        force (bool): Force refresh even if not needed. Default: False. Optional for: refresh, refresh_all.
-        patterns (dict | None): Custom organization patterns. Optional for: organize.
+    OPERATIONS:
+    - refresh: Update metadata from online sources for an item/library.
+    - refresh_all: Force a full metadata refresh across all libraries.
+    - fix_match: Manually correct an incorrect media identification.
+    - update: Modify specific metadata fields (title, year, etc.).
+    - analyze: Inspect metadata quality and identify missing info.
+    - match: Trigger automated matching for unmatched items.
+    - organize: Standardize library structure and naming.
 
     Returns:
-        Dictionary containing:
-            - success: Boolean indicating operation success
-            - operation: The operation that was performed
-            - data: Operation-specific result data
-            - error: Error message if success is False
-            - error_code: Specific error code for programmatic handling
-            - suggestions: List of suggested fixes (on error)
-
-    Examples:
-        # Refresh metadata for a library
-        result = await plex_metadata(operation="refresh", library_id="1", force=True)
-        # Returns: {'success': True, 'operation': 'refresh', 'data': {...}}
-
-        # Fix incorrect match
-        result = await plex_metadata(
-            operation="fix_match",
-            item_id="12345",
-            match_id="67890",
-            media_type="movie"
-        )
-        # Returns: {'success': True, 'operation': 'fix_match'}
-
-        # Update metadata
-        result = await plex_metadata(
-            operation="update",
-            item_id="12345",
-            metadata={"title": "New Title", "year": 2020}
-        )
-        # Returns: {'success': True, 'operation': 'update'}
-
-        # Analyze metadata
-        result = await plex_metadata(operation="analyze", library_id="1")
-        # Returns: {'success': True, 'operation': 'analyze', 'data': {...}}
-
-    Errors:
-        Common errors and solutions:
-        - "PLEX_TOKEN not set": Set PLEX_TOKEN environment variable with your auth token
-        - "item_id required": Provide valid item ID for operations that require it
-        - "library_id required": Provide valid library ID for operations that require it
-        - "Item not found": Verify item_id is correct
-        - "Library not found": Verify library_id is correct
-
-    See Also:
-        - plex_media: For browsing media and update_metadata operation
-        - plex_organization: For library organization operations
+    FastMCP 3.1+ dialogic response with metadata transaction details.
+    Enables autonomous library curation and automated matching.
     """
     try:
         plex = _get_plex_service()

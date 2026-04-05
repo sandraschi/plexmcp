@@ -23,11 +23,17 @@ async def plex_rag(
     """
     RAG integration for Plex Media. Semantic search over movie, show, and music (artist) descriptions.
 
-    Operations:
-    - semantic_search: Natural language semantic search across indexed Plex content.
-      Requires `query`. Returns best matches.
-    - sync_metadata: Indexes Plex metadata from movies, shows, and music (artist) libraries
-      into LanceDB (title, plot/summary, genres, directors; artist summaries). Data from Plex API.
+    PORTMANTEAU PATTERN RATIONALE:
+    Consolidates neural search and metadata vectorization into a single tool to manage the
+    lifecycle of the local knowledge base.
+
+    OPERATIONS:
+    - semantic_search: Natural language search across indexed Plex content using neural embeddings.
+    - sync_metadata: Extract and vectorize metadata into the local LanceDB store.
+
+    Returns:
+    FastMCP 3.1+ dialogic response with top semantic matches and sync status.
+    Enables natural language discovery and contextual media recommendations.
     """
     try:
         plex = _get_plex_service()

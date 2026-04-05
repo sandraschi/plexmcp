@@ -133,6 +133,7 @@ class PlexConfig(BaseModel):
 
         # Override with environment variables
         env_mappings = {
+            "PLEX_URL": "server_url",
             "PLEX_SERVER_URL": "server_url",
             "PLEX_TOKEN": "plex_token",
             "PLEX_USERNAME": "username",

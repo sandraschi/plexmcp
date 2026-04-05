@@ -49,34 +49,25 @@ async def plex_audio_mgr(
     volume: int | None = None,
     stream_id: str | None = None,
 ) -> dict[str, Any]:
-    """Comprehensive audio management operations for Plex Media Server.
+    """
+    Comprehensive audio management operations for Plex Media Server.
 
     PORTMANTEAU PATTERN RATIONALE:
-    Groups all audio-focused operations into a single interface to reduce tool fragmentation
-    and improve discoverability of audio-related capabilities.
+    Consolidates 7 audio-focused control operations into a single interface to minimize
+    latency during real-time playback adjustments and stream switching.
 
-    SUPPORTED OPERATIONS:
-    - get_volume: Get current volume level of a client (if supported)
-    - set_volume: Set volume level (0-100) for a client
-    - mute: Mute a client (sets volume to 0 or toggles mute)
-    - unmute: Unmute a client (restores volume or toggles mute)
-    - list_streams: List available audio tracks for a media item
-    - select_stream: Switch active audio track on a client
-    - handover: Transfer media playback from one client to another at the current offset
+    OPERATIONS:
+    - get_volume: Retrieve the current output level of a connected Plex client.
+    - set_volume: Precise adjustment of playback volume (0-100 scale).
+    - mute: Immediate suppression of audio output.
+    - unmute: Restoration of audio at the previous or default level.
+    - list_streams: Enumerate all available audio tracks (codecs, languages) for a media item.
+    - select_stream: Dynamic switching between available audio tracks during playback.
+    - handover: Seamless transfer of the current audio session to a different target client.
 
-    OPERATIONS DETAIL:
-
-    set_volume:
-    - Parameters: client_id (required), volume (required, 0-100)
-    - Use when: You want to adjust the audio level on a specific player.
-
-    select_stream:
-    - Parameters: client_id (required), stream_id (required)
-    - Use when: You want to switch to a different audio track (e.g., from AC3 to DTS or German to English).
-
-    handover:
-    - Parameters: client_id (source, required), target_client_id (required)
-    - Use when: You want to "move" what's playing in the living room to the kitchen without losing your spot.
+    Returns:
+    FastMCP 3.1+ dialogic response with client audio state and track details.
+    Enables autonomous multi-room audio control and track optimization.
     """
     plex = _get_plex_service()
 

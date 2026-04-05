@@ -1,0 +1,121 @@
+[
+  {
+    "tool": "plex_library",
+    "operation": "list",
+    "example": "plex_library(operation='list')",
+    "description": "List all media libraries organized by sections."
+  },
+  {
+    "tool": "plex_media",
+    "operation": "search",
+    "query": "Inception",
+    "example": "plex_media(operation='search', query='Inception')",
+    "description": "Search for specific media across all libraries using keywords."
+  },
+  {
+    "tool": "plex_performance",
+    "operation": "get_server_status",
+    "example": "plex_performance(operation='get_server_status')",
+    "description": "Monitor server health, active sessions, and version info."
+  },
+  {
+    "tool": "plex_streaming",
+    "operation": "list_sessions",
+    "example": "plex_streaming(operation='list_sessions')",
+    "description": "View real-time playback sessions and bandwidth usage."
+  },
+  {
+    "tool": "plex_server",
+    "operation": "info",
+    "example": "plex_server(operation='info')",
+    "description": "Retrieve detailed server configuration and capability flags."
+  },
+  {
+    "tool": "plex_search",
+    "operation": "global",
+    "query": "Nolan",
+    "example": "plex_search(operation='global', query='Nolan')",
+    "description": "Execute a global search across all media and library types."
+  },
+  {
+    "tool": "plex_metadata",
+    "operation": "refresh",
+    "rating_key": "12345",
+    "example": "plex_metadata(operation='refresh', rating_key='12345')",
+    "description": "Force a metadata refresh for a specific media item."
+  },
+  {
+    "tool": "plex_organization",
+    "operation": "analyze",
+    "library_id": "1",
+    "example": "plex_organization(operation='analyze', library_id='1')",
+    "description": "Scan a library for naming inconsistencies or missing metadata."
+  },
+  {
+    "tool": "plex_playlist",
+    "operation": "list",
+    "example": "plex_playlist(operation='list')",
+    "description": "Display all user-created playlists and their item counts."
+  },
+  {
+    "tool": "plex_user",
+    "operation": "list",
+    "example": "plex_user(operation='list')",
+    "description": "Manage shared users, permissions, and home accounts."
+  },
+  {
+    "tool": "plex_quality",
+    "operation": "get_profiles",
+    "example": "plex_quality(operation='get_profiles')",
+    "description": "Retrieve available transcoding quality profiles."
+  },
+  {
+    "tool": "plex_rag",
+    "operation": "query",
+    "query": "What movies do I have starring Leonardo DiCaprio?",
+    "example": "plex_rag(operation='query', query='What movies do I have starring Leonardo DiCaprio?')",
+    "description": "Perform natural language semantic queries over media metadata."
+  },
+  {
+    "tool": "plex_reporting",
+    "operation": "activity",
+    "example": "plex_reporting(operation='activity')",
+    "description": "Generate server activity reports and watch statistics."
+  },
+  {
+    "tool": "plex_collections",
+    "operation": "list",
+    "example": "plex_collections(operation='list')",
+    "description": "Browse and manage media collections across libraries."
+  },
+  {
+    "tool": "plex_integration",
+    "operation": "status",
+    "example": "plex_integration(operation='status')",
+    "description": "Check status of external integrations (Tautulli, Overseerr, etc.)."
+  },
+  {
+    "tool": "plex_audio_mgr",
+    "operation": "status",
+    "example": "plex_audio_mgr(operation='status')",
+    "description": "Manage Plex Music libraries and audio playback settings."
+  },
+  {
+    "tool": "arr_stack",
+    "operation": "health",
+    "example": "arr_stack(operation='health')",
+    "description": "Verify synchronization health with *Arr services (Radarr, Sonarr)."
+  },
+  {
+    "tool": "plex_help",
+    "operation": "guide",
+    "example": "plex_help(operation='guide')",
+    "description": "Access interactive guidance for complex tool sequences."
+  },
+  {
+    "tool": "plex_discovery",
+    "operation": "recent",
+    "example": "plex_discovery(operation='recent')",
+    "description": "Discover recently added or trending media items."
+  }
+]

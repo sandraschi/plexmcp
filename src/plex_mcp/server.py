@@ -4,6 +4,11 @@ PlexMCP - FastMCP 3.1 Server for Plex Media Server Management
 FastMCP 3.1 with sampling, agentic workflows, skills and prompts.
 """
 
+# CRITICAL: Load .env file before any other imports
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
 # Import the shared FastMCP instance
 from .app import mcp
 

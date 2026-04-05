@@ -38,8 +38,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
   return (
     <aside
-      className={`shrink-0 flex flex-col glass-panel-strong border-r border-slate-600/50 transition-[width] duration-200 ${collapsed ? "w-16 min-w-[4rem]" : "w-56 min-w-[14rem]"
-        }`}
+      className={`shrink-0 flex flex-col glass-panel-strong border-r border-slate-600/50 transition-[width] duration-200 ${collapsed ? "w-16 min-w-[4rem]" : "w-56 min-w-[14rem]"}`}
     >
       <nav className="flex-1 py-4 px-2 space-y-0.5 overflow-y-auto">
         {navItems.map(({ href, label, icon: Icon }) => {

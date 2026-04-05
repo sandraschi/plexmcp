@@ -1,14 +1,13 @@
-"""Plex service implementation for FastMCP 2.10."""
-
 import asyncio
 import logging
 from typing import Any
-
 from plexapi.exceptions import PlexApiException
 from plexapi.server import PlexServer
 
 from ..models.media import MediaItem
 from ..models.server import PlexServerStatus
+from ..config import get_settings
+from ..error_handling import log_operation_start, log_operation_success
 
 logger = logging.getLogger(__name__)
 
@@ -16,17 +15,18 @@ logger = logging.getLogger(__name__)
 class PlexService:
     """Service for interacting with Plex Media Server."""
 
-    def __init__(self, base_url: str, token: str, timeout: int = 30):
+    def __init__(self, base_url: str | None = None, token: str | None = None, timeout: int = 30):
         """Initialize Plex service.
 
         Args:
-            base_url: Base URL of the Plex server (e.g., http://localhost:32400)
+            base_url: Base URL of the Plex server
             token: Plex authentication token
             timeout: Request timeout in seconds
         """
-        self.base_url = base_url.rstrip("/")
-        self.token = token
-        self.timeout = timeout
+        settings = get_settings()
+        self.base_url = (base_url or settings.server_url).rstrip("/")
+        self.token = token or settings.plex_token
+        self.timeout = timeout or settings.timeout
         self.server: PlexServer | None = None
         self._initialized = False
 
@@ -35,15 +35,25 @@ class PlexService:
         if self._initialized:
             return
 
+        if not self.token:
+            settings = get_settings()
+            self.token = settings.plex_token
+            if not self.base_url:
+                self.base_url = settings.server_url.rstrip("/")
+
+        if not self.token:
+            raise RuntimeError("PLEX_TOKEN is not set. Cannot connect to Plex.")
+
         try:
-            # PlexAPI handles its own session management, don't pass aiohttp session
+            # PlexAPI handles its own session management
+            log_operation_start("Connecting to Plex server", {"url": self.base_url})
             self.server = await self._run_in_executor(
                 PlexServer, self.base_url, self.token, timeout=self.timeout
             )
             self._initialized = True
-            logger.info(f"Connected to Plex server: {self.server.friendlyName}")
+            log_operation_success(f"Connected to Plex: {self.server.friendlyName}")
 
-        except PlexApiException as e:
+        except Exception as e:
             logger.error(f"Failed to connect to Plex server: {str(e)}")
             raise
 
@@ -128,7 +138,7 @@ class PlexService:
                     if hasattr(section, "scannedAt")
                     else 0,
                     "content": getattr(section, "content", None),
-                    "count": section.totalSize if hasattr(section, "totalSize") else 0,
+                    "count": getattr(section, "totalSize", 0) if not callable(getattr(section, "totalSize", None)) else 0,
                 }
 
                 # Get additional metadata if available
@@ -146,14 +156,21 @@ class PlexService:
         return libraries
 
     async def search_media(
-        self, query: str, limit: int = 10, library_id: str | None = None
+        self,
+        query: str,
+        limit: int = 20,
+        library_id: str | None = None,
+        offset: int = 0,
+        **kwargs,
     ) -> list[MediaItem]:
         """Search for media across all libraries or within a specific library."""
         if not self._initialized:
             await self.connect()
 
         try:
-            results = await self._run_in_executor(self._search_media_sync, query, limit, library_id)
+            results = await self._run_in_executor(
+                self._search_media_sync, query, limit, library_id, offset, **kwargs
+            )
             return [MediaItem(**item) for item in results]
 
         except PlexApiException as e:
@@ -161,7 +178,12 @@ class PlexService:
             raise
 
     def _search_media_sync(
-        self, query: str, limit: int, library_id: str | None = None
+        self,
+        query: str,
+        limit: int,
+        library_id: str | None = None,
+        offset: int = 0,
+        **kwargs,
     ) -> list[dict[str, Any]]:
         """Synchronous helper to search for media."""
         if not self.server:
@@ -169,9 +191,12 @@ class PlexService:
 
         if library_id:
             section = self.server.library.sectionByID(int(library_id))
-            results = section.search(query, maxresults=limit)
+            # PlexAPI search uses X-Plex-Container-Start/Size under the hood for some methods,
+            # but for section.search it's maxresults.
+            # To support offset, we use container_start/size headers if supported or manual slice
+            results = section.search(query, maxresults=limit, container_start=offset, **kwargs)
         else:
-            results = self.server.search(query, limit=limit)
+            results = self.server.search(query, limit=limit, container_start=offset, **kwargs)
 
         return [
             {
@@ -939,9 +964,7 @@ class PlexService:
             "updated_at": section.updatedAt.timestamp() if hasattr(section, "updatedAt") else 0,
             "scanned_at": section.scannedAt.timestamp() if hasattr(section, "scannedAt") else 0,
             "count": len(section.all()),
-            "locations": [loc for loc in section.locations]
-            if hasattr(section, "locations")
-            else [],
+            "locations": list(section.locations) if hasattr(section, "locations") else [],
         }
 
     async def _format_media_item(self, item) -> dict[str, Any]:
@@ -1975,7 +1998,7 @@ class PlexService:
                     if c.machineIdentifier == client_identifier:
                         plexapi_client = c
                         break
-            except:
+            except Exception:
                 pass
 
             if plexapi_client and hasattr(plexapi_client, "playMedia"):
@@ -2002,6 +2025,10 @@ class PlexService:
                     client_name = getattr(
                         found_client, "title", getattr(found_client, "name", "Unknown")
                     )
+
+                logger.debug(
+                    f"Direct control targets: {client_name} at {client_address}:{client_port}"
+                )
 
                 # For Plex Web and Plex for Windows, we need to use server API routing
                 # Direct HTTP won't work (address is 127.0.0.1 or server address)

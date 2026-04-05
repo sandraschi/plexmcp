@@ -47,87 +47,24 @@ async def plex_reporting(
     format: Literal["json", "csv", "html"] | None = None,
     output_path: str | None = None,
 ) -> dict[str, Any]:
-    """Comprehensive reporting and analytics tool for Plex Media Server.
+    """
+    Comprehensive reporting and analytics tool for Plex Media Server.
 
     PORTMANTEAU PATTERN RATIONALE:
-    Instead of creating 6 separate tools (one per report type), this tool consolidates related
-    reporting operations into a single interface. This design:
-    - Prevents tool explosion (6 tools -> 1 tool) while maintaining full functionality
-    - Improves discoverability by grouping related operations together
-    - Reduces cognitive load when working with reporting tasks
-    - Enables consistent reporting interface across all operations
-    - Follows FastMCP 2.13+ best practices for feature-rich MCP servers
+    Consolidates 6 reporting and server diagnostic operations into a single tool to provide
+    a systematic overview of library growth and server health.
 
-    SUPPORTED OPERATIONS:
-    - library_stats: Get statistics for a library or all libraries
-    - usage_report: Generate usage statistics and viewing patterns
-    - content_report: Analyze content distribution and metadata quality
-    - user_activity: Report on user activity and engagement
-    - performance_report: Server performance metrics and recommendations
-    - export_report: Export reports in various formats (JSON, CSV, HTML)
-
-    OPERATIONS DETAIL:
-
-    library_stats: Get library statistics
-    - Parameters: library_id (optional, if omitted returns stats for all libraries)
-    - Returns: Statistics including item counts, sizes, types, etc.
-    - Use when: You need an overview of library contents and sizes
-
-    usage_report: Generate usage statistics
-    - Parameters: time_range (optional, e.g., "7d", "30d", "1y"), library_id (optional)
-    - Returns: Viewing statistics, popular content, watch time, etc.
-    - Use when: Analyzing viewing patterns and popular content
-
-    content_report: Analyze content distribution
-    - Parameters: library_id (optional)
-    - Returns: Content breakdown by type, genre, year, quality, etc.
-    - Use when: Understanding content distribution and metadata quality
-
-    user_activity: Report on user activity
-    - Parameters: time_range (optional)
-    - Returns: User engagement metrics, active users, viewing habits
-    - Use when: Monitoring user engagement and activity levels
-
-    performance_report: Server performance metrics
-    - Parameters: None
-    - Returns: Performance metrics, recommendations, resource usage
-    - Use when: Monitoring server health and performance
-
-    export_report: Export reports
-    - Parameters: format (json, csv, html), output_path (optional)
-    - Returns: Export confirmation with file path
-    - Use when: Saving reports for external analysis or sharing
-
-    Prerequisites:
-        - Plex Media Server running and accessible
-        - Valid PLEX_TOKEN environment variable set
-        - PLEX_SERVER_URL configured (or defaults to http://localhost:32400)
-
-    Args:
-        operation (str): The reporting operation to perform. Required. Must be one of: "library_stats", "usage_report", "content_report", "user_activity", "performance_report", "export_report"
-        library_id (str | None): Optional library ID to generate report for.
-        time_range (str | None): Time range for reports (e.g., "7d", "30d", "1y", "all").
-        format (str | None): Export format (json, csv, html) - used for export_report.
-        output_path (str | None): Optional file path for exported reports.
+    OPERATIONS:
+    - library_stats: Total media counts, storage consumption, and metadata health per library.
+    - usage_report: Aggregate viewing time and peak activity periods.
+    - content_report: Detailed breakdown of codecs, resolutions, and content age.
+    - user_activity: Audit user session history and individual consumption patterns.
+    - performance_report: Real-time server resource utilization and hardware health.
+    - export_report: Generate portable report files for external analysis.
 
     Returns:
-        Operation-specific result with report data
-
-    Examples:
-        # Get library statistics
-        plex_reporting("library_stats", library_id="1")
-
-        # Generate usage report for last 30 days
-        plex_reporting("usage_report", time_range="30d")
-
-        # Export content report as CSV
-        plex_reporting("export_report", format="csv", output_path="/tmp/content_report.csv")
-
-    Errors:
-        Common errors and solutions:
-        - "PLEX_TOKEN not set": Configure authentication token
-        - "Library not found": Verify library_id is correct
-        - "Invalid time range": Use format like "7d", "30d", "1y"
+    FastMCP 3.1+ dialogic response with detailed statistics and health metrics.
+    Enables autonomous infrastructure reporting and capacity planning.
     """
     try:
         plex = _get_plex_service()

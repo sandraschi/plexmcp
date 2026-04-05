@@ -19,6 +19,7 @@ after thorough testing and user migration.
 from .arr_stack import arr_stack
 from .audio_mgr import plex_audio_mgr
 from .collections import plex_collections
+from .enrichment import plex_media_enrichment
 from .help import plex_help
 from .integration import plex_integration
 from .library import plex_library
@@ -39,6 +40,7 @@ __all__ = [
     "arr_stack",
     "plex_audio_mgr",
     "plex_media",
+    "plex_media_enrichment",
     "plex_library",
     "plex_user",
     "plex_playlist",

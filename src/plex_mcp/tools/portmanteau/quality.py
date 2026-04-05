@@ -46,92 +46,24 @@ async def plex_quality(
     settings: dict[str, Any] | None = None,
     is_default: bool = False,
 ) -> dict[str, Any]:
-    """Comprehensive quality profile management tool for Plex Media Server.
+    """
+    Comprehensive quality profile management tool for Plex Media Server.
 
     PORTMANTEAU PATTERN RATIONALE:
-    Instead of creating 6 separate tools (one per profile operation), this tool consolidates related
-    quality profile operations into a single interface. This design:
-    - Prevents tool explosion (6 tools -> 1 tool) while maintaining full functionality
-    - Improves discoverability by grouping related operations together
-    - Reduces cognitive load when working with quality profile tasks
-    - Enables consistent quality profile interface across all operations
-    - Follows FastMCP 2.13+ best practices for feature-rich MCP servers
+    Consolidates 6 quality profile operations into a single tool to standardize
+    transcoding rules and resolution limits across multiple devices.
 
-    SUPPORTED OPERATIONS:
-    - list_profiles: List all available quality profiles
-    - get_profile: Get detailed information about a specific profile
-    - create_profile: Create a new quality profile
-    - update_profile: Update an existing quality profile
-    - delete_profile: Delete a quality profile
-    - set_default: Set a profile as the default
-
-    OPERATIONS DETAIL:
-
-    list_profiles: List all quality profiles
-    - Parameters: None
-    - Returns: List of all quality profiles with basic information
-    - Use when: Browsing available quality profiles
-
-    get_profile: Get profile details
-    - Parameters: profile_name (required)
-    - Returns: Detailed profile information including settings
-    - Use when: Viewing profile configuration
-
-    create_profile: Create new profile
-    - Parameters: profile_name (required), settings (required), is_default (optional)
-    - Returns: Created profile information
-    - Use when: Creating a custom quality profile
-
-    update_profile: Update profile
-    - Parameters: profile_name (required), settings (required)
-    - Returns: Updated profile information
-    - Use when: Modifying profile settings
-
-    delete_profile: Delete profile
-    - Parameters: profile_name (required)
-    - Returns: Deletion confirmation
-    - Use when: Removing a quality profile
-
-    set_default: Set default profile
-    - Parameters: profile_name (required)
-    - Returns: Confirmation with default profile information
-    - Use when: Setting the default quality profile
-
-    Prerequisites:
-        - Plex Media Server running and accessible
-        - Valid PLEX_TOKEN environment variable set
-        - PLEX_SERVER_URL configured (or defaults to http://localhost:32400)
-        - Admin/owner permissions for create/update/delete operations
-
-    Args:
-        operation (str): The quality profile operation to perform. Required. Must be one of: "list_profiles", "get_profile", "create_profile", "update_profile", "delete_profile", "set_default"
-        profile_name (str | None): Name of the quality profile. Required for: get_profile, create_profile, update_profile, delete_profile, set_default.
-        settings (dict[str, Any] | None): Profile settings dictionary. Required for: create_profile, update_profile.
-        is_default (bool): Whether to set as default profile (used for create_profile). Default: False.
+    OPERATIONS:
+    - list_profiles: Retrieve all custom and system quality profiles.
+    - get_profile: Inspect transcode bitrates and resolution settings.
+    - create_profile: Define a new profile with specific bandwidth constraints.
+    - update_profile: Modify existing profile parameters.
+    - delete_profile: Remove obsolete quality profiles.
+    - set_default: Assign a global default for automatic transcode selections.
 
     Returns:
-        Operation-specific result with profile data
-
-    Examples:
-        # List all profiles
-        plex_quality("list_profiles")
-
-        # Get profile details
-        plex_quality("get_profile", profile_name="High Quality")
-
-        # Create a new profile
-        plex_quality("create_profile", profile_name="4K Profile", settings={"quality": "4K", "bitrate": 20000})
-
-        # Set default profile
-        plex_quality("set_default", profile_name="High Quality")
-
-    Errors:
-        Common errors and solutions:
-        - "PLEX_TOKEN not set": Configure authentication token
-        - "profile_name required": Provide profile name for profile operations
-        - "settings required": Provide settings when creating/updating profiles
-        - "Profile not found": Verify profile_name is correct
-        - "Permission denied": Admin access required for create/update/delete
+    FastMCP 3.1+ dialogic response with transcode policy and profile details.
+    Enables autonomous bandwidth management and resolution optimization.
     """
     try:
         plex = _get_plex_service()

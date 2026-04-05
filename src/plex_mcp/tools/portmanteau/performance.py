@@ -8,6 +8,8 @@ FastMCP 2.13+ compliant with comprehensive docstrings and AI-friendly error mess
 import os
 from typing import Any, Literal
 
+from fastmcp.tools import ToolResult
+
 from ...app import mcp
 from ...utils import get_logger
 
@@ -57,167 +59,23 @@ async def plex_performance(
     upload_limit: int | None = None,
     time_range: str = "day",
     is_default: bool = False,
-) -> dict[str, Any]:
-    """Comprehensive performance, quality, and server status operations for Plex Media Server.
+) -> ToolResult:
+    """
+    Comprehensive performance, quality, and server status operations for Plex Media Server.
 
     PORTMANTEAU PATTERN RATIONALE:
-    Instead of creating 12+ separate tools (one per operation), this tool consolidates related
-    performance, quality, transcoding, and server status operations into a single interface. This design:
-    - Prevents tool explosion (12+ tools -> 1 tool) while maintaining full functionality
-    - Improves discoverability by grouping related operations together
-    - Reduces cognitive load when working with performance management tasks
-    - Enables consistent performance interface across all operations
-    - Follows FastMCP 2.13+ best practices for feature-rich MCP servers
+    Consolidates transcoding settings, bandwidth monitoring, and server health into a single tool.
+    Enables proactive performance management and quality optimization.
 
-    SUPPORTED OPERATIONS:
-    - get_transcode_settings: Get current transcode settings for a quality profile
-    - update_transcode_settings: Update transcode settings for a quality profile
-    - get_transcoding_status: Get current transcoding status
-    - get_bandwidth: Get bandwidth usage statistics
-    - set_quality: Set streaming quality settings for a profile
-    - get_throttling: Get current throttling status and settings
-    - set_throttling: Configure throttling settings
-    - list_profiles: List all available quality profiles
-    - create_profile: Create a new quality profile
-    - delete_profile: Delete a quality profile
-    - get_server_status: Get current server status
-    - get_server_info: Get comprehensive server information
-
-    OPERATIONS DETAIL:
-
-    get_transcode_settings: Get current transcode settings
-    - Parameters: profile_name (optional)
-    - Returns: Dictionary with transcode settings
-    - Example: plex_performance(operation="get_transcode_settings", profile_name="default")
-    - Use when: Checking current transcoding configuration
-
-    update_transcode_settings: Update transcode settings
-    - Parameters: profile_name (required), settings (required)
-    - Returns: Success confirmation
-    - Example: plex_performance(operation="update_transcode_settings", profile_name="default", settings={"quality": "1080p"})
-    - Use when: Modifying transcoding configuration
-
-    get_transcoding_status: Get current transcoding status
-    - Parameters: None required
-    - Returns: Current transcoding status information
-    - Example: plex_performance(operation="get_transcoding_status")
-    - Use when: Monitoring active transcoding operations
-
-    get_bandwidth: Get bandwidth usage statistics
-    - Parameters: time_range (optional, default: "day")
-    - Returns: Bandwidth usage analysis
-    - Example: plex_performance(operation="get_bandwidth", time_range="week")
-    - Use when: Analyzing network usage
-
-    set_quality: Set streaming quality settings
-    - Parameters: profile_name (required), quality (required), bitrate (optional)
-    - Returns: Success confirmation
-    - Example: plex_performance(operation="set_quality", profile_name="default", quality="1080p", bitrate=20000)
-    - Use when: Configuring streaming quality
-
-    get_throttling: Get throttling status
-    - Parameters: profile_name (optional)
-    - Returns: Dictionary with throttling status and settings
-    - Example: plex_performance(operation="get_throttling", profile_name="default")
-    - Use when: Checking bandwidth throttling configuration
-
-    set_throttling: Configure throttling settings
-    - Parameters: profile_name (required), enabled (required), download_limit (optional), upload_limit (optional)
-    - Returns: Success confirmation
-    - Example: plex_performance(operation="set_throttling", profile_name="default", enabled=True, download_limit=10000)
-    - Use when: Setting bandwidth limits
-
-    list_profiles: List all quality profiles
-    - Parameters: None required
-    - Returns: List of quality profiles
-    - Example: plex_performance(operation="list_profiles")
-    - Use when: Viewing available quality profiles
-
-    create_profile: Create a new quality profile
-    - Parameters: profile_name (required), settings (required), is_default (optional)
-    - Returns: Success confirmation
-    - Example: plex_performance(operation="create_profile", profile_name="4K", settings={"quality": "4K"})
-    - Use when: Creating custom quality profiles
-
-    delete_profile: Delete a quality profile
-    - Parameters: profile_name (required)
-    - Returns: Success confirmation
-    - Example: plex_performance(operation="delete_profile", profile_name="old-profile")
-    - Use when: Removing unused quality profiles
-
-    get_server_status: Get current server status
-    - Parameters: None required
-    - Returns: Server status information
-    - Example: plex_performance(operation="get_server_status")
-    - Use when: Checking server health and status
-
-    get_server_info: Get comprehensive server information
-    - Parameters: None required
-    - Returns: Combined server status and library information
-    - Example: plex_performance(operation="get_server_info")
-    - Use when: Getting complete server overview
-
-    Prerequisites:
-        - Plex Media Server running and accessible
-        - Valid PLEX_TOKEN environment variable set
-        - Admin/owner permissions for settings modification operations
-
-    Args:
-        operation (str): The performance operation to perform. Required. Must be one of: "get_transcode_settings", "update_transcode_settings", "get_transcoding_status", "get_bandwidth", "set_quality", "get_throttling", "set_throttling", "list_profiles", "create_profile", "delete_profile", "get_server_status", "get_server_info"
-        profile_name (str | None): Quality profile name. Required for: update_transcode_settings, set_quality, set_throttling, create_profile, delete_profile. Optional for: get_transcode_settings, get_throttling.
-        settings (dict | None): Settings dictionary. Required for: update_transcode_settings, create_profile.
-        quality (str | None): Quality setting (e.g., "1080p", "720p", "4K"). Required for: set_quality.
-        bitrate (int | None): Maximum bitrate in kbps. Optional for: set_quality.
-        enabled (bool | None): Whether to enable throttling. Required for: set_throttling.
-        download_limit (int | None): Download limit in kbps. Optional for: set_throttling.
-        upload_limit (int | None): Upload limit in kbps. Optional for: set_throttling.
-        time_range (str): Time range for bandwidth data ("hour", "day", "week", "month"). Default: "day". Optional for: get_bandwidth.
-        is_default (bool): Set as default profile. Default: False. Optional for: create_profile.
+    OPERATIONS:
+    - get_transcode_settings: Get current transcode settings for a quality profile.
+    - get_transcoding_status: Get current transcoding status.
+    - get_bandwidth: Get bandwidth usage statistics.
+    - set_quality: Set streaming quality settings for a profile.
+    - get_server_status: Get current server status and health.
 
     Returns:
-        Dictionary containing:
-            - success: Boolean indicating operation success
-            - operation: The operation that was performed
-            - data: Operation-specific result data
-            - error: Error message if success is False
-            - error_code: Specific error code for programmatic handling
-            - suggestions: List of suggested fixes (on error)
-
-    Examples:
-        # Get transcoding status
-        result = await plex_performance(operation="get_transcoding_status")
-        # Returns: {'success': True, 'operation': 'get_transcoding_status', 'data': {...}}
-
-        # Get bandwidth usage
-        result = await plex_performance(operation="get_bandwidth", time_range="week")
-        # Returns: {'success': True, 'operation': 'get_bandwidth', 'data': {...}}
-
-        # List quality profiles
-        result = await plex_performance(operation="list_profiles")
-        # Returns: {'success': True, 'operation': 'list_profiles', 'data': [...]}
-
-        # Update transcode settings
-        result = await plex_performance(
-            operation="update_transcode_settings",
-            profile_name="default",
-            settings={"quality": "1080p", "bitrate": 20000}
-        )
-        # Returns: {'success': True, 'operation': 'update_transcode_settings'}
-
-        # Get server status
-        result = await plex_performance(operation="get_server_status")
-        # Returns: {'success': True, 'operation': 'get_server_status', 'data': {...}}
-
-    Errors:
-        Common errors and solutions:
-        - "PLEX_TOKEN not set": Set PLEX_TOKEN environment variable with your auth token
-        - "profile_name required": Provide valid profile name for operations that require it
-        - "Profile not found": Use plex_performance(operation="list_profiles") to find valid profile names
-        - "Permission denied": Admin access required for settings modification operations
-
-    See Also:
-        - plex_library: For library management operations
-        - plex_streaming: For playback control operations
+    FastMCP 3.1+ dialogic response with visual Prefab rendering where applicable.
     """
     try:
         plex = _get_plex_service()
@@ -225,11 +83,14 @@ async def plex_performance(
         # Operation: get_transcode_settings
         if operation == "get_transcode_settings":
             result = await plex.get_transcode_settings(profile_name=profile_name)
-            return {
-                "success": True,
-                "operation": "get_transcode_settings",
-                "data": result,
-            }
+            return ToolResult(
+                content={
+                    "success": True,
+                    "operation": "get_transcode_settings",
+                    "data": result,
+                },
+                meta={"prefabs": ["plex_performance_dashboard"]},
+            )
 
         # Operation: update_transcode_settings
         elif operation == "update_transcode_settings":
@@ -402,12 +263,15 @@ async def plex_performance(
 
         # Operation: get_server_status
         elif operation == "get_server_status":
-            result = await plex.get_server_status()
-            return {
-                "success": True,
-                "operation": "get_server_status",
-                "data": result.dict() if hasattr(result, "dict") else result,
-            }
+            status = await plex.get_server_status()
+            return ToolResult(
+                body={
+                    "success": True,
+                    "operation": "get_server_status",
+                    "data": status.dict() if hasattr(status, "dict") else status,
+                },
+                prefabs=["plex_performance_dashboard"],
+            )
 
         # Operation: get_server_info
         elif operation == "get_server_info":

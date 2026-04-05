@@ -8,6 +8,8 @@ FastMCP 2.13+ compliant with comprehensive docstrings and AI-friendly error mess
 import os
 from typing import Any, Literal
 
+from fastmcp.tools import ToolResult
+
 from ...app import mcp
 from ...utils import get_logger
 
@@ -65,132 +67,23 @@ async def plex_search(
     search_name: str | None = None,
     max_recent: int = 10,
     summary_contains: str | None = None,
-) -> dict[str, Any]:
-    """Comprehensive search management tool for Plex Media Server.
+) -> ToolResult:
+    """
+    Comprehensive search management tool for Plex Media Server.
 
     PORTMANTEAU PATTERN RATIONALE:
-    Instead of creating 5 separate tools (one per search operation), this tool consolidates related
-    search operations into a single interface. This design:
-    - Prevents tool explosion (5 tools -> 1 tool) while maintaining full functionality
-    - Improves discoverability by grouping related operations together
-    - Reduces cognitive load when working with search tasks
-    - Enables consistent search interface across all operations
-    - Follows FastMCP 2.13+ best practices for feature-rich MCP servers
+    Consolidates 5 search modalities (text, advanced, suggest, history, persistence)
+    into one tool to provide a unified discovery interface for all media types.
 
-    SUPPORTED OPERATIONS:
-    - search: Basic text search across media libraries
-    - advanced_search: Complex multi-criteria search with extensive filtering
-    - suggest: Get search suggestions/autocomplete based on partial query
-    - recent_searches: Retrieve recently performed searches
-    - save_search: Save a search query for future reuse
-
-    OPERATIONS DETAIL:
-
-    search: Basic text search
-    - Parameters: query (required), library_id (optional), media_type (optional), limit (default: 100)
-    - Returns: List of matching media items with basic metadata
-    - Use when: You need a simple text search across titles, descriptions, etc.
-
-    advanced_search: Complex multi-criteria search
-    - Parameters: All search filters (title, year, genre, actor, director, etc.), sorting options
-    - Returns: Paginated results with total count and applied filters
-    - Use when: You need precise filtering with multiple criteria
-
-    suggest: Search suggestions/autocomplete
-    - Parameters: query (required, partial text), limit (default: 10)
-    - Returns: List of suggested search terms or matching items
-    - Use when: Building search UI or providing autocomplete functionality
-
-    recent_searches: Get recent search history
-    - Parameters: max_recent (default: 10)
-    - Returns: List of recently performed searches with timestamps
-    - Use when: Showing search history or allowing users to repeat searches
-
-    save_search: Save a search query
-    - Parameters: search_name (required), query and filters (required)
-    - Returns: Confirmation with saved search details
-    - Use when: Users want to save frequently used search queries
-
-    Prerequisites:
-    - Plex Media Server running and accessible
-    - Valid PLEX_TOKEN environment variable set
-    - PLEX_SERVER_URL configured (or defaults to http://localhost:32400)
-
-    Args:
-        operation (str): The search operation to perform. Required. Must be one of: "search", "advanced_search", "suggest", "recent_searches", "save_search"
-        query (str | None): Search query text (required for search, advanced_search, suggest, save_search).
-        library_id (str | None): Optional library ID to search within.
-        media_type (str | None): Filter by media type (movie, show, season, episode, artist, album, track, photo).
-        limit (int): Maximum number of results (default: 100, range: 1-1000).
-        offset (int): Pagination offset (default: 0).
-        title (str | None): Filter by title (supports wildcards with *).
-        year (int | list[int] | str | None): Filter by specific year or list of years.
-        decade (int | None): Filter by decade (e.g., 2020 for 2020s).
-        genre (str | list[str] | None): Filter by genre (single or list).
-        actor (str | list[str] | None): Filter by actor (single or list).
-        director (str | list[str] | None): Filter by director (single or list).
-        content_rating (str | list[str] | None): Filter by content rating (e.g., 'PG', 'R', 'TV-MA').
-        studio (str | list[str] | None): Filter by studio.
-        country (str | list[str] | None): Filter by country.
-        language (str | list[str] | None): Filter by language code (e.g., 'en', 'ja').
-        collection (str | list[str] | None): Filter by collection.
-        min_rating (float | None): Minimum user rating (0-10).
-        max_rating (float | None): Maximum user rating (0-10).
-        min_year (int | None): Minimum release year.
-        max_year (int | None): Maximum release year.
-        unwatched (bool | None): Only show unwatched items.
-        sort_by (str): Field to sort by (default: 'titleSort').
-        sort_dir (str): Sort direction ('asc' or 'desc', default: 'asc').
-        search_name (str | None): Name for saved search (required for save_search).
-        max_recent (int): Maximum number of recent searches to return (default: 10).
-        summary_contains (str | None): Search within plot summaries/descriptions (case-insensitive).
+    OPERATIONS:
+    - search: Keyword-based text search across libraries.
+    - advanced_search: Multi-parameter Boolean filtering (genre, year, actor, etc.).
+    - suggest: Partial query autocomplete and suggestions.
+    - recent_searches: Retrieve recent session search history.
+    - save_search: Persist complex filters for future recall.
 
     Returns:
-        Operation-specific result with search details and results
-
-    Examples:
-        # Basic search
-        plex_search("search", query="Star Wars")
-
-        # Search by plot summary (find films by character names, themes, etc.)
-        plex_search("search", summary_contains="holly martins")  # Finds The Third Man
-        plex_search("search", summary_contains="postwar Vienna")  # Finds films set in Vienna
-
-        # Combined title and summary search
-        plex_search("search", query="noir", summary_contains="detective")
-
-        # Advanced search with multiple filters
-        plex_search(
-            "advanced_search",
-            query="action",
-            genre=["Action", "Adventure"],
-            min_year=2010,
-            min_rating=7.5,
-            sort_by="rating",
-            sort_dir="desc"
-        )
-
-        # Get search suggestions
-        plex_search("suggest", query="star")
-
-        # Get recent searches
-        plex_search("recent_searches", max_recent=20)
-
-        # Save a search
-        plex_search(
-            "save_search",
-            search_name="High-rated Action Movies",
-            genre="Action",
-            min_rating=8.0,
-            min_year=2010
-        )
-
-    Errors:
-        Common errors and solutions:
-        - "PLEX_TOKEN not set": Configure authentication token
-        - "query required": Provide search query for search operations
-        - "search_name required": Provide name when saving searches
-        - "Library not found": Verify library_id is correct
+    FastMCP 3.1+ dialogic response with visual Prefab rendering where applicable.
     """
     try:
         plex = _get_plex_service()
@@ -263,14 +156,19 @@ async def plex_search(
                         if item.summary and search_term in item.summary.lower()
                     ]
 
-            return {
-                "success": True,
-                "operation": "search",
-                "query": query,
-                "summary_filter": summary_contains,
-                "results": results,
-                "count": len(results) if isinstance(results, list) else 0,
-            }
+            return ToolResult(
+                body={
+                    "success": True,
+                    "operation": "search",
+                    "query": query,
+                    "summary_filter": summary_contains,
+                    "results": results,
+                    "count": len(results) if isinstance(results, list) else 0,
+                    "limit": limit,
+                    "offset": offset,
+                },
+                prefabs=["plex_media_browser"],
+            )
 
         elif operation == "advanced_search":
             if not query and not title and not genre and not actor:
@@ -322,12 +220,17 @@ async def plex_search(
                 sort_by=sort_by,
                 sort_dir=sort_dir,
             )
-            return {
-                "success": True,
-                "operation": "advanced_search",
-                "results": results,
-                "count": results.get("total", 0) if isinstance(results, dict) else 0,
-            }
+            return ToolResult(
+                content={
+                    "success": True,
+                    "operation": "advanced_search",
+                    "results": results,
+                    "count": results.get("total", 0) if isinstance(results, dict) else 0,
+                    "limit": limit,
+                    "offset": offset,
+                },
+                meta={"prefabs": ["plex_media_browser"]},
+            )
 
         elif operation == "suggest":
             if not query:

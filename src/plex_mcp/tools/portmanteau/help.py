@@ -19,73 +19,22 @@ async def plex_help(
     tool_name: str | None = None,
     category: str | None = None,
 ) -> dict[str, Any]:
-    """Comprehensive help and discovery tool for PlexMCP.
+    """
+    Comprehensive help and discovery tool for PlexMCP.
 
     PORTMANTEAU PATTERN RATIONALE:
-    Instead of creating 4 separate tools (one per help operation), this tool consolidates related
-    help and discovery operations into a single interface. This design:
-    - Prevents tool explosion (4 tools -> 1 tool) while maintaining full functionality
-    - Improves discoverability by grouping related operations together
-    - Reduces cognitive load when working with help tasks
-    - Enables consistent help interface across all operations
-    - Follows FastMCP 3.1+ best practices for feature-rich MCP servers
+    Consolidates 4 discovery operations into a single tool to facilitate autonomous
+    exploration of available capabilities without requiring external documentation.
 
-    SUPPORTED OPERATIONS:
-    - help: Get general help and overview of PlexMCP
-    - list_tools: List all available tools with brief descriptions
-    - tool_info: Get detailed information about a specific tool
-    - examples: Get usage examples for tools
-
-    OPERATIONS DETAIL:
-
-    help: General help
-    - Parameters: category (optional, filter by category)
-    - Returns: General help information and overview
-    - Use when: Getting started or understanding PlexMCP capabilities
-
-    list_tools: List all tools
-    - Parameters: category (optional, filter by category)
-    - Returns: List of all available tools with brief descriptions
-    - Use when: Discovering available tools
-
-    tool_info: Get tool details
-    - Parameters: tool_name (required)
-    - Returns: Detailed tool information including parameters and examples
-    - Use when: Understanding how to use a specific tool
-
-    examples: Get usage examples
-    - Parameters: tool_name (optional, if omitted returns examples for all tools)
-    - Returns: Usage examples for tools
-    - Use when: Learning how to use tools through examples
-
-    Prerequisites:
-    - None (this tool provides help and discovery, no Plex server connection required)
-
-    Args:
-        operation (str): The help operation to perform. Required. Must be one of: "help", "list_tools", "tool_info", "examples"
-        tool_name (str | None): Name of the tool to get information about (required for tool_info, optional for examples).
-        category (str | None): Optional category filter (library, media, user, playlist, etc.).
+    OPERATIONS:
+    - help: General ecosystem overview and architectural guidance.
+    - list_tools: Brief enumeration of all available tools and categories.
+    - tool_info: Deep inspection of specific tool syntax and operation modes.
+    - examples: Curated few-shot examples for complex media workflows.
 
     Returns:
-        Operation-specific result with help information
-
-    Examples:
-        # Get general help
-        plex_help("help")
-
-        # List all tools
-        plex_help("list_tools")
-
-        # Get tool information
-        plex_help("tool_info", tool_name="plex_library")
-
-        # Get examples for a tool
-        plex_help("examples", tool_name="plex_media")
-
-    Errors:
-        Common errors and solutions:
-        - "tool_name required": Provide tool name for tool_info operation
-        - "Tool not found": Verify tool_name is correct
+    FastMCP 3.1+ dialogic response with capabilities and usage guidance.
+    Enables self-documenting autonomous agents and feature discovery.
     """
     try:
         # Define available tools and their categories

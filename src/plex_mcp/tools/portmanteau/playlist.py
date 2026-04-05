@@ -70,142 +70,23 @@ async def plex_playlist(
     public: bool | None = None,
     sort: str | None = None,
 ) -> dict[str, Any]:
-    """Comprehensive playlist management operations for Plex Media Server.
+    """
+    Comprehensive playlist management operations for Plex Media Server.
 
     PORTMANTEAU PATTERN RATIONALE:
-    Instead of creating 8 separate tools (one per operation), this tool consolidates related
-    playlist operations into a single interface. This design:
-    - Prevents tool explosion (8 tools -> 1 tool) while maintaining full functionality
-    - Improves discoverability by grouping related operations together
-    - Reduces cognitive load when working with playlist management tasks
-    - Enables consistent playlist interface across all operations
-    - Follows FastMCP 2.13+ best practices for feature-rich MCP servers
+    Consolidates 8 playlist lifecycle operations into a single tool to provide a
+    unified interface for curation and collaborative list management.
 
-    SUPPORTED OPERATIONS:
-    - list: List all playlists
-    - get: Get detailed information about a specific playlist
-    - create: Create a new playlist
-    - update: Update playlist settings
-    - delete: Delete a playlist
-    - add_items: Add items to a playlist
-    - remove_items: Remove items from a playlist
-    - get_analytics: Get analytics for a playlist
-
-    OPERATIONS DETAIL:
-
-    list: List all playlists
-    - Parameters: None required
-    - Returns: List of all playlists
-    - Example: plex_playlist(operation="list")
-    - Use when: You want to see all available playlists
-
-    get: Get detailed information about a specific playlist
-    - Parameters: playlist_id (required)
-    - Returns: Detailed playlist information
-    - Example: plex_playlist(operation="get", playlist_id="12345")
-    - Use when: You need details about a specific playlist
-
-    create: Create a new playlist
-    - Parameters: title (required), items (required), description (optional), public (optional), sort (optional)
-    - Returns: Created playlist information
-    - Example: plex_playlist(operation="create", title="My Playlist", items=["1", "2", "3"])
-    - Use when: Creating a new playlist with media items
-
-    update: Update playlist settings
-    - Parameters: playlist_id (required), title (optional), description (optional), public (optional), sort (optional)
-    - Returns: Updated playlist information
-    - Example: plex_playlist(operation="update", playlist_id="12345", title="New Title")
-    - Use when: Changing playlist details
-
-    delete: Delete a playlist
-    - Parameters: playlist_id (required)
-    - Returns: Deletion confirmation
-    - Example: plex_playlist(operation="delete", playlist_id="12345")
-    - Use when: Removing a playlist (WARNING: Cannot be undone)
-
-    add_items: Add items to a playlist
-    - Parameters: playlist_id (required), items (required)
-    - Returns: Updated playlist information
-    - Example: plex_playlist(operation="add_items", playlist_id="12345", items=["4", "5"])
-    - Use when: Adding media items to an existing playlist
-
-    remove_items: Remove items from a playlist
-    - Parameters: playlist_id (required), items (required)
-    - Returns: Updated playlist information
-    - Example: plex_playlist(operation="remove_items", playlist_id="12345", items=["1", "2"])
-    - Use when: Removing media items from a playlist
-
-    get_analytics: Get analytics for a playlist
-    - Parameters: playlist_id (required)
-    - Returns: Analytics data for the playlist
-    - Example: plex_playlist(operation="get_analytics", playlist_id="12345")
-    - Use when: Viewing playlist statistics and metrics
-
-    Prerequisites:
-        - Plex Media Server running and accessible
-        - Valid PLEX_TOKEN environment variable set
-        - Media items must exist for create/add_items operations
-
-    Args:
-        operation (str): The playlist operation to perform. Required. Must be one of: "list", "get", "create", "update", "delete", "add_items", "remove_items", "get_analytics"
-        playlist_id (str | None): Playlist identifier. Required for: get, update, delete, add_items, remove_items, get_analytics.
-        title (str | None): Playlist title (min 1, max 255). Required for: create. Optional for: update.
-        items (list[str] | None): List of media item IDs. Required for: create, add_items, remove_items.
-        description (str | None): Playlist description. Optional for: create, update.
-        public (bool | None): Whether playlist is publicly visible (limited support). Optional for: create, update.
-        sort (str | None): Sort order (limited support). Optional for: create, update.
+    OPERATIONS:
+    - update: Modify metadata, description, or visibility settings.
+    - delete: Permanently remove a playlist from the server.
+    - add_items: Append new media items to an existing playlist.
+    - remove_items: Strip specific items from a playlist by ID.
+    - get_analytics: View play statistics and usage metrics for the playlist.
 
     Returns:
-        Dictionary containing:
-            - success: Boolean indicating operation success
-            - operation: The operation that was performed
-            - data: Operation-specific result data
-            - count: Number of playlists returned (for list operation)
-            - error: Error message if success is False
-            - error_code: Specific error code for programmatic handling
-            - suggestions: List of suggested fixes (on error)
-
-    Examples:
-        # List all playlists
-        result = await plex_playlist(operation="list")
-        # Returns: {'success': True, 'operation': 'list', 'data': [...], 'count': 10}
-
-        # Get playlist details
-        result = await plex_playlist(operation="get", playlist_id="12345")
-        # Returns: {'success': True, 'operation': 'get', 'data': {...}}
-
-        # Create new playlist
-        result = await plex_playlist(
-            operation="create",
-            title="My Favorites",
-            items=["1", "2", "3"],
-            description="My favorite movies"
-        )
-        # Returns: {'success': True, 'operation': 'create', 'data': {...}}
-
-        # Add items to playlist
-        result = await plex_playlist(
-            operation="add_items",
-            playlist_id="12345",
-            items=["4", "5"]
-        )
-        # Returns: {'success': True, 'operation': 'add_items', 'data': {...}}
-
-        # Get analytics
-        result = await plex_playlist(operation="get_analytics", playlist_id="12345")
-        # Returns: {'success': True, 'operation': 'get_analytics', 'data': {...}}
-
-    Errors:
-        Common errors and solutions:
-        - "PLEX_TOKEN not set": Set PLEX_TOKEN environment variable with your auth token
-        - "playlist_id required": Provide valid playlist ID for operations that require it
-        - "Playlist not found": Use plex_playlist(operation="list") to find valid playlist IDs
-        - "No valid media items found": Verify media item IDs exist and are accessible
-        - "Title required": Provide title parameter for create operation
-
-    See Also:
-        - plex_media: For browsing and searching media items to add to playlists
-        - plex_library: For library management operations
+    FastMCP 3.1+ dialogic response with playlist state and item counts.
+    Supports automated mixtape generation and library curation.
     """
     try:
         plex = _get_plex_service()
@@ -518,11 +399,11 @@ async def plex_playlist(
                 # Get view counts and other metrics
                 total_plays = sum(getattr(item, "viewCount", 0) for item in playlist_items)
                 unique_users = len(
-                    set(
+                    {
                         item.lastViewedAt
                         for item in playlist_items
                         if hasattr(item, "lastViewedAt") and item.lastViewedAt
-                    )
+                    }
                 )
 
                 # Get popular items (top 3 most played)

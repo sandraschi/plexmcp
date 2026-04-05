@@ -6,7 +6,6 @@ operations like user management and server maintenance.
 """
 
 import logging
-import random
 import time
 from typing import Any
 
@@ -14,6 +13,8 @@ from plexapi.exceptions import Unauthorized
 
 from ..models import ServerMaintenanceResult, UserPermissions
 from .base import BaseService, ServiceError
+from .rag_ingestor import HAS_RAG, get_rag_sync_progress
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -146,62 +147,43 @@ class AdminService(BaseService):
         await self.initialize()
 
         try:
-            # This is a simplified example - actual implementation would use Plex API
-            # to perform maintenance operations
+            logger.info(f"Triggering maintenance operation: {operation}")
+            start_time = time.time()
 
-            # Log the maintenance operation
-            logger.info(f"Running maintenance operation: {operation}")
-            if options:
-                logger.info(f"Options: {options}")
+            # Execute real operations via PlexAPI
+            if operation == "optimize":
+                await self.plex_service._run_in_executor(self.plex.library.optimize)
+            elif operation == "clean_bundles":
+                await self.plex_service._run_in_executor(self.plex.library.cleanBundles)
+            elif operation == "empty_trash":
+                # Empty trash for all sections
+                for section in self.plex.library.sections():
+                    await self.plex_service._run_in_executor(section.emptyTrash)
+            else:
+                logger.warning(f"Maintenance operation '{operation}' not explicitly supported, trying library update.")
+                await self.plex_service._run_in_executor(self.plex.library.update)
 
-            # Simulate the maintenance operation
-            # In a real implementation, we would call the appropriate Plex API methods
-            time.sleep(2)  # Simulate work being done
-
-            # Generate some mock results
+            duration = time.time() - start_time
+            
             result_details = {
                 "operation": operation,
                 "options": options or {},
                 "completed_at": int(time.time()),
                 "status": "completed",
+                "duration_seconds": round(duration, 2)
             }
-
-            # Add operation-specific details
-            if operation == "optimize":
-                result_details.update(
-                    {
-                        "database_optimized": True,
-                        "fragmentation_reduced": random.randint(10, 50),
-                        "performance_improved": True,
-                    }
-                )
-            elif operation == "clean_bundles":
-                result_details.update(
-                    {
-                        "bundles_cleaned": random.randint(5, 20),
-                        "space_freed_mb": random.randint(50, 500),
-                    }
-                )
-            elif operation == "empty_trash":
-                result_details.update(
-                    {
-                        "items_removed": random.randint(0, 10),
-                        "space_freed_mb": random.randint(0, 100),
-                    }
-                )
 
             return ServerMaintenanceResult(
                 operation=operation,
                 status="success",
                 details=result_details,
-                space_freed_gb=random.uniform(0.1, 2.0),
-                items_processed=random.randint(1, 100),
-                duration_seconds=random.uniform(1.0, 10.0),
+                space_freed_gb=0.0, # Plex API doesn't return space freed directly
+                items_processed=0,
+                duration_seconds=duration,
                 recommendations=[
-                    "Run this operation weekly for optimal performance",
-                    "Consider running a full optimization next time",
+                    "Maintain a regular schedule for library optimization to ensure peak performance.",
                 ],
-                next_recommended=int(time.time()) + (7 * 24 * 3600),  # 1 week from now
+                next_recommended=int(time.time()) + (7 * 24 * 3600),
                 warnings=[],
             )
 
@@ -223,28 +205,17 @@ class AdminService(BaseService):
             server_status = await self.plex_service.get_server_status()
 
             # Get active sessions
-            sessions = await self.plex_service.get_sessions()
-
-            # Get system resources (simulated)
-            resources = {
-                "cpu_percent": random.uniform(10.0, 80.0),
-                "memory_percent": random.uniform(20.0, 90.0),
-                "disk_usage_percent": random.uniform(10.0, 95.0),
-                "network_usage": {
-                    "bytes_sent": random.randint(1000000, 1000000000),
-                    "bytes_received": random.randint(1000000, 1000000000),
-                },
-            }
+            sessions = await self.plex_service._run_in_executor(self.plex.sessions)
+            transcode_sessions = getattr(self.plex, "transcodeSessions", lambda: [])
+            if callable(transcode_sessions):
+                transcode_sessions = await self.plex_service._run_in_executor(transcode_sessions)
 
             # Check for any active alerts
             alerts = []
-            if resources["disk_usage_percent"] > 85:
-                alerts.append("Disk usage is high - consider freeing up space")
-            if resources["memory_percent"] > 90:
-                alerts.append("Memory usage is high - consider upgrading your server")
-
+            
+            # Surface version as health data
             return {
-                "status": "healthy" if not alerts else "warning",
+                "status": "healthy",
                 "timestamp": int(time.time()),
                 "server": {
                     "name": server_status.name,
@@ -252,12 +223,15 @@ class AdminService(BaseService):
                     "platform": server_status.platform,
                     "my_plex_connected": server_status.connected,
                 },
-                "resources": resources,
-                "active_sessions": len(sessions),
-                "background_tasks": {
-                    "running": random.randint(0, 5),
-                    "pending": random.randint(0, 3),
+                "load": {
+                    "active_sessions": len(sessions),
+                    "transcode_sessions": len(transcode_sessions),
                 },
+                "background_tasks": {
+                    "running": 0, # Plex API doesn't expose task counts easily
+                    "status": "operational"
+                },
+                "rag": self._get_rag_stats(),
                 "alerts": alerts,
             }
 
@@ -265,6 +239,41 @@ class AdminService(BaseService):
             error_msg = f"Failed to get server health: {str(e)}"
             logger.error(error_msg)
             raise ServiceError(error_msg, code="health_check_failed") from e
+
+    def _get_rag_stats(self) -> dict[str, Any]:
+        """Get RAG indexing and storage statistics."""
+        if not HAS_RAG:
+            return {"available": False}
+        
+        try:
+            from .rag_ingestor import PlexIngestor
+            ingestor = PlexIngestor(self.plex_service)
+            db_path = ingestor.db_path
+            
+            # Calculate directory size
+            total_size_mb = 0.0
+            item_count = 0
+            if os.path.exists(db_path):
+                for dirpath, _, filenames in os.walk(db_path):
+                    for f in filenames:
+                        fp = os.path.join(dirpath, f)
+                        total_size_mb += os.path.getsize(fp) / (1024 * 1024)
+                
+                # Try to get item count from progress if idle, or assume 0 if first run
+                progress = get_rag_sync_progress()
+                item_count = progress.get("indexed_count", 0)
+            
+            return {
+                "available": True,
+                "backend": "lancedb",
+                "storage_mb": round(total_size_mb, 2),
+                "item_count": item_count,
+                "db_path": db_path,
+                "sync_status": get_rag_sync_progress().get("phase", "idle")
+            }
+        except Exception as e:
+            logger.error(f"Error gathering RAG stats: {e}")
+            return {"available": True, "error": str(e)}
 
     # Helper methods
     def _create_admin_user_permissions(self, account) -> UserPermissions:

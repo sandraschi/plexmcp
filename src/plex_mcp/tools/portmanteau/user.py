@@ -44,133 +44,24 @@ async def plex_user(
     restricted: bool | None = None,
     permissions: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Comprehensive user management operations for Plex Media Server.
+    """
+    Comprehensive user management operations for Plex Media Server.
 
     PORTMANTEAU PATTERN RATIONALE:
-    Instead of creating 6 separate tools (one per operation), this tool consolidates related
-    user management operations into a single interface. This design:
-    - Prevents tool explosion (6 tools -> 1 tool) while maintaining full functionality
-    - Improves discoverability by grouping related operations together
-    - Reduces cognitive load when working with user management tasks
-    - Enables consistent user interface across all operations
-    - Follows FastMCP 2.13+ best practices for feature-rich MCP servers
+    Consolidates 6 user and access control operations into a single interface to ensure
+    consistent security policy enforcement across shared libraries.
 
-    SUPPORTED OPERATIONS:
-    - list: List all Plex users
-    - get: Get detailed information about a specific user
-    - create: Create a new Plex user
-    - update: Update an existing user's information
-    - delete: Delete a user
-    - update_permissions: Update user permissions and restrictions
-
-    OPERATIONS DETAIL:
-
-    list: List all Plex users
-    - Parameters: None required
-    - Returns: List of all users with their information
-    - Example: plex_user(operation="list")
-    - Use when: You want to see all users on the server
-
-    get: Get detailed information about a specific user
-    - Parameters: user_id (required)
-    - Returns: Detailed user information
-    - Example: plex_user(operation="get", user_id="12345")
-    - Use when: You need details about a specific user
-
-    create: Create a new Plex user
-    - Parameters: username (required), email (required), password (required), role (optional), restricted (optional)
-    - Returns: Created user information
-    - Example: plex_user(operation="create", username="newuser", email="user@example.com", password="securepass123")
-    - Use when: Adding a new user to the server
-
-    update: Update an existing user's information
-    - Parameters: user_id (required), username (optional), email (optional), password (optional), role (optional), restricted (optional)
-    - Returns: Updated user information
-    - Example: plex_user(operation="update", user_id="12345", username="newname")
-    - Use when: Changing user details
-
-    delete: Delete a user
-    - Parameters: user_id (required)
-    - Returns: Deletion confirmation
-    - Example: plex_user(operation="delete", user_id="12345")
-    - Use when: Removing a user from the server (WARNING: Cannot be undone)
-
-    update_permissions: Update user permissions and restrictions
-    - Parameters: user_id (required), permissions (required)
-    - Returns: Updated user information with new permissions
-    - Example: plex_user(operation="update_permissions", user_id="12345", permissions={"allowSync": True, "restricted": False})
-    - Use when: Changing what a user can access
-
-    Prerequisites:
-        - Plex Media Server running and accessible
-        - Valid PLEX_TOKEN environment variable set
-        - Admin/owner permissions for create/update/delete operations
-
-    Args:
-        operation (str): The user operation to perform. Required. Must be one of: "list", "get", "create", "update", "delete", "update_permissions"
-        user_id (str | None): User identifier (required for get/update/delete/update_permissions).
-        username (str | None): Username (required for create, optional for update).
-        email (str | None): Email address (required for create, optional for update).
-        password (str | None): Password (required for create, optional for update).
-        role (str | None): User role ("owner", "admin", "user", "managed", "shared").
-        restricted (bool | None): Whether user should be restricted.
-        permissions (dict | None): Permissions dictionary (required for update_permissions).
+    OPERATIONS:
+    - list: Audit all users with access to the server (Managed & Home).
+    - get: Inspect detailed profile and consumption metrics for a user.
+    - create: Invite or initialize new managed users/home members.
+    - update: Modify user profile details (username, email, role).
+    - delete: Revoke server access and delete user profile data.
+    - update_permissions: Fine-grained control over library access and sync rights.
 
     Returns:
-        Dictionary containing:
-            - success: Boolean indicating operation success
-            - operation: The operation that was performed
-            - data: Operation-specific result data
-            - count: Number of users returned (for list operation)
-            - error: Error message if success is False
-            - error_code: Specific error code for programmatic handling
-            - suggestions: List of suggested fixes (on error)
-
-    Examples:
-        # List all users
-        result = await plex_user(operation="list")
-        # Returns: {'success': True, 'operation': 'list', 'data': [...], 'count': 5}
-
-        # Get user details
-        result = await plex_user(operation="get", user_id="12345")
-        # Returns: {'success': True, 'operation': 'get', 'data': {...}}
-
-        # Create new user
-        result = await plex_user(
-            operation="create",
-            username="newuser",
-            email="user@example.com",
-            password="securepass123",
-            role="user",
-            restricted=False
-        )
-        # Returns: {'success': True, 'operation': 'create', 'data': {...}}
-
-        # Update user
-        result = await plex_user(operation="update", user_id="12345", username="newname")
-        # Returns: {'success': True, 'operation': 'update', 'data': {...}}
-
-        # Update permissions
-        result = await plex_user(
-            operation="update_permissions",
-            user_id="12345",
-            permissions={"allowSync": True, "restricted": False}
-        )
-        # Returns: {'success': True, 'operation': 'update_permissions', 'data': {...}}
-
-    Errors:
-        Common errors and solutions:
-        - "PLEX_TOKEN not set": Set PLEX_TOKEN environment variable with your auth token
-        - "user_id required": Provide valid user ID for operations that require it
-        - "User not found": Use plex_user(operation="list") to find valid user IDs
-        - "Permission denied": Admin access required for create/update/delete operations
-        - "Invalid email": Provide a valid email address format
-        - "Password too short": Password must be at least 8 characters
-        - "Username too short": Username must be at least 3 characters
-
-    See Also:
-        - plex_library: For library management operations
-        - plex_server: For server management operations
+    FastMCP 3.1+ dialogic response with user profile and security state.
+    Enables autonomous user onboarding and access auditing.
     """
     try:
         plex = _get_plex_service()

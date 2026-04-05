@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- **FastMCP 3.2+ Upgrade**: Updated FastMCP dependency from 3.1.0 to 3.2.0 for universal connect pattern support
+- **Documentation**: Updated FastMCP version references throughout README and documentation
+- **Compatibility**: Enhanced support for simultaneous stdio + HTTP access patterns
+
+### Added
+- **Universal Connect Pattern**: Support for multiple simultaneous clients via stdio and HTTP transports
+- **FastMCP 3.2 Features**: Access to new 3.2 functionality including codemode, prefabs, app providers, and transforms
+- **Concurrency Readiness**: Foundation for multi-client database operations (implementation in progress)
+- **Enhanced Error Handling**: Comprehensive error handling with proper logging and structured responses
+- **Production Monitoring**: Added health check endpoint and metrics collection for production deployments
+- **Automated Deployment**: PowerShell deployment script with prerequisites checking and environment setup
+- **Comprehensive Testing**: Added integration test suite with real Plex server connectivity tests
+- **Startup Fixes**: Resolved hanging issues during server startup by ensuring .env file loading
+
+### Fixed
+- **Server Hanging**: Fixed critical startup hanging issue by adding `load_dotenv()` to server initialization
+- **Version References**: Updated all FastMCP 3.1+ references to 3.2+ in documentation and badges
+- **Dependency Resolution**: Ensured compatibility with latest FastMCP 3.2.0 features
+- **Transport Methods**: Updated deprecated `run_stdio_async()` to new `run()` method for FastMCP 3.2 compatibility
+- **Environment Loading**: Fixed missing environment variables from .env file during startup
+
+## [2.3.1] - 2026-03-30
+
+### Fixed
+- **FastMCP 3.1 Compatibility**: Hardened the custom `NullLogger` in `src/plex_mcp/app.py` with missing standard `Logger` attributes (`handlers`, `filters`, `propagate`, `level`, etc.) to prevent `AttributeError` during startup in `stdio` mode (e.g., in Antigravity).
+
 ## [2.3.0] - 2026-02-26
 
 ### Added

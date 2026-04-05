@@ -6,7 +6,9 @@ FastMCP 2.13+ compliant with comprehensive docstrings and AI-friendly error mess
 """
 
 import os
-from typing import Any, Literal
+from typing import Literal
+
+from fastmcp.tools import ToolResult
 
 from ...app import mcp
 from ...utils import get_logger
@@ -54,153 +56,26 @@ async def plex_streaming(
     action: str | None = None,
     volume: int | None = None,
     quality: str | None = None,
-) -> dict[str, Any]:
-    """Comprehensive playback control and session management operations for Plex Media Server.
+) -> ToolResult:
+    """
+    Comprehensive playback control and session management operations for Plex Media Server.
 
     PORTMANTEAU PATTERN RATIONALE:
-    Instead of creating 10+ separate tools (one per operation), this tool consolidates related
-    playback control and session management operations into a single interface. This design:
-    - Prevents tool explosion (10+ tools -> 1 tool) while maintaining full functionality
-    - Improves discoverability by grouping related operations together
-    - Reduces cognitive load when working with playback control tasks
-    - Enables consistent playback interface across all operations
-    - Follows FastMCP 2.13+ best practices for feature-rich MCP servers
+    Consolidates session monitoring, client discovery, and remote playback control into a single tool.
+    Enables seamless media orchestration across the entire Plex ecosystem.
 
-    SUPPORTED OPERATIONS:
-    - list_sessions: List all active Plex sessions
-    - list_clients: List all available Plex clients
-    - play: Play media on a client
-    - pause: Pause playback on a client
-    - stop: Stop playback on a client
-    - seek: Seek to a specific position in the current media
-    - skip_next: Skip to the next item in the play queue
-    - skip_previous: Skip to the previous item in the play queue
-    - set_quality: Set streaming quality settings (placeholder for future implementation)
-    - set_volume: Set the volume of a Plex client (0-100)
-    - control: Generic playback control with action parameter
-
-    OPERATIONS DETAIL:
-
-    list_sessions: List all active Plex sessions
-    - Parameters: None required
-    - Returns: List of active sessions with client and playback information
-    - Example: plex_streaming(operation="list_sessions")
-    - Use when: You want to see what's currently playing
-
-    list_clients: List all available Plex clients
-    - Parameters: None required
-    - Returns: List of available Plex clients
-    - Example: plex_streaming(operation="list_clients")
-    - Use when: You want to see available clients to control
-
-    play: Play media on a client
-    - Parameters: client_id (required), media_key (required)
-    - Returns: Success confirmation
-    - Example: plex_streaming(operation="play", client_id="abc123", media_key="12345")
-    - Use when: Starting playback on a specific client
-
-    pause: Pause playback on a client
-    - Parameters: client_id (required)
-    - Returns: Success confirmation
-    - Example: plex_streaming(operation="pause", client_id="abc123")
-    - Use when: Pausing current playback
-
-    stop: Stop playback on a client
-    - Parameters: client_id (required)
-    - Returns: Success confirmation
-    - Example: plex_streaming(operation="stop", client_id="abc123")
-    - Use when: Stopping current playback
-
-    seek: Seek to a specific position in the current media
-    - Parameters: client_id (required), seek_to (required, milliseconds)
-    - Returns: Success confirmation
-    - Example: plex_streaming(operation="seek", client_id="abc123", seek_to=60000)
-    - Use when: Jumping to a specific time in the media
-
-    skip_next: Skip to the next item in the play queue
-    - Parameters: client_id (required)
-    - Returns: Success confirmation
-    - Example: plex_streaming(operation="skip_next", client_id="abc123")
-    - Use when: Moving to the next item in queue
-
-    skip_previous: Skip to the previous item in the play queue
-    - Parameters: client_id (required)
-    - Returns: Success confirmation
-    - Example: plex_streaming(operation="skip_previous", client_id="abc123")
-    - Use when: Moving to the previous item in queue
-
-    set_quality: Set streaming quality settings
-    - Parameters: client_id (required), quality (required)
-    - Returns: Success confirmation
-    - Example: plex_streaming(operation="set_quality", client_id="abc123", quality="1080p")
-    - Use when: Changing streaming quality (NOTE: May not be fully supported by Plex API)
-
-    control: Generic playback control with action parameter
-    - Parameters: client_id (required), action (required), media_key (optional), seek_to (optional), offset (optional)
-    - Returns: Success confirmation
-    - Example: plex_streaming(operation="control", client_id="abc123", action="play", media_key="12345")
-    - Use when: Using a custom action or when other operations don't fit
-
-    Prerequisites:
-        - Plex Media Server running and accessible
-        - Valid PLEX_TOKEN environment variable set
-        - At least one active client for playback operations
-
-    Args:
-        operation (str): The streaming operation to perform. Required. Must be one of: "list_sessions", "list_clients", "play", "pause", "stop", "seek", "skip_next", "skip_previous", "set_quality", "control"
-        client_id (str | None): Client identifier. Required for: play, pause, stop, seek, skip_next, skip_previous, set_quality, control. Use list_clients to find IDs.
-        media_key (str | None): Media item key/ID. Required for: play. Optional for: control ("play" action). Obtained from plex_media results.
-        seek_to (int | None): Position in milliseconds to seek to. Required for: seek. Optional for: control ("seek_to" action).
-        offset (int | None): Time offset in seconds. Optional for: control ("step_forward" or "step_back" action). Default: 30.
-        action (str | None): Action to perform. Required for: control. Valid: play, pause, stop, skip_next, skip_previous, step_forward, step_back, seek_to.
-        quality (str | None): Quality setting. Required for: set_quality. Examples: "1080p", "720p", "480p".
+    OPERATIONS:
+    - list_sessions: List all active sessions with client and playback details.
+    - list_clients: List all available Plex clients for remote control.
+    - play: Start media playback on a specific client (auto-selects if omitted).
+    - pause/stop: Control current playback state on a client.
+    - seek: Jump to a specific position (milliseconds) in the media.
+    - skip_next/skip_previous: Navigate through the play queue.
+    - set_volume: Adjust the playback volume (0-100) on a client.
+    - control: Generic playback control for custom actions (e.g., step_forward).
 
     Returns:
-        Dictionary containing:
-            - success: Boolean indicating operation success
-            - operation: The operation that was performed
-            - data: Operation-specific result data
-            - count: Number of sessions/clients returned (for list operations)
-            - error: Error message if success is False
-            - error_code: Specific error code for programmatic handling
-            - suggestions: List of suggested fixes (on error)
-
-    Examples:
-        # List active sessions
-        result = await plex_streaming(operation="list_sessions")
-        # Returns: {'success': True, 'operation': 'list_sessions', 'data': [...], 'count': 2}
-
-        # List available clients
-        result = await plex_streaming(operation="list_clients")
-        # Returns: {'success': True, 'operation': 'list_clients', 'data': [...], 'count': 5}
-
-        # Play media on a client
-        result = await plex_streaming(operation="play", client_id="abc123", media_key="12345")
-        # Returns: {'success': True, 'operation': 'play'}
-
-        # Pause playback
-        result = await plex_streaming(operation="pause", client_id="abc123")
-        # Returns: {'success': True, 'operation': 'pause'}
-
-        # Seek to position
-        result = await plex_streaming(operation="seek", client_id="abc123", seek_to=60000)
-        # Returns: {'success': True, 'operation': 'seek'}
-
-        # Generic control
-        result = await plex_streaming(operation="control", client_id="abc123", action="skip_next")
-        # Returns: {'success': True, 'operation': 'control'}
-
-    Errors:
-        Common errors and solutions:
-        - "PLEX_TOKEN not set": Set PLEX_TOKEN environment variable with your auth token
-        - "client_id required": Provide valid client ID for operations that require it
-        - "Client not found": Use plex_streaming(operation="list_clients") to find valid client IDs
-        - "Media key required": Provide media_key for play operation
-        - "Invalid action": Use valid action values for control operation
-
-    See Also:
-        - plex_media: For browsing and searching media to play
-        - plex_library: For library management operations
+    FastMCP 3.1+ dialogic response with visual Prefab rendering where applicable.
     """
     try:
         plex = _get_plex_service()
@@ -208,22 +83,28 @@ async def plex_streaming(
         # Operation: list_sessions
         if operation == "list_sessions":
             sessions = await plex.get_sessions()
-            return {
-                "success": True,
-                "operation": "list_sessions",
-                "data": sessions,
-                "count": len(sessions) if isinstance(sessions, list) else 0,
-            }
+            return ToolResult(
+                content={
+                    "success": True,
+                    "operation": "list_sessions",
+                    "data": sessions,
+                    "count": len(sessions) if isinstance(sessions, list) else 0,
+                },
+                meta={"prefabs": ["plex_streaming_session"]},
+            )
 
         # Operation: list_clients
         elif operation == "list_clients":
             clients = await plex.get_clients()
-            return {
-                "success": True,
-                "operation": "list_clients",
-                "data": clients,
-                "count": len(clients) if isinstance(clients, list) else 0,
-            }
+            return ToolResult(
+                content={
+                    "success": True,
+                    "operation": "list_clients",
+                    "data": clients,
+                    "count": len(clients) if isinstance(clients, list) else 0,
+                },
+                meta={"prefabs": ["plex_streaming_client"]},
+            )
 
         # Operation: play (can auto-select client, so check before requiring client_id)
         elif operation == "play":

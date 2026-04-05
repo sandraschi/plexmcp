@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "plex-mcp-advanced"
-version = "2.0.0"
+version = "2.3.1"
 description = "FastMCP 3.1 & MCPB package for Plex Media Server management with conversational AI, sampling, and agentic workflows"
 authors = [
     {name = "Sandra Schipal", email = "sandra@sandraschi.dev"}
@@ -29,7 +29,8 @@ classifiers = [
 ]
 
 dependencies = [
-    "fastmcp>=3.1",
+    "fastmcp>=3.2.0",
+    "prefab-ui>=0.14.0",
     "aiohttp>=3.9.0,<4.0.0",
     "aiofiles>=23.2.0,<24.0.0",
     "plexapi>=4.15.0",
@@ -54,10 +55,6 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-rag = [
-    "lancedb>=0.4.0",
-    "sentence-transformers>=2.2.0",
-]
 dev = [
     "pytest>=8.0.0,<9.0.0",
     "pytest-asyncio>=0.23.0,<1.0.0",
@@ -89,21 +86,37 @@ where = ["src"]
 line-length = 100
 target-version = ["py311"]
 
-[tool.ruff]
-line-length = 100
-target-version = "py311"
-
-[tool.ruff.lint]
-select = ["E", "W", "F", "I", "B", "C4", "UP", "S"]
-ignore = ["E501", "B008", "C901", "B904"]
-exclude = ["__pycache__", ".git", ".venv", "venv", "dist", "build"]
-
-[tool.ruff.lint.per-file-ignores]
-"tests/*" = ["S101"]  # Allow assert in tests
-
 [tool.mypy]
 python_version = "3.11"
 strict = true
 warn_return_any = true
 warn_unused_configs = true
 
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+# Hardened v13.1 Rule Set
+select = [
+    "E", "F", "I", "UP", "B", "S", "A", "ANN", "COM", "C4", "DTZ", "PIE", "T20", "PYI", "Q", "RSE", "RET", "SLF", "SIM", "TID", "ARG", "PTH", "ERA", "PD", "PGH", "PL", "TRY", "FLY", "PERF", "FURB", "LOG", "RUF"
+]
+ignore = [
+    "ANN101", # Missing type annotation for self
+    "ANN102", # Missing type annotation for cls
+    "COM812", # Trailing comma missing (handled by formatter)
+    "ISC001", # Single line implicit string concatenation (handled by formatter)
+    "PLR0913", # Too many arguments
+    "S101",   # Use of assert (standard for pytest)
+    "TRY003", # Avoid specifying long messages in exceptions
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101", "ANN", "PLR", "TRY", "S105", "S106", "SLF001", "ARG002", "PLC0415"]
+"server.py" = ["T20", "ARG001", "ARG002"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"

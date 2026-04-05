@@ -4,6 +4,7 @@ import os
 import sys
 import threading
 from typing import Any
+from .enrichment_service import get_enrichment_service
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +68,15 @@ if not HAS_RAG:
         import lancedb
         from sentence_transformers import SentenceTransformer
 
-        _embed_model = SentenceTransformer("all-MiniLM-L6-v2")
+        _embed_model_instance = None
+
+        def get_embed_model():
+            """Lazy loader for SentenceTransformer to speed up startup."""
+            global _embed_model_instance
+            if _embed_model_instance is None:
+                logger.info("Lazy loading SentenceTransformer (all-MiniLM-L6-v2)...")
+                _embed_model_instance = SentenceTransformer("all-MiniLM-L6-v2")
+            return _embed_model_instance
 
         class LocalVectorStore:
             """In-repo RAG using LanceDB + sentence-transformers. No mcp-central-docs needed."""
@@ -94,7 +103,7 @@ if not HAS_RAG:
                 if not documents:
                     return
                 texts = [d.get("content", "") or "" for d in documents]
-                vectors = _embed_model.encode(texts).tolist()
+                vectors = get_embed_model().encode(texts).tolist()
                 rows = []
                 for d, vec in zip(documents, vectors, strict=False):
                     rows.append(
@@ -117,7 +126,7 @@ if not HAS_RAG:
                     self._table = self.db.open_table(self.table_name)
                 except Exception:
                     return []
-                qvec = _embed_model.encode([query]).tolist()[0]
+                qvec = get_embed_model().encode([query]).tolist()[0]
                 results = self._table.search(qvec).limit(limit).to_list()
                 out = []
                 for r in results:
@@ -163,17 +172,17 @@ class PlexIngestor:
         self.vector_store = BaseVectorStore(db_path=self.db_path, table_name="plex_media")
         self.is_available = HAS_RAG
 
-    async def extract_and_index_all(self):
+    async def extract_and_index_all(self, enrich: bool = False):
         """Extracts Title, Plot/Summary, Genres, Directors (movies/shows) and artist summaries (music) into LanceDB."""
         reset_rag_sync_progress()
         try:
-            return await self._extract_and_index_all_impl()
+            return await self._extract_and_index_all_impl(enrich=enrich)
         except Exception as e:
             logger.exception("RAG extract_and_index_all failed: %s", e)
             _report_progress({"phase": "error", "message": str(e), "indexed_count": 0})
             return 0
 
-    async def _extract_and_index_all_impl(self) -> int:
+    async def _extract_and_index_all_impl(self, enrich: bool = False) -> int:
         """Inner implementation after reset (see extract_and_index_all)."""
         if not self.is_available:
             logger.error("RAG Core is not available.")
@@ -200,6 +209,8 @@ class PlexIngestor:
         )
 
         docs = []
+        enrich_svc = get_enrichment_service() if enrich else None
+        semaphore = asyncio.Semaphore(5)  # Limit concurrent enrichment requests
 
         for lib_idx, lib in enumerate(eligible):
             lib_id = str(lib.get("id"))
@@ -251,6 +262,17 @@ class PlexIngestor:
                         continue
 
                     safe_year = int(year) if str(year).isdigit() else 0
+
+                    # High-Value Enrichment Callout
+                    if enrich and enrich_svc:
+                        async with semaphore:
+                            enrichment = await enrich_svc.enrich_media(title, safe_year, lib_type)
+                            if enrichment and enrichment.get("wikipedia"):
+                                wiki = enrichment["wikipedia"]
+                                content += f"\n\nSource: Wikipedia ({wiki.get('url')})\n"
+                                content += f"Context: {wiki.get('summary')}\n"
+                                if wiki.get("description"):
+                                    content += f"Era/Historical Context: {wiki.get('description')}\n"
 
                     doc = {
                         "id": key,

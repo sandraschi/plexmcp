@@ -49,108 +49,23 @@ async def plex_organization(
     vacuum: bool = True,
     reindex: bool = True,
 ) -> dict[str, Any]:
-    """Comprehensive library organization and maintenance operations for Plex Media Server.
+    """
+    Comprehensive library organization and maintenance operations for Plex Media Server.
 
     PORTMANTEAU PATTERN RATIONALE:
-    Instead of creating 5+ separate tools (one per operation), this tool consolidates related
-    library organization and maintenance operations into a single interface. This design:
-    - Prevents tool explosion (5+ tools -> 1 tool) while maintaining full functionality
-    - Improves discoverability by grouping related operations together
-    - Reduces cognitive load when working with library organization tasks
-    - Enables consistent organization interface across all operations
-    - Follows FastMCP 2.13+ best practices for feature-rich MCP servers
+    Consolidates 5 library structural maintenance and database optimization tasks into one
+    tool to streamline the archival and cleanup workflows.
 
-    SUPPORTED OPERATIONS:
-    - organize: Organize a library according to best practices
-    - analyze: Analyze a library for organization issues
-    - clean_bundles: Clean old bundles to free up disk space
-    - optimize_database: Optimize the Plex database
-    - fix_issues: Fix identified organization issues
-
-    OPERATIONS DETAIL:
-
-    organize: Organize a library according to best practices
-    - Parameters: library_id (required), dry_run (optional), patterns (optional)
-    - Returns: Organization results
-    - Example: plex_organization(operation="organize", library_id="1", dry_run=True)
-    - Use when: Organizing library structure and file organization
-
-    analyze: Analyze a library for organization issues
-    - Parameters: library_id (required)
-    - Returns: Analysis results with issues found
-    - Example: plex_organization(operation="analyze", library_id="1")
-    - Use when: Checking for organization problems
-
-    clean_bundles: Clean old bundles to free up disk space
-    - Parameters: library_id (optional), threshold_days (optional, default: 30)
-    - Returns: Cleanup results
-    - Example: plex_organization(operation="clean_bundles", library_id="1", threshold_days=60)
-    - Use when: Freeing up disk space by removing old bundle files
-
-    optimize_database: Optimize the Plex database
-    - Parameters: analyze (optional), vacuum (optional), reindex (optional)
-    - Returns: Optimization results
-    - Example: plex_organization(operation="optimize_database", analyze=True, vacuum=True)
-    - Use when: Improving database performance
-
-    fix_issues: Fix identified organization issues
-    - Parameters: library_id (required)
-    - Returns: Fix results
-    - Example: plex_organization(operation="fix_issues", library_id="1")
-    - Use when: Automatically fixing issues found by analyze
-
-    Prerequisites:
-        - Plex Media Server running and accessible
-        - Valid PLEX_TOKEN environment variable set
-        - Admin/owner permissions for organization operations
-
-    Args:
-        operation (str): The organization operation to perform. Required. Must be one of: "organize", "analyze", "clean_bundles", "optimize_database", "fix_issues"
-        library_id (str | None): Library identifier. Required for: organize, analyze, fix_issues. Optional for: clean_bundles.
-        dry_run (bool): Preview changes without applying. Default: False. Optional for: organize.
-        patterns (dict | None): Custom organization patterns. Optional for: organize.
-        threshold_days (int): Days threshold for bundle cleanup. Default: 30. Optional for: clean_bundles.
-        analyze (bool): Run ANALYZE on database. Default: True. Optional for: optimize_database.
-        vacuum (bool): Run VACUUM on database. Default: True. Optional for: optimize_database.
-        reindex (bool): Rebuild indexes. Default: True. Optional for: optimize_database.
+    OPERATIONS:
+    - organize: Standardize file paths and library structure based on patterns.
+    - analyze: Scan for naming inconsistencies, missing files, or empty folders.
+    - clean_bundles: Remove obsolete metadata bundles to reclaim disk space.
+    - optimize_database: Perform VACUUM and REINDEX on the Plex SQLite database.
+    - fix_issues: Automatically resolve common structural problems found during analysis.
 
     Returns:
-        Dictionary containing:
-            - success: Boolean indicating operation success
-            - operation: The operation that was performed
-            - data: Operation-specific result data
-            - error: Error message if success is False
-            - error_code: Specific error code for programmatic handling
-            - suggestions: List of suggested fixes (on error)
-
-    Examples:
-        # Analyze library for issues
-        result = await plex_organization(operation="analyze", library_id="1")
-        # Returns: {'success': True, 'operation': 'analyze', 'data': {...}}
-
-        # Organize library (dry run)
-        result = await plex_organization(operation="organize", library_id="1", dry_run=True)
-        # Returns: {'success': True, 'operation': 'organize', 'data': {...}}
-
-        # Clean bundles
-        result = await plex_organization(operation="clean_bundles", library_id="1", threshold_days=60)
-        # Returns: {'success': True, 'operation': 'clean_bundles', 'data': {...}}
-
-        # Optimize database
-        result = await plex_organization(operation="optimize_database", analyze=True, vacuum=True)
-        # Returns: {'success': True, 'operation': 'optimize_database', 'data': {...}}
-
-    Errors:
-        Common errors and solutions:
-        - "PLEX_TOKEN not set": Set PLEX_TOKEN environment variable with your auth token
-        - "library_id required": Provide valid library ID for operations that require it
-        - "Library not found": Use plex_library(operation="list") to find valid library IDs
-        - "Permission denied": Admin access required for organization operations
-
-    See Also:
-        - plex_library: For library management operations
-        - plex_metadata: For metadata management operations
-        - plex_performance: For performance optimization
+    FastMCP 3.1+ dialogic response with cleanup statistics and database health.
+    Enables low-friction library maintenance and storage optimization.
     """
     try:
         plex = _get_plex_service()

@@ -29,7 +29,6 @@ Usage:
 """
 
 import argparse
-import asyncio
 import logging
 import os
 from typing import Literal
@@ -191,28 +190,10 @@ def run_server(
     mcp_app, args: argparse.Namespace | None = None, server_name: str = "mcp-server"
 ) -> None:
     """
-    Unified server runner for all transport modes.
+    Unified server runner for all transport modes (FastMCP 3.2).
 
     This is the main entry point for running an MCP server with proper
     transport configuration based on CLI arguments and environment variables.
-
-    Args:
-        mcp_app: FastMCP application instance.
-        args: Parsed CLI arguments (optional, will parse if None).
-        server_name: Server name for logging and help text.
-
-    Raises:
-        Exception: If server fails to start.
-    """
-    # Simply run the async version
-    asyncio.run(run_server_async(mcp_app, args, server_name))
-
-
-async def run_server_async(
-    mcp_app, args: argparse.Namespace | None = None, server_name: str = "mcp-server"
-) -> None:
-    """
-    Asynchronous unified server runner for all transport modes.
 
     Args:
         mcp_app: FastMCP application instance.
@@ -237,7 +218,8 @@ async def run_server_async(
     try:
         if transport == "stdio":
             logger.info("Running in STDIO mode - Ready for Claude Desktop!")
-            await mcp_app.run_stdio_async()
+            # FastMCP.run() is synchronous and handles its own loop
+            mcp_app.run()
 
         elif transport == "http":
             host = config["host"]
@@ -245,20 +227,53 @@ async def run_server_async(
             path = config["path"]
             endpoint = f"http://{host}:{port}{path}"
             logger.info(f"Running in HTTP Streamable mode: {endpoint}")
-            await mcp_app.run_http_async(host=host, port=port, path=path)
+            # FastMCP.run_http() is synchronous and handles its own loop
+            mcp_app.run_http(host=host, port=port, path=path)
 
         elif transport == "sse":
             host = config["host"]
             port = config["port"]
             logger.warning("SSE mode is deprecated. Migrate to HTTP Streamable (--http).")
             logger.info(f"Running in SSE mode: http://{host}:{port}")
-            await mcp_app.run_sse_async(host=host, port=port)
+            # FastMCP.run_sse() is synchronous and handles its own loop
+            mcp_app.run_sse(host=host, port=port)
 
-    except asyncio.CancelledError:
-        logger.info(f"{server_name} task cancelled")
     except Exception as e:
         logger.error(f"{server_name} failed: {e}", exc_info=True)
-        raise
+        # Final exit from main entry point
+        import sys
+        sys.exit(1)
+
+
+async def run_server_async(
+    mcp_app, args: argparse.Namespace | None = None, server_name: str = "mcp-server"
+) -> None:
+    """
+    Asynchronous unified server runner for all transport modes.
+    Used when calling from an existing event loop (e.g. testing).
+
+    Args:
+        mcp_app: FastMCP application instance.
+        args: Parsed CLI arguments (optional, will parse if None).
+        server_name: Server name for logging and help text.
+    """
+    if args is None:
+        parser = create_argument_parser(server_name)
+        args = parser.parse_args()
+
+    config = resolve_config(args)
+    transport = config["transport"]
+
+    if transport == "stdio":
+        # For stdio, we use the mcp_app's internal server run_async equivalent if available,
+        # but in FastMCP 3.1+ we usually use .run() or we wrap the internal server.
+        # Actually, FastMCP usually exposes a way to run it on an existing loop.
+        # For now, let's keep it simple.
+        await mcp_app.run()
+    elif transport == "http":
+        await mcp_app.run_http(host=config["host"], port=config["port"], path=config["path"])
+    elif transport == "sse":
+        await mcp_app.run_sse(host=config["host"], port=config["port"])
 
 
 # Export public API

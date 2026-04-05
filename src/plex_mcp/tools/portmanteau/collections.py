@@ -41,99 +41,25 @@ async def plex_collections(
     summary: str | None = None,
     items: list[str] | None = None,
 ) -> dict[str, Any]:
-    """Comprehensive collections management tool for Plex Media Server.
+    """
+    Comprehensive collections management tool for Plex Media Server.
 
     PORTMANTEAU PATTERN RATIONALE:
-    Instead of creating 7 separate tools (one per collection operation), this tool consolidates related
-    collection operations into a single interface. This design:
-    - Prevents tool explosion (7 tools -> 1 tool) while maintaining full functionality
-    - Improves discoverability by grouping related operations together
-    - Reduces cognitive load when working with collection tasks
-    - Enables consistent collection interface across all operations
-    - Follows FastMCP 2.13+ best practices for feature-rich MCP servers
+    Consolidates 7 collection-related operations into a single tool to facilitate
+    the thematic grouping and organization of cross-library media.
 
-    SUPPORTED OPERATIONS:
-    - list: List all collections in a library or across all libraries
-    - get: Get detailed information about a specific collection
-    - create: Create a new collection
-    - update: Update collection metadata (title, summary, etc.)
-    - delete: Delete a collection
-    - add_items: Add media items to a collection
-    - remove_items: Remove media items from a collection
-
-    OPERATIONS DETAIL:
-
-    list: List collections
-    - Parameters: library_id (optional)
-    - Returns: List of collections with basic metadata
-    - Use when: Browsing available collections
-
-    get: Get collection details
-    - Parameters: collection_id (required)
-    - Returns: Detailed collection information including items
-    - Use when: Viewing collection contents and metadata
-
-    create: Create new collection
-    - Parameters: title (required), library_id (required), summary (optional), items (optional)
-    - Returns: Created collection information
-    - Use when: Creating a new collection
-
-    update: Update collection
-    - Parameters: collection_id (required), title (optional), summary (optional)
-    - Returns: Updated collection information
-    - Use when: Modifying collection metadata
-
-    delete: Delete collection
-    - Parameters: collection_id (required)
-    - Returns: Deletion confirmation
-    - Use when: Removing a collection
-
-    add_items: Add items to collection
-    - Parameters: collection_id (required), items (required, list of media IDs)
-    - Returns: Updated collection with new items
-    - Use when: Adding media to an existing collection
-
-    remove_items: Remove items from collection
-    - Parameters: collection_id (required), items (required, list of media IDs)
-    - Returns: Updated collection without removed items
-    - Use when: Removing media from a collection
-
-    Prerequisites:
-        - Plex Media Server running and accessible
-        - Valid PLEX_TOKEN environment variable set
-        - PLEX_SERVER_URL configured (or defaults to http://localhost:32400)
-
-    Args:
-        operation: The collection operation to perform. Required. Must be one of:
-            "list", "get", "create", "update", "delete", "add_items", "remove_items"
-        collection_id: Collection ID (required for get, update, delete, add_items, remove_items)
-        library_id: Library ID (required for create, optional for list)
-        title: Collection title (required for create, optional for update)
-        summary: Collection summary/description (optional)
-        items: List of media item IDs (required for add_items, remove_items, optional for create)
+    OPERATIONS:
+    - list: Retrieve all collections within a specific library or the entire server.
+    - get: Inspect collection metadata and list all contained media items.
+    - create: Initialize a new collection with optional initial items and descriptions.
+    - update: Modify existing collection titles or summaries.
+    - delete: Permanently remove a collection (media items are preserved).
+    - add_items: Append new media items to an existing collection.
+    - remove_items: Detach specific media items from a collection.
 
     Returns:
-        Operation-specific result with collection data
-
-    Examples:
-        # List all collections
-        plex_collections("list")
-
-        # Get collection details
-        plex_collections("get", collection_id="12345")
-
-        # Create a new collection
-        plex_collections("create", title="Marvel Movies", library_id="1", items=["1", "2", "3"])
-
-        # Add items to collection
-        plex_collections("add_items", collection_id="12345", items=["4", "5"])
-
-    Errors:
-        Common errors and solutions:
-        - "PLEX_TOKEN not set": Configure authentication token
-        - "collection_id required": Provide collection ID for get/update/delete operations
-        - "title required": Provide title when creating collections
-        - "Collection not found": Verify collection_id is correct
+    FastMCP 3.1+ dialogic response with collection state and member list.
+    Enables autonomous curation and systematic content organization.
     """
     try:
         plex = _get_plex_service()
