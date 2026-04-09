@@ -19,3 +19,21 @@ Run once before querying:
 - Webapp: **Semantic search** → “Sync / Index metadata”, or **Settings** → **RAG / Indexing** → Reindex (with progress UI).
 
 Large libraries may take minutes; the first run may download the embedding model.
+
+## Deep Indexing (Industrial)
+
+As of version 2.4.0, PlexMCP implements **Deep Indexing**:
+- **TV Shows**: Automatically traverses all seasons and indexes every episode individually.
+- **Music**: Traverses all artists and indexes every album individually.
+- **Hierarchical Context**: Content strings are enriched with grandparent/parent metadata:
+  - **Episodes**: `Show: [Show Title]\nSeason [N], Episode [M]: [Title] \n [Plot]`
+  - **Albums**: `Artist: [Artist Title]\nAlbum: [Title] \n [Summary]`
+
+This contextual enrichment ensures that searches for plot details or album titles correctly associate with their parent metadata, enabling high-fidelity discovery (e.g., finding the specific episode where a specific event occurs).
+
+## Telemetry and Control
+
+The webapp provides an **Industrial RAG Management** dashboard with real-time telemetry:
+- **Streaming Logs**: Track exactly which library and item is being indexed in real-time.
+- **Vector Stats**: Monitor total document count in the vector store.
+- **Sync Control**: Trigger full or incremental syncs directly from the UI.

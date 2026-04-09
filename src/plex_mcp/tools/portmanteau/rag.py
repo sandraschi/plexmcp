@@ -79,6 +79,15 @@ async def plex_rag(
                 "count": len(results),
             }
 
+        elif operation == "status":
+            stats = ingestor.get_stats()
+            return {
+                "success": True,
+                "operation": "status",
+                "data": stats,
+                "message": f"RAG Status: {stats.get('count', 0)} items indexed using {stats.get('backend', 'unknown')} backend.",
+            }
+
         else:
             return {"success": False, "error": f"Unknown operation: {operation}"}
 

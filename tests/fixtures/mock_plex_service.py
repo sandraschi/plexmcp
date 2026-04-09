@@ -47,14 +47,48 @@ def build_mock_plex_service() -> MagicMock:
         svc._initialized = True
 
     svc.connect = AsyncMock(side_effect=_connect)
-    lib_row = [{"id": "1", "key": "1", "title": "Movies", "type": "movie"}]
+    lib_row = [
+        {"id": "1", "key": "1", "title": "Movies", "type": "movie"},
+        {"id": "2", "key": "2", "title": "TV Shows", "type": "show"},
+        {"id": "3", "key": "3", "title": "Music", "type": "artist"},
+    ]
     svc.get_libraries = AsyncMock(return_value=lib_row)
     svc.list_libraries = AsyncMock(return_value=lib_row)
     svc.get_library = AsyncMock(
-        return_value={"id": "1", "key": "1", "title": "Movies", "type": "movie"}
+        side_effect=lambda library_id: next((l for l in lib_row if l["id"] == library_id), None)
     )
     svc.get_server_status = AsyncMock(return_value=status)
-    svc.get_library_items = AsyncMock(return_value={"items": [], "total": 0})
+
+    async def _mock_get_items(library_id=None, libtype=None, **kwargs):
+        if libtype == "episode":
+            return {
+                "items": [
+                    {
+                        "id": "e1",
+                        "title": "Episode 1",
+                        "type": "episode",
+                        "grandparent_title": "Mock Show",
+                        "parent_index": 1,
+                        "index": 1,
+                        "summary": "Plot 1",
+                    }
+                ],
+                "total": 1,
+            }
+        if libtype == "album":
+            return {
+                "items": [{"id": "a1", "title": "Album 1", "type": "album", "parent_title": "Mock Artist"}],
+                "total": 1,
+            }
+        if library_id == "1":
+            return {"items": [{"id": "m1", "title": "Movie 1", "type": "movie", "summary": "Plot x"}], "total": 1}
+        if library_id == "2":
+            return {"items": [{"id": "s1", "title": "Mock Show", "type": "show"}], "total": 1}
+        if library_id == "3":
+            return {"items": [{"id": "ar1", "title": "Mock Artist", "type": "artist"}], "total": 1}
+        return {"items": [], "total": 0}
+
+    svc.get_library_items = AsyncMock(side_effect=_mock_get_items)
     svc.search_media = AsyncMock(return_value=[])
     svc.get_media_info = AsyncMock(return_value={"title": "x"})
     svc.get_recently_added = AsyncMock(return_value=[])
@@ -66,17 +100,11 @@ def build_mock_plex_service() -> MagicMock:
     svc.delete_user = AsyncMock(return_value=True)
     svc.update_user_permissions = AsyncMock(return_value=True)
     svc.get_sessions = AsyncMock(return_value=[])
-    svc.get_clients = AsyncMock(
-        return_value=[{"name": "c1", "machineIdentifier": "client123", "id": "client123"}]
-    )
+    svc.get_clients = AsyncMock(return_value=[{"name": "c1", "machineIdentifier": "client123", "id": "client123"}])
     svc.control_playback = AsyncMock(return_value=True)
-    svc._run_in_executor = AsyncMock(
-        side_effect=lambda fn, *a, **k: fn(*a, **k) if callable(fn) else None
-    )
+    svc._run_in_executor = AsyncMock(side_effect=lambda fn, *a, **k: fn(*a, **k) if callable(fn) else None)
     svc._get_media_type = MagicMock(return_value="movie")
-    svc._select_client_for_media = MagicMock(
-        return_value={"name": "c1", "machineIdentifier": "client123"}
-    )
+    svc._select_client_for_media = MagicMock(return_value={"name": "c1", "machineIdentifier": "client123"})
     svc.get_transcode_settings = AsyncMock(return_value={})
     svc.update_transcode_settings = AsyncMock(return_value=True)
     svc.get_transcoding_status = AsyncMock(return_value={})

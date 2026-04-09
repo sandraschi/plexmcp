@@ -33,6 +33,19 @@ async def get_rag_sync_status():
     return get_rag_sync_progress()
 
 
+@router.get("/stats")
+async def get_rag_stats():
+    """Get vector store statistics (row counts, backend type)."""
+    try:
+        result = await mcp_client.call_tool(
+            "plex_rag",
+            {"operation": "status"},
+        )
+        return result
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
 @router.post("/sync")
 async def post_rag_sync() -> dict:
     """

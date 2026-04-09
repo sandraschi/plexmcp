@@ -12,8 +12,10 @@ import pytest
 import pytest_asyncio
 
 os.environ.setdefault("PLEXMCP_ALLOW_LOGGING", "1")
+os.environ.setdefault("APP_SETTINGS_MODULE", "webapp.backend.app.config.Settings")  # Ensure settings load for tests
 
 from fixtures.mock_plex_service import build_mock_plex_service
+from fixtures.mock_rag_engine import patch_rag_engine
 
 
 def _write_minimal_plex_sqlite(db_path: Path) -> None:
@@ -55,9 +57,7 @@ def _write_minimal_plex_sqlite(db_path: Path) -> None:
 
 
 def pytest_configure(config: pytest.Config) -> None:
-    config.addinivalue_line(
-        "markers", "mcp_http: needs webapp backend reachable at MCP_TEST_BASE_URL (default :10740)"
-    )
+    config.addinivalue_line("markers", "mcp_http: needs webapp backend reachable at MCP_TEST_BASE_URL (default :10740)")
     config.addinivalue_line("markers", "integration: real Plex server (skipped in CI)")
 
 
@@ -65,6 +65,17 @@ def pytest_configure(config: pytest.Config) -> None:
 def mock_plex_service() -> Any:
     """Patched `PlexService` shape for portmanteau unit tests (no network)."""
     return build_mock_plex_service()
+
+
+@pytest.fixture(autouse=True)
+def mock_rag_engine():
+    """Automatically patch RAG dependencies for all tests unless disabled."""
+    patches = patch_rag_engine()
+    for p in patches:
+        p.start()
+    yield
+    for p in patches:
+        p.stop()
 
 
 @pytest.fixture
@@ -95,9 +106,7 @@ async def real_plex_service(plex_available: None) -> AsyncGenerator[Any, None]:
     """Connected `PlexService` when credentials and network allow."""
     from plex_mcp.services.plex_service import PlexService
 
-    base = (
-        os.getenv("PLEX_URL") or os.getenv("PLEX_SERVER_URL") or "http://localhost:32400"
-    ).strip()
+    base = (os.getenv("PLEX_URL") or os.getenv("PLEX_SERVER_URL") or "http://localhost:32400").strip()
     token = (os.getenv("PLEX_TOKEN") or "").strip()
     svc = PlexService(base_url=base, token=token)
     try:
@@ -155,3 +164,11 @@ def plex_fixture_db(tmp_path: Path) -> Path:
     db = tmp_path / "com.plexapp.plugins.library.db"
     _write_minimal_plex_sqlite(db)
     return db
+
+
+@pytest.fixture
+def webapp_app():
+    """Returns the FastAPI app instance from webapp.backend.app.main."""
+    from webapp.backend.app.main import app
+
+    return app

@@ -14,14 +14,18 @@ import {
   ChevronRight,
   Sparkles,
   BookOpen,
+  Wrench,
+  Database,
 } from "lucide-react";
 
 const navItems = [
   { href: "/", label: "Overview", icon: LayoutDashboard },
   { href: "/libraries", label: "Libraries", icon: Library },
   { href: "/movies", label: "Movies", icon: Film },
+  { href: "/repair", label: "Media Repair", icon: Wrench },
   { href: "/search", label: "Search", icon: Search },
   { href: "/search/semantic", label: "Semantic search", icon: Sparkles },
+  { href: "/rag", label: "RAG Management", icon: Database },
   { href: "/chat", label: "Chat", icon: MessageSquare },
   { href: "/server", label: "Server", icon: Server },
   { href: "/help", label: "Help", icon: BookOpen },

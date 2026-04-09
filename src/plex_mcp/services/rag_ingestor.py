@@ -4,6 +4,7 @@ import os
 import sys
 import threading
 from typing import Any
+
 from .enrichment_service import get_enrichment_service
 
 logger = logging.getLogger(__name__)
@@ -49,9 +50,7 @@ _BaseVectorStore = None
 HAS_RAG = False
 _rag_backend = "none"
 
-central_docs_src = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "../../../../mcp-central-docs/src")
-)
+central_docs_src = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../../mcp-central-docs/src"))
 if os.path.exists(central_docs_src) and central_docs_src not in sys.path:
     sys.path.append(central_docs_src)
 try:
@@ -139,6 +138,14 @@ if not HAS_RAG:
                     )
                 return out
 
+            def count_rows(self) -> int:
+                try:
+                    self.db = lancedb.connect(self.db_path)
+                    table = self.db.open_table(self.table_name)
+                    return table.count_rows()
+                except Exception:
+                    return 0
+
         _BaseVectorStore = LocalVectorStore
         HAS_RAG = True
         _rag_backend = "lancedb"
@@ -166,11 +173,25 @@ class PlexIngestor:
 
     def __init__(self, plex_service, db_path: str = None):
         self.plex = plex_service
-        self.db_path = db_path or os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "../../data/lancedb")
-        )
+        self.db_path = db_path or os.path.abspath(os.path.join(os.path.dirname(__file__), "../../data/lancedb"))
         self.vector_store = BaseVectorStore(db_path=self.db_path, table_name="plex_media")
         self.is_available = HAS_RAG
+
+    def get_stats(self) -> dict[str, Any]:
+        """Get statistics about the vector store."""
+        if not self.is_available:
+            return {"available": False, "count": 0, "backend": "none"}
+
+        count = 0
+        if hasattr(self.vector_store, "count_rows"):
+            count = self.vector_store.count_rows()
+
+        return {
+            "available": True,
+            "count": count,
+            "backend": _rag_backend,
+            "db_path": self.db_path,
+        }
 
     async def extract_and_index_all(self, enrich: bool = False):
         """Extracts Title, Plot/Summary, Genres, Directors (movies/shows) and artist summaries (music) into LanceDB."""
@@ -230,33 +251,59 @@ class PlexIngestor:
             )
 
             try:
+                # 1) Fetch main library items (Movies, Shows, Artist list)
                 result = await self.plex.get_library_items(library_id=lib_id, limit=50000)
                 items = result.get("items", [])
+
+                # 2) If Show/Artist, also deep scan for Episodes/Albums
+                if lib_type == "show":
+                    _report_progress({"message": f'Reading episodes for "{lib_name}"...'})
+                    ep_result = await self.plex.get_library_items(library_id=lib_id, libtype="episode", limit=50000)
+                    items.extend(ep_result.get("items", []))
+                elif lib_type == "artist":
+                    _report_progress({"message": f'Reading albums for "{lib_name}"...'})
+                    album_result = await self.plex.get_library_items(library_id=lib_id, libtype="album", limit=50000)
+                    items.extend(album_result.get("items", []))
 
                 for item in items:
                     key = str(item.get("id", item.get("key", "")))
                     title = item.get("title", "")
                     summary = item.get("summary", "")
                     year = item.get("year", "")
+                    item_type = item.get("type", "unknown")
 
-                    genres = (
-                        list(item.get("genres", [])) if isinstance(item.get("genres"), list) else []
-                    )
-                    directors = (
-                        list(item.get("directors", []))
-                        if isinstance(item.get("directors"), list)
-                        else []
-                    )
+                    # Structure content with parent context
+                    content = ""
+                    parent = item.get("parent_title")
+                    grandparent = item.get("grandparent_title")
+                    idx = item.get("index")  # Episode/Album number
+                    p_idx = item.get("parent_index")  # Season number
 
-                    content = f"Title: {title}\n"
+                    if item_type == "episode":
+                        content = f"Show: {grandparent}\n"
+                        if p_idx is not None and idx is not None:
+                            content += f"Season {p_idx}, Episode {idx}: {title}\n"
+                        else:
+                            content += f"Episode: {title}\n"
+                    elif item_type == "album":
+                        content = f"Artist: {parent}\n"
+                        content += f"Album: {title}\n"
+                    else:
+                        content = f"Title: {title}\n"
+
                     if year:
                         content += f"Year: {year}\n"
+
+                    genres = list(item.get("genres", [])) if isinstance(item.get("genres"), list) else []
+                    directors = list(item.get("directors", [])) if isinstance(item.get("directors"), list) else []
+
                     if genres:
                         content += f"Genres: {', '.join(genres)}\n"
                     if directors:
                         content += f"Directors: {', '.join(directors)}\n"
                     if summary:
                         content += f"Plot: {summary}\n"
+
                     content = content.strip()
                     if not content:
                         continue
@@ -266,7 +313,14 @@ class PlexIngestor:
                     # High-Value Enrichment Callout
                     if enrich and enrich_svc:
                         async with semaphore:
-                            enrichment = await enrich_svc.enrich_media(title, safe_year, lib_type)
+                            # Use parent/grandparent for better enrichment matching if needed
+                            match_title = title
+                            if item_type == "episode" and grandparent:
+                                match_title = f"{grandparent} {title}"
+                            elif item_type == "album" and parent:
+                                match_title = f"{parent} {title}"
+
+                            enrichment = await enrich_svc.enrich_media(match_title, safe_year, item_type)
                             if enrichment and enrichment.get("wikipedia"):
                                 wiki = enrichment["wikipedia"]
                                 content += f"\n\nSource: Wikipedia ({wiki.get('url')})\n"
@@ -279,9 +333,11 @@ class PlexIngestor:
                         "content": content,
                         "metadata": {
                             "title": title,
-                            "type": item.get("type", "unknown"),
+                            "type": item_type,
                             "library": lib_name,
                             "year": safe_year,
+                            "parent": parent or "",
+                            "grandparent": grandparent or "",
                         },
                     }
                     docs.append(doc)

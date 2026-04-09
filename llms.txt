@@ -9,8 +9,10 @@ PlexMCP is a production-ready MCP server for managing Plex Media Server. It impl
 - **Streaming & Performance**: Remote playback control across clients, session monitoring, and real-time transcoding optimization
 - **Natural Language Assistant**: Sampling-handler for server-side LLMs and agentic workflow orchestration
 - **Skill Personas**: Embeds multiple expert personas (Plex Expert, Anime Curator, Hifi-AV) via skills
-- **Production Monitoring**: Built-in health checks, metrics collection, and error tracking
-- **Enhanced Error Handling**: Comprehensive error handling with structured responses and recovery
+- **Industrial RAG**: Deep-indexing of TV episodes and music albums with recursive traversal and parent context enrichment
+- **Media Repair Hub**: High-fidelity dashboard for library health, real-time sync telemetry, and database maintenance
+- **Neural Media RAG**: Unified search and synthesis tool for accessing context vectorized by LanceDB
+- **Production Monitoring**: Built-in health checks, real-time sync telemetry, and error tracking
 
 ### FastMCP 3.2 Features
 - **Universal Connect**: Simultaneous stdio + HTTP access for multiple clients
@@ -54,7 +56,7 @@ PlexMCP is a production-ready MCP server for managing Plex Media Server. It impl
 
 ### Package Information
 - **Package Name**: `plex-mcp`
-- **Version**: `3.2.0`
+- **Version**: `2.4.0`
 - **Type**: Server
 - **Runtime**: Python 3.12+
 - **Package Format**: `.mcpb`
@@ -308,12 +310,12 @@ just start
 
 ## 📈 Version History
 
-### v3.2.0 (Current)
+### v2.4.0 (Current)
+- **Deep Media RAG**: Recursive indexing for TV episodes and music albums with parent context
+- **Media Repair Hub**: Industrial-grade dashboard for library health and sync telemetry
+- **Industrial UI**: High-fidelity 'Alsergrund Industrial' design system in webapp
 - **FastMCP 3.2 Compatibility**: Full support for latest FastMCP features
-- **Production Monitoring**: Built-in health checks and metrics
-- **Enhanced Error Handling**: Comprehensive error handling and recovery
-- **Automated Deployment**: PowerShell deployment script with validation
-- **Critical Fixes**: Resolved server hanging and startup issues
+- **Critical Fixes**: Fixed "Unknown error" on webapp Libraries page (ToolResult parsing) and resolved server hanging issues
 
 ### Previous Versions
 - **v2.3.1**: FastMCP 3.1 compatibility fixes

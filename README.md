@@ -25,9 +25,10 @@
 
 ## What you get
 
-- **MCP tools**  Plex libraries, media, search, playlists, streaming/session helpers, server health, reporting, optional *arr read-only status, RAG (`plex_rag`), `agentic_plex_workflow`, `plex_natural_assistant` (sampling).
-- **Webapp**  Dashboard, libraries, movies, keyword + semantic search, chat (local LLM), settings (Plex, LLM, *arr). Backend **10740**, frontend **10741**; MCP at `/mcp` on the backend.
-- **Universal Connect**  FastMCP 3.2+ support for simultaneous stdio + HTTP access from multiple clients.
+- **MCP tools**  Plex libraries, media, search, playlists, streaming/session helpers, server health, reporting, optional *arr read-only status, Deep RAG (`plex_rag`), `agentic_plex_workflow`, `plex_natural_assistant` (sampling).
+- **Webapp**  Industrial Dashboard, libraries, movies, keyword + semantic search, Deep RAG Management, Media Repair Hub, chat (local LLM), settings. Backend **10740**, frontend **10741**.
+- **Deep Media RAG**  Implemented recursive traversal for episodes and albums with hierarchical context (Show -> Season -> Episode).
+- **Industrial Maintenance**  High-fidelity dashboard for library health, real-time sync telemetry, and database maintenance.
 - **Stack**  `plexapi`, LanceDB + embeddings for RAG (requires shared `docs_mcp` vector code from [mcp-central-docs](https://github.com/sandraschi/mcp-central-docs) on `PYTHONPATH`).
 
 ## Quick start

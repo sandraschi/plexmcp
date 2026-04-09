@@ -5,7 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.4.0] - 2026-04-09
+
+### Added
+- **Industrial RAG**: Implemented deep-indexing for TV shows (episodes) and music (albums) with recursive library traversal.
+- **Contextual Enrichment**: Content strings now include grandparent (Show/Artist) and parent (Season/Series) metadata for high-fidelity semantic search.
+- **Media Repair Hub**: New premium dashboard for library health, real-time sync telemetry, and maintenance control.
+- **Industrial Dashboard**: "Alsergrund Industrial" design system implemented for the RAG Management and Repair UI.
+- **Enhanced Telemetry**: Real-time progress logs and vector store statistics (row counts) exposed via backend and UI.
 
 ### Changed
 - **FastMCP 3.2+ Upgrade**: Updated FastMCP dependency from 3.1.0 to 3.2.0 for universal connect pattern support
@@ -23,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Startup Fixes**: Resolved hanging issues during server startup by ensuring .env file loading
 
 ### Fixed
+- **Webapp Backend**: Fixed "Unknown error" on Libraries page caused by unhandled FastMCP 3.2 `ToolResult` objects in the MCP client.
 - **Server Hanging**: Fixed critical startup hanging issue by adding `load_dotenv()` to server initialization
 - **Version References**: Updated all FastMCP 3.1+ references to 3.2+ in documentation and badges
 - **Dependency Resolution**: Ensured compatibility with latest FastMCP 3.2.0 features

@@ -20,6 +20,7 @@ from .arr_stack import arr_stack
 from .audio_mgr import plex_audio_mgr
 from .collections import plex_collections
 from .enrichment import plex_media_enrichment
+from .ffmpeg_mgr import plex_ffmpeg_mgr
 from .help import plex_help
 from .integration import plex_integration
 from .library import plex_library
@@ -39,21 +40,22 @@ from .user import plex_user
 __all__ = [
     "arr_stack",
     "plex_audio_mgr",
+    "plex_collections",
+    "plex_ffmpeg_mgr",
+    "plex_help",
+    "plex_integration",
+    "plex_library",
     "plex_media",
     "plex_media_enrichment",
-    "plex_library",
-    "plex_user",
-    "plex_playlist",
-    "plex_streaming",
-    "plex_performance",
     "plex_metadata",
     "plex_organization",
-    "plex_server",
-    "plex_integration",
-    "plex_search",
-    "plex_reporting",
-    "plex_collections",
+    "plex_performance",
+    "plex_playlist",
     "plex_quality",
-    "plex_help",
     "plex_rag",
+    "plex_reporting",
+    "plex_search",
+    "plex_server",
+    "plex_streaming",
+    "plex_user",
 ]

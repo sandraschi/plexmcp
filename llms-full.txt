@@ -23,7 +23,7 @@ Each entry is a FastMCP `@mcp.tool()` portmanteau unless noted. Use `plex_help(o
 | plex_collections | Collections CRUD and items |
 | plex_audio_mgr | Volume, mute, streams, handover |
 | plex_quality | Quality profiles CRUD and default |
-| plex_rag | sync_metadata, semantic_search (LanceDB; requires indexing setup) |
+| plex_rag | sync_metadata, semantic_search, status (Deep-indexing for episodes/albums; context enrichment) |
 | plex_help | help, list_tools, tool_info, examples |
 | agentic_plex_workflow | Multi-step: `sample_step` + named tools (requires sampling) |
 | plex_natural_assistant | Single-turn `sample()` text only (no live Plex API unless tools used separately) |

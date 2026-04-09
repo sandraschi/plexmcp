@@ -10,12 +10,26 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .config import settings
 from .api import (
-    arr_stack, fleet, help_api, images, library, llm, logs,
-    movies, playback, rag, search, server, system, v1,
-    webapp_launch, workflows,
+    arr_stack,
+    fleet,
+    help_api,
+    images,
+    library,
+    llm,
+    logs,
+    movies,
+    playback,
+    rag,
+    repair,
+    search,
+    server,
+    system,
+    v1,
+    webapp_launch,
+    workflows,
 )
+from .config import settings
 
 # 1. Immediate Path & Logging setup
 _current_file = Path(__file__).resolve()
@@ -31,10 +45,11 @@ _log_dir = project_root / "logs"
 _log_dir.mkdir(parents=True, exist_ok=True)
 _log_file = _log_dir / "webapp.log"
 
+
 def setup_logging():
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.INFO)
-    
+
     # Avoid duplicate handlers if reloaded
     if not any(isinstance(h, logging.handlers.RotatingFileHandler) for h in root_logger.handlers):
         handler = logging.handlers.RotatingFileHandler(
@@ -42,7 +57,7 @@ def setup_logging():
         )
         handler.setFormatter(logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s"))
         root_logger.addHandler(handler)
-        
+
         # Also ensure console output for uvicorn window
         console = logging.StreamHandler(sys.stdout)
         console.setFormatter(logging.Formatter("%(levelname)s:     %(message)s"))
@@ -52,7 +67,8 @@ def setup_logging():
         for logger_name in ["uvicorn", "uvicorn.error", "uvicorn.access"]:
             logger_obj = logging.getLogger(logger_name)
             logger_obj.addHandler(handler)
-            logger_obj.propagate = True # Allow reaching root but we added handler explicitly to be safe
+            logger_obj.propagate = True  # Allow reaching root but we added handler explicitly to be safe
+
 
 setup_logging()
 logger = logging.getLogger(__name__)
@@ -60,6 +76,7 @@ logger = logging.getLogger(__name__)
 # 2. Settings Bootstrapping (Call before MCP mounting)
 try:
     from .settings_store import load_and_apply
+
     load_and_apply()
     # Apply Settings to OS environment immediately so Tools can see them
     for key in ["PLEX_TOKEN", "PLEX_URL", "LLM_BASE_URL", "LLM_PROVIDER", "LLM_API_KEY"]:
@@ -74,10 +91,12 @@ except Exception as e:
 
 # 3. Lazy imports for API routes
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan handler (environment already synchronized at module load)."""
     yield
+
 
 app = FastAPI(
     title=settings.API_TITLE,
@@ -89,13 +108,14 @@ app = FastAPI(
 # 3. FastMCP Mounting
 try:
     from plex_mcp.app import http_app
+
     mcp_app = http_app()
     if mcp_app:
         app.mount("/mcp", mcp_app)
         logger.info("SOTA: FastMCP HTTP endpoints successfully mounted at /mcp")
         logger.info("SOTA: PLEX_URL used: %s", os.environ.get("PLEX_URL"))
         if not os.environ.get("PLEX_TOKEN"):
-             logger.warning("SOTA: PLEX_TOKEN is missing in environment!")
+            logger.warning("SOTA: PLEX_TOKEN is missing in environment!")
     else:
         logger.error("CRITICAL: FastMCP http_app() returned None")
 except Exception as e:
@@ -114,6 +134,7 @@ app.include_router(library.router, prefix="/api/libraries", tags=["libraries"])
 app.include_router(server.router, prefix="/api/server", tags=["server"])
 app.include_router(search.router, prefix="/api/search", tags=["search"])
 app.include_router(movies.router, prefix="/api/movies", tags=["movies"])
+app.include_router(repair.router, prefix="/api/repair", tags=["repair"])
 app.include_router(playback.router, prefix="/api/playback", tags=["playback"])
 app.include_router(images.router, prefix="/image", tags=["images"])
 app.include_router(system.router, prefix="/api/system", tags=["system"])
@@ -127,6 +148,7 @@ app.include_router(rag.router, prefix="/api/rag", tags=["rag"])
 app.include_router(arr_stack.router, prefix="/api/arr", tags=["arr"])
 app.include_router(workflows.router, prefix="/api/workflows", tags=["workflows"])
 
+
 @app.get("/")
 async def root():
     return {
@@ -134,6 +156,7 @@ async def root():
         "version": settings.API_VERSION,
         "docs": "/docs",
     }
+
 
 @app.get("/health")
 async def health():

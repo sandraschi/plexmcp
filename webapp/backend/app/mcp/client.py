@@ -39,6 +39,7 @@ _tool_map = {
     "plex_media": ("plex_mcp.tools.portmanteau.media", "plex_media"),
     "plex_streaming": ("plex_mcp.tools.portmanteau.streaming", "plex_streaming"),
     "plex_rag": ("plex_mcp.tools.portmanteau.rag", "plex_rag"),
+    "plex_ffmpeg_mgr": ("plex_mcp.tools.portmanteau.ffmpeg_mgr", "plex_ffmpeg_mgr"),
 }
 
 
@@ -73,6 +74,38 @@ class MCPClient:
         func = _get_tool_function(tool_name)
         if func and callable(func):
             result = await func(**arguments)
+
+            # Handle FastMCP 3.2+ ToolResult objects
+            if hasattr(result, "content") and hasattr(result, "meta"):
+                # Extract content
+                out = {}
+                if hasattr(result, "content") and isinstance(result.content, list):
+                    for item in result.content:
+                        # Extract text content (most common for tools returning dicts)
+                        if hasattr(item, "text") and isinstance(item.text, str):
+                            try:
+                                # Try to parse as JSON if it looks like it
+                                if item.text.strip().startswith(("{", "[")):
+                                    data = json.loads(item.text)
+                                    if isinstance(data, dict):
+                                        out.update(data)
+                                    else:
+                                        out["data"] = data
+                                else:
+                                    out["message"] = item.text
+                            except json.JSONDecodeError:
+                                out["message"] = item.text
+
+                # Merge metadata (prefabs, etc)
+                if result.meta:
+                    out["_meta"] = result.meta
+
+                # Ensure success flag if present in tool design but lost in ToolResult wrapping
+                if "success" not in out and not any(k in out for k in ["error", "error_code"]):
+                    out["success"] = True
+
+                return out
+
             if isinstance(result, str):
                 try:
                     return json.loads(result)
@@ -80,6 +113,7 @@ class MCPClient:
                     return {"result": result}
             if isinstance(result, dict):
                 return result
+            # Fallback for other types or unhandled ToolResult structure
             return {"result": result}
         raise RuntimeError(f"Tool {tool_name} not available")
 

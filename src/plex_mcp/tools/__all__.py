@@ -49,6 +49,7 @@ from .playlists import (
 
 # Audio management tools
 from .portmanteau.audio_mgr import plex_audio_mgr
+from .portmanteau.ffmpeg_mgr import plex_ffmpeg_mgr
 
 # Quality and transcoding tools
 from .quality import (
@@ -90,6 +91,7 @@ __all__ = [
     "list_clients",
     "control_playback",
     "plex_audio_mgr",
+    "plex_ffmpeg_mgr",
     # User management
     "create_user",
     "update_user",
