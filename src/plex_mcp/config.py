@@ -129,7 +129,7 @@ class PlexConfig(BaseModel):
                         file_data = json.load(f)
                         config_data.update(file_data)
                 except (OSError, json.JSONDecodeError) as e:
-                    print(f"Warning: Could not load config file {config_file}: {e}")
+                    sys.stderr.write(f"Warning: Could not load config file {config_file}: {e}\n")
 
         # Override with environment variables
         env_mappings = {
@@ -149,7 +149,7 @@ class PlexConfig(BaseModel):
                     try:
                         config_data[config_key] = int(env_value)
                     except ValueError:
-                        print(f"Warning: Invalid integer value for {env_var}: {env_value}")
+                        sys.stderr.write(f"Warning: Invalid integer value for {env_var}: {env_value}\n")
                 else:
                     config_data[config_key] = env_value
 

@@ -1,17 +1,17 @@
 [build-system]
-requires = ["setuptools>=68.0.0", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling", "uv-dynamic-versioning>=0.7.0"]
+build-backend = "hatchling.build"
 
 [project]
-name = "plex-mcp-advanced"
-version = "2.3.1"
-description = "FastMCP 3.1 & MCPB package for Plex Media Server management with conversational AI, sampling, and agentic workflows"
-authors = [
-    {name = "Sandra Schipal", email = "sandra@sandraschi.dev"}
-]
+name = "schip-mcp-plex"
+version = "2.4.0"
+description = "SOTA April 2026 industrialized FastMCP 3.2.0 server for Plex Media Server management with conversational AI, sampling, and agentic workflows"
 readme = "README.md"
-license = {text = "MIT"}
 requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [
+    { name = "Sandra Schipal", email = "sandra@schipal.at" }
+]
 keywords = ["mcp", "plex", "media", "streaming", "fastmcp", "glama-gold", "mcpb"]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -70,7 +70,7 @@ dev = [
 ]
 
 [project.scripts]
-plex-mcp-advanced = "plex_mcp.server:main"
+schip-mcp-plex = "plex_mcp.server:main"
 
 [project.urls]
 Homepage = "https://github.com/yourusername/plex-mcp"
@@ -79,8 +79,13 @@ Documentation = "https://github.com/yourusername/plex-mcp#readme"
 Changelog = "https://github.com/yourusername/plex-mcp/blob/main/CHANGELOG.md"
 Issues = "https://github.com/yourusername/plex-mcp/issues"
 
-[tool.setuptools.packages.find]
-where = ["src"]
+[tool.hatch.build.targets.wheel]
+packages = ["src/plex_mcp"]
+
+[tool.uv-dynamic-versioning]
+enable = true
+vcs = "git"
+style = "pep440"
 
 [tool.black]
 line-length = 100
@@ -97,8 +102,8 @@ line-length = 120
 target-version = "py312"
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "B", "S", "UP", "RUF"]
-ignore = ["S101", "B008"]
+select = ["E", "F", "I", "B", "UP", "N", "S", "A", "C4", "T20", "RET", "SIM", "ARG", "PTH", "TRY"]
+ignore = ["E501", "B008"]
 
 [tool.ruff.format]
 quote-style = "double"

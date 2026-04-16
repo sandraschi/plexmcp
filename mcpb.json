@@ -1,144 +1,97 @@
 {
+
   "name": "plex-mcp",
-  "version": "3.2.0",
+
+  "version": "2.3.1",
+
   "type": "server",
+
   "runtime": "python",
+
   "entry_point": "src/plex_mcp/server.py",
-  "description": "Production-ready FastMCP 3.2 server for Plex Media Server with comprehensive error handling, monitoring, and 21 portmanteau tools",
-  "author": "Sandra Schipal",
-  "license": "MIT",
-  "homepage": "https://github.com/sandraschi/plex-mcp",
-  "repository": "https://github.com/sandraschi/plex-mcp.git",
-  "keywords": ["mcp", "plex", "media", "streaming", "fastmcp", "monitoring", "production"],
+
   "dependencies": [
-    "fastmcp>=3.2.0",
-    "prefab-ui>=0.14.0",
+
+    "fastmcp>=3.1",
+
     "aiohttp>=3.9.0,<4.0.0",
+
     "aiofiles>=23.2.0,<24.0.0",
+
     "plexapi>=4.15.0",
+
     "pydantic>=2.0.0,<3.0.0",
+
     "python-dotenv>=1.0.0",
+
     "pyyaml>=6.0.0,<7.0.0",
+
     "requests>=2.31.0",
+
     "pytz>=2024.1",
-    "jsonschema>=4.21.0",
-    "fastapi>=0.104.0",
-    "uvicorn[standard]>=0.24.0",
-    "pydantic-settings>=2.0.0",
-    "httpx>=0.25.0",
-    "python-multipart>=0.0.6",
-    "lancedb>=0.4.0",
-    "sentence-transformers>=2.2.0",
-    "pytest>=7.4.0",
-    "pytest-asyncio>=0.21.0",
-    "black>=23.0.0",
-    "rich>=13.0.0",
-    "ruff>=0.14.3"
+
+    "jsonschema>=4.21.0"
+
   ],
-  "optional_dependencies": {
-    "dev": [
-      "pytest>=8.0.0,<9.0.0",
-      "pytest-asyncio>=0.23.0,<1.0.0",
-      "pytest-cov>=4.0.0,<5.0.0",
-      "black>=24.0.0,<25.0.0",
-      "isort>=5.12.0,<6.0.0",
-      "ruff>=0.1.0",
-      "mypy>=1.8.0,<2.0.0",
-      "bandit>=1.7.0,<2.0.0",
-      "safety>=2.3.0,<3.0.0",
-      "types-PyYAML>=6.0.0,<7.0.0",
-      "pre-commit>=3.6.0"
-    ],
-    "apps": [
-      "prefab-ui>=0.18.0"
-    ],
-    "anthropic": [
-      "anthropic>=0.48.0"
-    ],
-    "openai": [
-      "openai>=1.102.0"
-    ],
-    "gemini": [
-      "google-genai>=1.18.0"
-    ],
-    "azure": [
-      "azure-identity>=1.16.0",
-      "pyjwt>=2.12.0"
-    ],
-    "tasks": [
-      "pydocket>=0.18.0"
-    ]
-  },
+
   "build": {
+
     "include": [
+
       "src/**/*",
+
       "README.md",
+
       "LICENSE",
-      "manifest.json",
-      "CHANGELOG.md",
-      "docs/CONFIGURATION.md",
-      "docs/TOOLS.md",
-      "docs/TROUBLESHOOTING.md",
-      "deploy.ps1",
-      "llms.txt"
+
+      "manifest.json"
+
     ],
+
     "exclude": [
+
       "tests/",
+
       ".git/",
+
       "__pycache__/",
+
       "*.pyc",
+
       ".venv/",
+
       "dist/",
+
       "build/",
+
       "target/",
-      "docs-private/",
+
+      "docs/",
+
       "scripts/",
+
       "logs/",
+
       ".cursor/",
+
       ".windsurf/",
+
       ".pytest_cache/",
-      ".coverage",
-      "htmlcov/",
-      "_llm_test_scripts/",
-      "assets/",
-      "webapp/",
-      "config/",
-      "data/"
+
+      ".coverage"
+
     ]
+
   },
+
   "scripts": {
+
     "build": "mcpb build",
+
     "pack": "mcpb pack . dist/plex-mcp.mcpb",
-    "test": "python -m pytest tests/",
-    "test-integration": "python tests/test_integration.py",
-    "test-startup": "python tests/test_server_startup.py",
-    "lint": "ruff check src/",
-    "format": "ruff format src/",
-    "type-check": "mypy src/",
-    "security": "bandit -r src/",
-    "clean": "rm -rf build/ dist/ target/ .pytest_cache/ .coverage htmlcov/",
-    "dev": "python -m plex_mcp.server --stdio --debug",
-    "dev-http": "python -m plex_mcp.server --http --port 10740",
-    "webapp": "powershell -ExecutionPolicy Bypass -File .\\start.ps1"
-  },
-  "features": {
-    "monitoring": "Built-in health checks and metrics collection",
-    "error_handling": "Comprehensive error handling with structured responses",
-    "production_ready": "Production-ready with monitoring and logging",
-    "fastmcp_32": "Full FastMCP 3.2 compatibility with universal connect",
-    "portmanteau_tools": "21 specialized portmanteau tools for all Plex operations",
-    "rag_support": "Neural semantic search with LanceDB backend",
-    "deployment_automation": "Automated deployment with PowerShell script",
-    "comprehensive_testing": "Unit and integration test suites"
-  },
-  "requirements": {
-    "python": ">=3.12",
-    "plex": "Plex Media Server with network access",
-    "token": "Plex authentication token required"
-  },
-  "compatibility": {
-    "fastmcp": ">=3.2.0",
-    "python": "3.12+",
-    "platforms": ["Windows", "Linux", "macOS"]
+
+    "test": "python -m pytest"
+
   }
+
 }

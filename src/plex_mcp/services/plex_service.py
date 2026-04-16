@@ -1,12 +1,13 @@
+"""Plex service implementation for FastMCP 2.10."""
+
 import asyncio
 import logging
+import os
 from typing import Any
 
 from plexapi.exceptions import PlexApiException
 from plexapi.server import PlexServer
 
-from ..config import get_settings
-from ..error_handling import log_operation_start, log_operation_success
 from ..models.media import MediaItem
 from ..models.server import PlexServerStatus
 
@@ -24,10 +25,11 @@ class PlexService:
             token: Plex authentication token
             timeout: Request timeout in seconds
         """
-        settings = get_settings()
-        self.base_url = (base_url or settings.server_url).rstrip("/")
-        self.token = token or settings.plex_token
-        self.timeout = timeout or settings.timeout
+        self.base_url = (
+            base_url or os.getenv("PLEX_URL") or os.getenv("PLEX_SERVER_URL", "http://localhost:32400")
+        ).rstrip("/")
+        self.token = token or os.getenv("PLEX_TOKEN")
+        self.timeout = timeout
         self.server: PlexServer | None = None
         self._initialized = False
 
@@ -36,24 +38,25 @@ class PlexService:
         if self._initialized:
             return
 
+        # Re-check environment if missing
+        if not self.base_url:
+            self.base_url = (os.getenv("PLEX_URL") or os.getenv("PLEX_SERVER_URL", "http://localhost:32400")).rstrip(
+                "/"
+            )
         if not self.token:
-            settings = get_settings()
-            self.token = settings.plex_token
-            if not self.base_url:
-                self.base_url = settings.server_url.rstrip("/")
+            self.token = os.getenv("PLEX_TOKEN")
 
         if not self.token:
             raise RuntimeError("PLEX_TOKEN is not set. Cannot connect to Plex.")
 
         try:
             # PlexAPI handles its own session management
-            log_operation_start("Connecting to Plex server", {"url": self.base_url})
             self.server = await self._run_in_executor(PlexServer, self.base_url, self.token, timeout=self.timeout)
             self._initialized = True
-            log_operation_success(f"Connected to Plex: {self.server.friendlyName}")
+            logger.info(f"Connected to Plex: {self.server.friendlyName} ({self.base_url})")
 
-        except Exception as e:
-            logger.error(f"Failed to connect to Plex server: {e!s}")
+        except PlexApiException as e:
+            logger.error(f"Failed to connect to Plex server: {str(e)}")
             raise
 
     async def _run_in_executor(self, func, *args, **kwargs):
@@ -73,7 +76,7 @@ class PlexService:
             return PlexServerStatus(**status)
 
         except PlexApiException as e:
-            logger.error(f"Failed to get server status: {e!s}")
+            logger.error(f"Failed to get server status: {str(e)}")
             raise
 
     def _get_server_status_sync(self) -> dict[str, Any]:
@@ -104,7 +107,7 @@ class PlexService:
             return libraries
 
         except PlexApiException as e:
-            logger.error(f"Failed to list libraries: {e!s}")
+            logger.error(f"Failed to list libraries: {str(e)}")
             raise
 
     async def get_libraries(self) -> list[dict[str, Any]]:
@@ -143,7 +146,7 @@ class PlexService:
                 libraries.append(section_info)
 
             except Exception as e:
-                logger.error(f"Error processing library section {getattr(section, 'title', 'unknown')}: {e!s}")
+                logger.error(f"Error processing library section {getattr(section, 'title', 'unknown')}: {str(e)}")
                 continue
 
         return libraries
@@ -165,7 +168,7 @@ class PlexService:
             return [MediaItem(**item) for item in results]
 
         except PlexApiException as e:
-            logger.error(f"Search failed: {e!s}")
+            logger.error(f"Search failed: {str(e)}")
             raise
 
     def _search_media_sync(
@@ -302,7 +305,7 @@ class PlexService:
                 item = await self._run_in_executor(lambda: self.server.fetchItem(int(item_id)))
                 await self._run_in_executor(item.refresh)
                 return {"item_id": item_id, "title": item.title, "refreshed": True}
-            elif library_id:
+            if library_id:
                 section = await self._run_in_executor(lambda: self.server.library.sectionByID(int(library_id)))
                 await self._run_in_executor(section.update)
                 return {
@@ -310,8 +313,7 @@ class PlexService:
                     "library_name": section.title,
                     "refreshed": True,
                 }
-            else:
-                raise ValueError("Either item_id or library_id must be provided")
+            raise ValueError("Either item_id or library_id must be provided")
         except Exception as e:
             logger.error(f"Error refreshing metadata: {e}")
             raise
@@ -799,7 +801,6 @@ class PlexService:
         limit: int = 100,
         offset: int = 0,
         sort: str | None = None,
-        libtype: str | None = None,
         **filters,
     ) -> dict[str, Any]:
         """Get items from a library.
@@ -809,7 +810,6 @@ class PlexService:
             limit: Maximum number of items to return
             offset: Offset for pagination
             sort: Sort field (e.g., 'titleSort', 'addedAt', 'lastViewedAt')
-            libtype: Optional filter by media type (movie, show, season, episode, artist, album, track)
             **filters: Filter criteria (e.g., genre='Action', year=2020)
 
         Returns:
@@ -821,11 +821,8 @@ class PlexService:
         try:
             section = await self._run_in_executor(lambda: self.server.library.sectionByID(int(library_id)))
 
-            # Get all items from section with optional libtype
-            if libtype:
-                all_items = await self._run_in_executor(lambda: section.all(libtype=libtype))
-            else:
-                all_items = await self._run_in_executor(lambda: section.all())
+            # Get all items from section
+            all_items = await self._run_in_executor(lambda: section.all())
 
             # Apply filters if any
             items = all_items
@@ -904,9 +901,8 @@ class PlexService:
                     "library_name": section.title,
                     "cleaned": True,
                 }
-            else:
-                await self._run_in_executor(self.server.library.cleanBundles)
-                return {"all_libraries": True, "cleaned": True}
+            await self._run_in_executor(self.server.library.cleanBundles)
+            return {"all_libraries": True, "cleaned": True}
         except Exception as e:
             logger.error(f"Error cleaning bundles: {e}")
             return {"cleaned": False, "error": str(e)}
@@ -953,10 +949,6 @@ class PlexService:
             "summary": getattr(item, "summary", ""),
             "rating_key": str(rating_key),
             "key": getattr(item, "key", ""),
-            "parent_title": getattr(item, "parentTitle", None),
-            "grandparent_title": getattr(item, "grandparentTitle", None),
-            "index": getattr(item, "index", None),
-            "parent_index": getattr(item, "parentIndex", None),
         }
 
         # Add timestamp fields safely
@@ -1609,7 +1601,7 @@ class PlexService:
         try:
             return await self._run_in_executor(self._get_sessions_sync)
         except Exception as e:
-            logger.error(f"Failed to get sessions: {e!s}")
+            logger.error(f"Failed to get sessions: {str(e)}")
             return []
 
     def _get_sessions_sync(self) -> list[dict[str, Any]]:
@@ -1648,7 +1640,7 @@ class PlexService:
             logger.info(f"get_clients returning {len(clients)} clients")
             return clients
         except Exception as e:
-            logger.error(f"Failed to get clients: {e!s}")
+            logger.error(f"Failed to get clients: {str(e)}")
             return []
 
     def _get_media_type(self, media_key: str) -> str | None:
@@ -1688,35 +1680,31 @@ class PlexService:
             # Fall back to any client if PlexAmp not available
             logger.info("No PlexAmp found, using first available client for audio")
             return clients[0]
-        else:
-            # For video content, prefer video-capable clients (not PlexAmp)
-            video_clients = []
-            for client in clients:
-                product = client.get("product", "").lower()
-                # Exclude PlexAmp for video
-                if "plexamp" not in product:
-                    video_clients.append(client)
+        # For video content, prefer video-capable clients (not PlexAmp)
+        video_clients = []
+        for client in clients:
+            product = client.get("product", "").lower()
+            # Exclude PlexAmp for video
+            if "plexamp" not in product:
+                video_clients.append(client)
 
-            if video_clients:
-                # Prefer Plex Web or Plex app
-                for client in video_clients:
-                    product = client.get("product", "").lower()
-                    if "plex web" in product or "plex" in product:
-                        logger.info(
-                            f"Selected video client '{client.get('name')}' ({product}) for media type '{media_type}'"
-                        )
-                        return client
-                # Fall back to first video-capable client
-                logger.info(
-                    f"Using first video-capable client '{video_clients[0].get('name')}' for media type '{media_type}'"
-                )
-                return video_clients[0]
-            else:
-                # No video clients available, return first client anyway
-                logger.warning(
-                    f"No video-capable clients found, using first available client for media type '{media_type}'"
-                )
-                return clients[0]
+        if video_clients:
+            # Prefer Plex Web or Plex app
+            for client in video_clients:
+                product = client.get("product", "").lower()
+                if "plex web" in product or "plex" in product:
+                    logger.info(
+                        f"Selected video client '{client.get('name')}' ({product}) for media type '{media_type}'"
+                    )
+                    return client
+            # Fall back to first video-capable client
+            logger.info(
+                f"Using first video-capable client '{video_clients[0].get('name')}' for media type '{media_type}'"
+            )
+            return video_clients[0]
+        # No video clients available, return first client anyway
+        logger.warning(f"No video-capable clients found, using first available client for media type '{media_type}'")
+        return clients[0]
 
     def _find_client_by_id(self, client_identifier: str):
         """Helper method to find a client by machineIdentifier using all available methods.
@@ -1900,7 +1888,7 @@ class PlexService:
         try:
             return await self._run_in_executor(self._play_media_sync, client_identifier, media_key)
         except Exception as e:
-            logger.error(f"Failed to play media: {e!s}")
+            logger.error(f"Failed to play media: {str(e)}")
             return False
 
     def _play_media_sync(self, client_identifier: str, media_key: str) -> bool:
@@ -1997,13 +1985,12 @@ class PlexService:
                 if response2.status_code in (200, 201, 204):
                     logger.info("SUCCESS: Started playback via /player/playback")
                     return True
-                else:
-                    logger.error("Both endpoints failed")
+                logger.error("Both endpoints failed")
 
             logger.error(f"Client {client_identifier} not found or not controllable")
             return False
         except Exception as e:
-            logger.error(f"Error playing media: {e!s}", exc_info=True)
+            logger.error(f"Error playing media: {str(e)}", exc_info=True)
             return False
 
     def _send_client_command(self, client: Any, command: str, params: dict[str, Any] | None = None) -> bool:
@@ -2044,11 +2031,11 @@ class PlexService:
                             c.pause()
                             logger.info(f"SUCCESS: Paused {c.title} via plexapi")
                             return True
-                        elif command == "play" and hasattr(c, "play"):
+                        if command == "play" and hasattr(c, "play"):
                             c.play()
                             logger.info(f"SUCCESS: Played {c.title} via plexapi")
                             return True
-                        elif command == "stop" and hasattr(c, "stop"):
+                        if command == "stop" and hasattr(c, "stop"):
                             c.stop()
                             logger.info(f"SUCCESS: Stopped {c.title} via plexapi")
                             return True
@@ -2094,14 +2081,13 @@ class PlexService:
             if response.status_code in (200, 201, 204):
                 logger.info(f"SUCCESS: Command '{command}' sent to {client_name} via server API")
                 return True
-            else:
-                logger.error(
-                    f"FAILED: Command '{command}' failed (Status: {response.status_code}, Response: {response.text[:200]})"
-                )
-                return False
+            logger.error(
+                f"FAILED: Command '{command}' failed (Status: {response.status_code}, Response: {response.text[:200]})"
+            )
+            return False
 
         except Exception as e:
-            logger.error(f"Failed to send command '{command}': {e!s}", exc_info=True)
+            logger.error(f"Failed to send command '{command}': {str(e)}", exc_info=True)
             return False
 
     async def stop_playback(self, client_identifier: str) -> bool:
@@ -2111,7 +2097,7 @@ class PlexService:
         try:
             return await self._run_in_executor(self._stop_playback_sync, client_identifier)
         except Exception as e:
-            logger.error(f"Failed to stop playback: {e!s}")
+            logger.error(f"Failed to stop playback: {str(e)}")
             return False
 
     def _stop_playback_sync(self, client_identifier: str) -> bool:
@@ -2126,7 +2112,7 @@ class PlexService:
                 return False
             return self._send_client_command(client, "stop")
         except Exception as e:
-            logger.error(f"Error stopping playback: {e!s}")
+            logger.error(f"Error stopping playback: {str(e)}")
             return False
 
     async def control_playback(
@@ -2148,7 +2134,7 @@ class PlexService:
                 **kwargs,
             )
         except Exception as e:
-            logger.error(f"Failed to control playback: {e!s}")
+            logger.error(f"Failed to control playback: {str(e)}")
             return False
 
     def _control_playback_sync(
@@ -2214,7 +2200,7 @@ class PlexService:
 
             return self._send_client_command(client, command, params)
         except Exception as e:
-            logger.error(f"Error controlling playback: {e!s}")
+            logger.error(f"Error controlling playback: {str(e)}")
             return False
 
     async def get_audio_streams(self, media_key: str) -> list[dict[str, Any]]:
@@ -2239,7 +2225,7 @@ class PlexService:
                 )
             return streams
         except Exception as e:
-            logger.error(f"Failed to get audio streams for {media_key}: {e!s}")
+            logger.error(f"Failed to get audio streams for {media_key}: {str(e)}")
             return []
 
     async def set_audio_stream(self, client_identifier: str, stream_id: str) -> bool:
@@ -2249,7 +2235,7 @@ class PlexService:
         try:
             return await self._run_in_executor(self._set_audio_stream_sync, client_identifier, stream_id)
         except Exception as e:
-            logger.error(f"Failed to set audio stream: {e!s}")
+            logger.error(f"Failed to set audio stream: {str(e)}")
             return False
 
     def _set_audio_stream_sync(self, client_identifier: str, stream_id: str) -> bool:
@@ -2266,7 +2252,7 @@ class PlexService:
             # Plex remote control command for setting streams
             return self._send_client_command(client, "setStreams", {"audioStreamID": stream_id})
         except Exception as e:
-            logger.error(f"Error setting audio stream: {e!s}")
+            logger.error(f"Error setting audio stream: {str(e)}")
             return False
 
     async def handover_media(self, source_client_id: str, target_client_id: str) -> bool:
@@ -2276,7 +2262,7 @@ class PlexService:
         try:
             return await self._run_in_executor(self._handover_media_sync, source_client_id, target_client_id)
         except Exception as e:
-            logger.error(f"Failed to handover media: {e!s}")
+            logger.error(f"Failed to handover media: {str(e)}")
             return False
 
     def _handover_media_sync(self, source_client_id: str, target_client_id: str) -> bool:
@@ -2321,5 +2307,5 @@ class PlexService:
 
             return True
         except Exception as e:
-            logger.error(f"Error during media handover: {e!s}")
+            logger.error(f"Error during media handover: {str(e)}")
             return False

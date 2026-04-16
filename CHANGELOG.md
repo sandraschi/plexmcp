@@ -5,37 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.4.0] - 2026-04-09
-
+## [2.4.0] - 2026-04-14
 ### Added
-- **Industrial RAG**: Implemented deep-indexing for TV shows (episodes) and music (albums) with recursive library traversal.
-- **Contextual Enrichment**: Content strings now include grandparent (Show/Artist) and parent (Season/Series) metadata for high-fidelity semantic search.
-- **Media Repair Hub**: New premium dashboard for library health, real-time sync telemetry, and maintenance control.
-- **Industrial Dashboard**: "Alsergrund Industrial" design system implemented for the RAG Management and Repair UI.
-- **Enhanced Telemetry**: Real-time progress logs and vector store statistics (row counts) exposed via backend and UI.
+- **SOTA 2026 Industrialization**: Fleet-wide modernization for April 2026 standards.
+- **FastMCP 3.2.0 Parity**: Full integration of native prompts, skills, and sampling features.
+- **Biome Integration**: High-fidelity linting and formatting toolchain for the web dashboard.
+- **Universal Connect Pattern**: Support for multiple simultaneous clients via stdio and HTTP transports.
+- **Sampling (2026)**: Industrialized server-side sampling with `PlexSamplingHandler` and `agentic_plex_workflow`.
 
 ### Changed
-- **FastMCP 3.2+ Upgrade**: Updated FastMCP dependency from 3.1.0 to 3.2.0 for universal connect pattern support
-- **Documentation**: Updated FastMCP version references throughout README and documentation
-- **Compatibility**: Enhanced support for simultaneous stdio + HTTP access patterns
-
-### Added
-- **Universal Connect Pattern**: Support for multiple simultaneous clients via stdio and HTTP transports
-- **FastMCP 3.2 Features**: Access to new 3.2 functionality including codemode, prefabs, app providers, and transforms
-- **Concurrency Readiness**: Foundation for multi-client database operations (implementation in progress)
-- **Enhanced Error Handling**: Comprehensive error handling with proper logging and structured responses
-- **Production Monitoring**: Added health check endpoint and metrics collection for production deployments
-- **Automated Deployment**: PowerShell deployment script with prerequisites checking and environment setup
-- **Comprehensive Testing**: Added integration test suite with real Plex server connectivity tests
-- **Startup Fixes**: Resolved hanging issues during server startup by ensuring .env file loading
+- **Codebase Hardening**: Purged all executable `print` statements in configuration and tool modules to ensure strict JSON-RPC protocol compliance.
+- **Ruff Standard**: Aligned with 120-character line length and expanded SOTA linting rules. 
+- **Webapp Performance**: Optimized Next.js dashboard with adjacent port assignments (10741/10742).
 
 ### Fixed
-- **Webapp Backend**: Fixed "Unknown error" on Libraries page caused by unhandled FastMCP 3.2 `ToolResult` objects in the MCP client.
-- **Server Hanging**: Fixed critical startup hanging issue by adding `load_dotenv()` to server initialization
-- **Version References**: Updated all FastMCP 3.1+ references to 3.2+ in documentation and badges
-- **Dependency Resolution**: Ensured compatibility with latest FastMCP 3.2.0 features
-- **Transport Methods**: Updated deprecated `run_stdio_async()` to new `run()` method for FastMCP 3.2 compatibility
-- **Environment Loading**: Fixed missing environment variables from .env file during startup
+- **JSON-RPC Protocol Integrity**: Replaced unauthorized `print()` calls in `config.py` with `sys.stderr.write`.
+- **FastMCP Compatibility**: Resolved `NullLogger` attribute errors and startup regressions.
 
 ## [2.3.1] - 2026-03-30
 
