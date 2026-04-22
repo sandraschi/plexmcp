@@ -67,6 +67,28 @@
 
 ---
 
+### **6. A2A Protocol (Agent2Agent) — Fleet briefing**
+📄 [A2A_PROTOCOL_FLEET_BRIEFING.md](A2A_PROTOCOL_FLEET_BRIEFING.md)
+
+**Google / Linux Foundation Agent2Agent standard next to MCP**
+- What A2A specifies (agent cards, tasks, JSON-RPC) vs MCP
+- Governance, partners, maturity and versioning
+- Anthropic and ecosystem uptake (with citations)
+- Pros, cons, fleet rollout patterns, official links and samples
+
+---
+
+### **7. A2A fleet rollout plan (Plex → Calibre → Memory → supervisors)**
+📄 [A2A_FLEET_ROLLOUT_PLAN.md](A2A_FLEET_ROLLOUT_PLAN.md)
+
+**Phased adoption across fleet repos + mcp-central-docs alignment**
+- Phase 1 **plex-mcp** (reference A2A server)
+- Phase 2 **calibre-mcp** (HTTP readiness checklist, then A2A)
+- Phase 3 **advanced-memory-mcp** (horizontal A2A agent)
+- Phase 4 **meta-mcp** / **universal-actuator-mcp** (supervisor as A2A client; optional inbound A2A)
+
+---
+
 ## 🎯 **Purpose**
 
 This directory contains **MCP server technical documentation** including:
@@ -77,6 +99,8 @@ This directory contains **MCP server technical documentation** including:
 ✅ **Production Deployment** - Checklists and guidelines  
 ✅ **Troubleshooting** - Common issues and fixes  
 ✅ **Monitoring** - Observability and logging  
+✅ **A2A (Agent2Agent)** - Complementary agent-to-agent standard (fleet briefing)  
+✅ **A2A rollout** - Plex → Calibre → Memory → supervisor MCPs ([plan](A2A_FLEET_ROLLOUT_PLAN.md))
 
 ---
 
@@ -131,6 +155,8 @@ This directory contains **MCP server technical documentation** including:
 | **FastMCP issues** | [FastMCP Troubleshooting](TROUBLESHOOTING_FASTMCP_2.12.md) | 10 min |
 | **Containerize** | [Containerization](CONTAINERIZATION_GUIDELINES.md) | 20 min |
 | **Monitor** | [Monitoring Stack](MONITORING_STACK_DEPLOYMENT.md) | 15 min |
+| **A2A + MCP** | [A2A fleet briefing](A2A_PROTOCOL_FLEET_BRIEFING.md) | 25 min |
+| **A2A rollout** | [Fleet rollout plan](A2A_FLEET_ROLLOUT_PLAN.md) | 15 min |
 
 ---
 
@@ -222,6 +248,7 @@ This directory contains **MCP server technical documentation** including:
 - [FastMCP Documentation](https://github.com/jlowin/fastmcp)
 - [Claude Desktop Docs](https://claude.ai/docs)
 - [Python async/await](https://docs.python.org/3/library/asyncio.html)
+- [A2A Protocol docs](https://a2a-protocol.org/) · [A2A spec repo](https://github.com/a2aproject/A2A)
 
 ---
 
@@ -258,7 +285,7 @@ This directory contains **MCP server technical documentation** including:
 
 *MCP Technical Documentation*  
 *Location: `docs/mcp-technical/`*  
-*Files: 5*  
+*Files: 7*  
 *Focus: MCP server development & deployment*  
 *Target: Technical developers & DevOps*
 

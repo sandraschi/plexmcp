@@ -61,3 +61,5 @@ Everything below links from the [project README](../README.md). Pick a path by *
 - [**webapp/README.md**](../webapp/README.md) — UI feature list and API index  
 
 Legacy and deep technical folders (`mcp-technical/`, `github/`, `glama-platform/`, …) still exist under `docs/` for maintainers; the table above is the **curated** user path.
+
+- [**mcp-technical/README.md**](mcp-technical/README.md) — MCP server ops index (production checklist, debugging, **A2A fleet briefing**, [**A2A rollout plan**](mcp-technical/A2A_FLEET_ROLLOUT_PLAN.md) Plex → Calibre → Memory → supervisors)
