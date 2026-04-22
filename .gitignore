@@ -52,6 +52,8 @@ Thumbs.db
 *.log
 *.sqlite
 *.db
+# Local RAG / LanceDB vector store (generated; can exceed GitHub size limits)
+src/data/lancedb/
 temp/
 tmp/
 .cache/
