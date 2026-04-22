@@ -1,12 +1,11 @@
 """Image proxy API."""
 
+import logging
 import os
 
 import httpx
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Query, Response
 from fastapi.responses import StreamingResponse
-
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +25,7 @@ async def proxy_image(
     path: str,
     width: int | None = None,
     height: int | None = None,
-    minSize: int | None = None,
+    min_size: int | None = Query(None, alias="minSize"),
 ):
     """Proxy image requests to Plex."""
     base_url, token = _get_plex_config()
@@ -54,8 +53,8 @@ async def proxy_image(
         params["width"] = str(width)
     if height:
         params["height"] = str(height)
-    if minSize:
-        params["minSize"] = str(minSize)
+    if min_size:
+        params["minSize"] = str(min_size)
 
     # If usage is /image/transcode?url=... we need to point to /photo/:/transcode
     # specific handling for 'transcode' path component?
@@ -66,17 +65,16 @@ async def proxy_image(
     try:
 
         async def iter_content():
-            async with httpx.AsyncClient() as client:
-                async with client.stream("GET", url, params=params) as response:
-                    if response.status_code != 200:
-                        logger.error(
-                            f"Failed to fetch image: {response.status_code} {url}"
-                        )
-                        yield b""
-                        return
+            async with httpx.AsyncClient() as client, client.stream("GET", url, params=params) as response:
+                if response.status_code != 200:
+                    logger.error(
+                        f"Failed to fetch image: {response.status_code} {url}"
+                    )
+                    yield b""
+                    return
 
-                    async for chunk in response.aiter_bytes():
-                        yield chunk
+                async for chunk in response.aiter_bytes():
+                    yield chunk
 
         # We can't easily set headers from the inner stream without fetching first
         # But for images, usually content-type is enough.
@@ -95,6 +93,6 @@ async def proxy_image(
             background=None,  # client.aclose() should be handled...
             # httpx AsyncClient needs to be closed. StreamingResponse background task?
         )
-    except Exception as e:
-        logger.error(f"Image proxy error: {e}")
-        return Response(status_code=500, content=str(e))
+    except Exception:
+        logger.exception("Image proxy error")
+        return Response(status_code=500, content="Image proxy failed")

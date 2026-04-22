@@ -231,15 +231,31 @@ async def plex_media(
         }
 
     except Exception as e:
-        logger.error(f"Unexpected error in plex_media operation '{operation}': {e}")
+        error_msg = str(e)
+        is_unauthorized = "unauthorized" in error_msg.lower() or "(401)" in error_msg
+        
+        logger.error(
+            f"Error in plex_media operation '{operation}': {error_msg}",
+            exc_info=not is_unauthorized,
+        )
+        
+        suggestions = [
+            "Check Plex server is running and accessible",
+            "Verify your server URL and token in settings",
+            "Check server logs for detailed error information",
+        ]
+        
+        if is_unauthorized:
+            suggestions = [
+                "Update your PLEX_TOKEN in settings",
+                "Verify your token hasn't expired",
+                "Visit: https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/",
+            ]
+
         return {
             "success": False,
-            "error": f"Unexpected error during {operation}: {str(e)}",
-            "error_code": "UNEXPECTED_ERROR",
+            "error": f"Plex Authentication Failed: {error_msg}" if is_unauthorized else error_msg,
+            "error_code": "AUTH_FAILURE" if is_unauthorized else "UNEXPECTED_ERROR",
             "operation": operation,
-            "suggestions": [
-                "Check server logs for detailed error information",
-                "Verify all required parameters are provided",
-                "Try the operation again with valid parameters",
-            ],
+            "suggestions": suggestions,
         }

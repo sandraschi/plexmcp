@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from pydantic import BaseModel
 
 from ..mcp.client import mcp_client
@@ -30,9 +30,10 @@ async def play_media(request: PlayRequest) -> dict[str, Any]:
             args["client_id"] = request.client_id
 
         result = await mcp_client.call_tool("plex_streaming", args)
-        return result
     except Exception as e:
-        raise handle_mcp_error(e)
+        raise handle_mcp_error(e) from e
+    else:
+        return result
 
 
 @router.get("/clients")
@@ -42,6 +43,7 @@ async def list_clients() -> dict[str, Any]:
         result = await mcp_client.call_tool(
             "plex_streaming", {"operation": "list_clients"}
         )
-        return result
     except Exception as e:
-        raise handle_mcp_error(e)
+        raise handle_mcp_error(e) from e
+    else:
+        return result

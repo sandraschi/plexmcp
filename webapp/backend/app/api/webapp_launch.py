@@ -46,11 +46,13 @@ def _repos_root() -> Path:
 def _check_port_up(port: int, timeout: float = 3.0) -> bool:
     try:
         import urllib.request
+
         req = urllib.request.Request(f"http://127.0.0.1:{port}/", method="GET")
-        urllib.request.urlopen(req, timeout=timeout)
-        return True
+        urllib.request.urlopen(req, timeout=timeout)  # noqa: S310
     except Exception:
         return False
+    else:
+        return True
 
 
 def _run_start_script(repo_dir: str, script_rel: str) -> None:
@@ -58,7 +60,7 @@ def _run_start_script(repo_dir: str, script_rel: str) -> None:
     repo_path = root / repo_dir
     script_path = repo_path / script_rel
     if not script_path.exists():
-        raise FileNotFoundError(f"Start script not found: {script_path}")
+        raise FileNotFoundError(script_path)
     cmd: list[str]
     if script_path.suffix.lower() == ".ps1":
         cmd = ["powershell", "-ExecutionPolicy", "Bypass", "-File", str(script_path)]
@@ -69,7 +71,7 @@ def _run_start_script(repo_dir: str, script_rel: str) -> None:
     creationflags = 0
     if sys.platform == "win32":
         creationflags = subprocess.CREATE_NEW_CONSOLE
-    subprocess.Popen(
+    subprocess.Popen(  # noqa: S603,S607
         cmd,
         cwd=str(repo_path),
         creationflags=creationflags,
@@ -111,7 +113,7 @@ async def webapp_launch(body: WebappLaunchRequest) -> WebappLaunchResponse:
             already_running=False, started=False, url=url, error=str(e)
         )
     except Exception as e:
-        logger.exception("Webapp launch failed: %s", e)
+        logger.exception("Webapp launch failed")
         return WebappLaunchResponse(
             already_running=False, started=False, url=url, error=str(e)
         )

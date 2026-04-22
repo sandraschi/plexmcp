@@ -1,13 +1,10 @@
 """SOTA Fleet Launch Protocol: launch a repo by path (start.ps1)."""
 
-import logging
-import os
 import subprocess
+from pathlib import Path
 
 from fastapi import APIRouter
 from pydantic import BaseModel
-
-logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -28,22 +25,23 @@ async def fleet_launch(launch_req: LaunchRequest) -> dict:
     normalized = repo_path.lower().replace("\\", "/")
     if not any(normalized.startswith(p) for p in ALLOWED_PREFIXES):
         return {"status": "error", "message": "Forbidden path"}
-    if not os.path.exists(repo_path):
+    repo = Path(repo_path)
+    if not repo.is_dir():
         return {"status": "error", "message": "Path not found"}
-    start_ps1 = os.path.join(repo_path, "start.ps1")
-    if not os.path.exists(start_ps1):
+    start_ps1 = repo / "start.ps1"
+    if not start_ps1.is_file():
         return {"status": "error", "message": "start.ps1 not found"}
-    subprocess.Popen(
-        [
+    subprocess.Popen(  # noqa: S603
+        [  # noqa: S607
             "powershell.exe",
             "-ExecutionPolicy",
             "Bypass",
             "-File",
             "start.ps1",
         ],
-        cwd=repo_path,
+        cwd=str(repo),
     )
     return {
         "status": "success",
-        "message": f"Launched {os.path.basename(repo_path)}",
+        "message": f"Launched {repo.name}",
     }

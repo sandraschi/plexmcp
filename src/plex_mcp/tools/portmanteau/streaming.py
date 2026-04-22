@@ -383,43 +383,32 @@ async def plex_streaming(
                 ],
             }
 
-    except RuntimeError as e:
+    except Exception as e:
         error_msg = str(e)
-        suggestions = []
-
-        if "PLEX_TOKEN" in error_msg:
+        is_unauthorized = "unauthorized" in error_msg.lower() or "(401)" in error_msg
+        
+        logger.error(
+            f"Error in plex_streaming operation '{operation}': {error_msg}",
+            exc_info=not is_unauthorized,
+        )
+        
+        suggestions = [
+            "Check Plex server is running and accessible",
+            "Verify your server URL and token in settings",
+            "Check server logs for detailed error information",
+        ]
+        
+        if is_unauthorized:
             suggestions = [
-                "Set PLEX_TOKEN environment variable",
-                "Get token from: Plex Web App -> Settings -> Account -> Authorized Devices",
-                "Or visit: https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/",
-            ]
-        elif "not found" in error_msg.lower():
-            suggestions = [
-                "Verify the client_id is correct",
-                "Use plex_streaming(operation='list_clients') to find valid client IDs",
+                "Update your PLEX_TOKEN in settings",
+                "Verify your token hasn't expired",
+                "Visit: https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/",
             ]
 
         return {
             "success": False,
-            "error": error_msg,
-            "error_code": "RUNTIME_ERROR",
+            "error": f"Plex Authentication Failed: {error_msg}" if is_unauthorized else error_msg,
+            "error_code": "AUTH_FAILURE" if is_unauthorized else "UNEXPECTED_ERROR",
             "operation": operation,
             "suggestions": suggestions,
-        }
-
-    except Exception as e:
-        logger.error(
-            f"Unexpected error in plex_streaming operation '{operation}': {e}",
-            exc_info=True,
-        )
-        return {
-            "success": False,
-            "error": f"Unexpected error during {operation}: {str(e)}",
-            "error_code": "UNEXPECTED_ERROR",
-            "operation": operation,
-            "suggestions": [
-                "Check server logs for detailed error information",
-                "Verify all required parameters are provided",
-                "Try the operation again with valid parameters",
-            ],
         }

@@ -32,7 +32,7 @@ async def get_logs(
     if not log_path:
         return {"lines": [], "total": 0, "error": "No log file found", "file": None}
     try:
-        with open(log_path, encoding="utf-8", errors="replace") as f:
+        with log_path.open(encoding="utf-8", errors="replace") as f:
             lines = f.readlines()
     except OSError as e:
         return {"lines": [], "total": 0, "error": str(e), "file": str(log_path)}

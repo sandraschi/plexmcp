@@ -1,29 +1,63 @@
-# PlexMCP documentation hub
+# PlexMCP documentation
 
-Start here for curated guides. Deep legacy material (Glama, MCPB, migrations) remains under subfolders.
+Everything below links from the [project README](../README.md). Pick a path by **what you are trying to do**.
 
-## Core guides
+---
 
-| Doc | Description |
-|-----|-------------|
-| [INSTALL.md](INSTALL.md) | uv (Windows PATH), clone, run, Claude Desktop, conditional PyPI |
-| [CONFIGURATION.md](CONFIGURATION.md) | Plex, sampling, RAG, *arr, webapp overrides |
-| [TOOLS.md](TOOLS.md) | Portmanteau tools overview |
-| [RAG.md](RAG.md) | Semantic search dependency and indexing |
-| [WEBAPP.md](WEBAPP.md) | Fleet ports **10740** / **10741**, links to webapp README |
-| [DEVELOPMENT.md](DEVELOPMENT.md) | Ruff, pytest, repo layout |
-| [TROUBLESHOOTING.md](TROUBLESHOOTING.md) | Auth, connection, RAG, *arr |
-| [PRD.md](PRD.md) | Product scope, in/out of scope, references |
+## Start here
 
-## Other entry points
+| Guide | Purpose |
+|-------|---------|
+| [**QUICKSTART.md**](QUICKSTART.md) | **~60 seconds** — MCP stdio, then optional web UI and RAG pointer |
+| [**INSTALL.md**](INSTALL.md) | Install **uv**, clone the repo, set `PLEX_TOKEN` / `PLEX_URL`, run the MCP server, Claude Desktop |
+| [**PLEX.md**](PLEX.md) | **Plain-language Plex** — what the server is, how tokens work, remote vs LAN |
+| [**WEBAPP.md**](WEBAPP.md) | Start the **browser UI** (ports **10740** / **10741**), where features live |
+| [**TROUBLESHOOTING.md**](TROUBLESHOOTING.md) | Auth errors, connection refused, RAG, *arr |
 
-- [index.md](index.md) — legacy landing (links below)
-- [api/](api/) — API notes
-- [mcp-technical/](mcp-technical/) — MCP checklists
-- [mcpb-packaging/](mcpb-packaging/) — MCPB notes
-- [standards/](standards/) — project standards
+---
 
-## Root
+## Understand the system
 
-- [README.md](../README.md) — short overview and doc table  
-- [CHANGELOG.md](../CHANGELOG.md) — release history
+| Guide | Purpose |
+|-------|---------|
+| [**ARCHITECTURE.md**](ARCHITECTURE.md) | stdio MCP vs web backend vs Next.js — **diagram** and layout |
+| [**CONFIGURATION.md**](CONFIGURATION.md) | All **environment variables**, sampling, RAG path, *arr, web overrides |
+| [**TOOLS.md**](TOOLS.md) | **MCP tools** (portmanteaus, search, RAG, streaming, …) |
+
+---
+
+## Features in depth
+
+| Guide | Purpose |
+|-------|---------|
+| [**RAG.md**](RAG.md) | Semantic search, LanceDB, indexing, `PYTHONPATH` |
+| [**ENRICHMENT.md**](ENRICHMENT.md) | Wikipedia-style enrichment |
+| [**PRD.md**](PRD.md) | Product scope — in / out of scope |
+
+---
+
+## Run it like a service
+
+| Guide | Purpose |
+|-------|---------|
+| [**SELF_HOSTING.md**](SELF_HOSTING.md) | HTTPS, reverse proxy, secrets, Docker mental model |
+| [**DOCKER.md**](DOCKER.md) | Optional **Docker Compose** example (API-focused; see repo root `docker-compose.example.yml`) |
+
+---
+
+## Contribute
+
+| Guide | Purpose |
+|-------|---------|
+| [**DEVELOPMENT.md**](DEVELOPMENT.md) | Tests, Ruff, `just e2e` (Playwright), Semgrep vs optional Bandit/safety, repo layout |
+
+---
+
+## Other material
+
+- [**plans/ROADMAP.md**](plans/ROADMAP.md) — product roadmap and feature specs  
+- [**plans/OPERATIONAL_IMPROVEMENTS.md**](plans/OPERATIONAL_IMPROVEMENTS.md) — **concrete doc/DX/ops todo list** (phased checklist)  
+- [**CHANGELOG.md**](../CHANGELOG.md) — release history  
+- [**webapp/README.md**](../webapp/README.md) — UI feature list and API index  
+
+Legacy and deep technical folders (`mcp-technical/`, `github/`, `glama-platform/`, …) still exist under `docs/` for maintainers; the table above is the **curated** user path.

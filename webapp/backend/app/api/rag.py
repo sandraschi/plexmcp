@@ -41,31 +41,32 @@ async def get_rag_stats():
             "plex_rag",
             {"operation": "status"},
         )
-        return result
     except Exception as e:
         return {"success": False, "error": str(e)}
+    else:
+        return result
 
 
 @router.post("/sync")
-async def post_rag_sync() -> dict:
+async def post_rag_sync(operation: str = "sync_metadata") -> dict:
     """
-    Start indexing Plex metadata into the RAG vector store (background task).
+    Start indexing Plex metadata or subtitles into the RAG vector store (background task).
     Poll GET /sync/status for phase, library name, and document counts.
     """
     global _sync_task
 
-    async def run_sync() -> None:
+    async def run_sync(op: str) -> None:
         try:
             result = await mcp_client.call_tool(
                 "plex_rag",
-                {"operation": "sync_metadata"},
+                {"operation": op},
             )
             if not result.get("success", True):
                 prog = get_rag_sync_progress()
                 if prog.get("phase") != "error":
                     report_rag_sync_error(str(result.get("error", "Sync failed")))
         except Exception as e:
-            logger.exception("RAG sync task failed: %s", e)
+            logger.exception("RAG %s task failed", op)
             prog = get_rag_sync_progress()
             if prog.get("phase") != "error":
                 report_rag_sync_error(str(e))
@@ -80,29 +81,38 @@ async def post_rag_sync() -> dict:
                 },
                 status_code=409,
             )
-        _sync_task = asyncio.create_task(run_sync())
+        _sync_task = asyncio.create_task(run_sync(operation))
 
     return {
         "success": True,
         "started": True,
+        "operation": operation,
         "error": None,
     }
+
+
+@router.post("/sync/subtitles")
+async def post_rag_sync_subtitles():
+    """Convinience endpoint to start subtitle sync."""
+    return await post_rag_sync(operation="sync_subtitles")
 
 
 @router.get("/semantic")
 async def get_rag_semantic(
     query: str = Query(..., min_length=1),
     limit: int = Query(10, ge=1, le=50),
+    index: str = Query("metadata", enum=["metadata", "subtitles"]),
 ):
     """
-    Semantic search over indexed Plex metadata (LanceDB).
-    Requires RAG to be available: docs_mcp.backend.rag_core importable (mcp-central-docs src on path).
-    Run plex_rag(operation='sync_metadata') once to index before searching.
+    Semantic search over indexed Plex metadata or subtitles (LanceDB).
+    index='metadata' targets plex_media table.
+    index='subtitles' targets plex_subtitles table.
     """
+    op = "semantic_search" if index == "metadata" else "search_subtitles"
     try:
         result = await mcp_client.call_tool(
             "plex_rag",
-            {"operation": "semantic_search", "query": query, "limit": limit},
+            {"operation": op, "query": query, "limit": limit},
         )
     except Exception as e:
         return {
@@ -111,15 +121,16 @@ async def get_rag_semantic(
             "error_code": "RAG_ERROR",
             "results": [],
         }
-    if not result.get("success", True):
-        return {
-            "available": False,
-            "error": result.get("error", "RAG not available"),
-            "error_code": result.get("error_code", "RAG_ERROR"),
-            "results": [],
-        }
-    data = result.get("data") or result.get("results") or []
-    return {"available": True, "results": data, "error": None}
+    else:
+        if not result.get("success", True):
+            return {
+                "available": False,
+                "error": result.get("error", "RAG not available"),
+                "error_code": result.get("error_code", "RAG_ERROR"),
+                "results": [],
+            }
+        data = result.get("data") or result.get("results") or []
+        return {"available": True, "results": data, "error": None}
 
 
 @router.get("/context")
@@ -137,7 +148,7 @@ async def get_rag_context(
             {"operation": "search", "query": query, "library_id": library_id, "limit": limit},
         )
     except Exception as e:
-        raise handle_mcp_error(e)
+        raise handle_mcp_error(e) from e
     if not result.get("success", True):
         return {"context": "", "error": result.get("error", "Search failed"), "results": []}
     items = result.get("data") or result.get("results") or []

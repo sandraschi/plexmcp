@@ -30,6 +30,7 @@ async def search(
         if media_type:
             args["media_type"] = media_type
         result = await mcp_client.call_tool("plex_search", args)
-        return result
     except Exception as e:
-        raise handle_mcp_error(e)
+        raise handle_mcp_error(e) from e
+    else:
+        return result

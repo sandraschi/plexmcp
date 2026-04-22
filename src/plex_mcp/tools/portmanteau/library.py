@@ -382,15 +382,31 @@ async def plex_library(
             }
 
     except Exception as e:
-        logger.error(f"Error in plex_library operation '{operation}': {e}")
+        error_msg = str(e)
+        is_unauthorized = "unauthorized" in error_msg.lower() or "(401)" in error_msg
+        
+        logger.error(
+            f"Error in plex_library operation '{operation}': {error_msg}",
+            exc_info=not is_unauthorized,
+        )
+        
+        suggestions = [
+            "Check Plex server is running and accessible",
+            "Verify your server URL and token in settings",
+            "Check server logs for detailed error information",
+        ]
+        
+        if is_unauthorized:
+            suggestions = [
+                "Update your PLEX_TOKEN in settings",
+                "Verify your token hasn't expired",
+                "Visit: https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/",
+            ]
+
         return {
             "success": False,
-            "error": str(e),
-            "error_code": "EXECUTION_ERROR",
+            "error": f"Plex Authentication Failed: {error_msg}" if is_unauthorized else error_msg,
+            "error_code": "AUTH_FAILURE" if is_unauthorized else "EXECUTION_ERROR",
             "operation": operation,
-            "suggestions": [
-                "Check Plex server is running and accessible",
-                "Verify PLEX_TOKEN is valid",
-                "Check server logs for detailed error information",
-            ],
+            "suggestions": suggestions,
         }

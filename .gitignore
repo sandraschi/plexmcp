@@ -86,6 +86,10 @@ node_modules/
 .next/
 webapp/frontend/.next/
 webapp/backend/.next/
+**/tsconfig.tsbuildinfo
+webapp/frontend/test-results/
+webapp/frontend/playwright-report/
+webapp/frontend/blob-report/
 
 # Rust (if present at repo root)
 target/

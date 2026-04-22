@@ -18,6 +18,37 @@ from fixtures.mock_plex_service import build_mock_plex_service
 from fixtures.mock_rag_engine import patch_rag_engine
 
 
+class MockPlexObject:
+    def __init__(self, **kwargs):
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+        if not hasattr(self, "ratingKey"):
+            self.ratingKey = "mock_key"
+        if not hasattr(self, "title"):
+            self.title = "Mock Item"
+
+    def reload(self):
+        return self
+
+
+@pytest.fixture
+def plex_mock_factory():
+    """Factory to create minimal PlexAPI-like objects for unit tests."""
+    return MockPlexObject
+
+
+@pytest.fixture
+def mock_plex_server(plex_mock_factory):
+    """Mocks a plexapi.server.PlexServer."""
+    server = plex_mock_factory(
+        machineIdentifier="test-machine-id",
+        version="1.32.0",
+        friendlyName="Test Server"
+    )
+    server.library = plex_mock_factory(sections=[])
+    return server
+
+
 def _write_minimal_plex_sqlite(db_path: Path) -> None:
     """Create a tiny Plex-shaped SQLite DB for fixture_db tests."""
     conn = sqlite3.connect(str(db_path))

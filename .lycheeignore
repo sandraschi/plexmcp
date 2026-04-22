@@ -1,0 +1,11 @@
+# Lychee: patterns excluded from link checking
+http://127.0.0.1
+http://localhost
+https://127.0.0.1
+https://localhost
+http://host.docker.internal
+# Placeholders
+https://plexmcp.example.com
+https://api.plexmcp.example.com
+https://example.com
+mailto:

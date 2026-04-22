@@ -132,3 +132,37 @@ class TestRealPlexIntegration:
             assert "data" in result
             assert isinstance(result["data"], list)
             # Note: Results might be empty, so we just check structure
+
+    async def test_subtitle_rag_real(self, real_plex_service, plex_available, test_library_id):
+        """Test subtitle RAG sync and search on real Plex server."""
+        from plex_mcp.tools.portmanteau.rag import plex_rag
+        
+        # Ensure connected
+        if not real_plex_service._initialized:
+            await real_plex_service.connect()
+
+        with patch("plex_mcp.tools.portmanteau.rag._get_plex_service", return_value=real_plex_service):
+            # 1. Browse for a media item that might have subtitles
+            browse_res = await plex_media(operation="browse", library_id=test_library_id, limit=5)
+            if not browse_res["success"] or not browse_res["data"]:
+                pytest.skip("No media found in test library to index subtitles for.")
+            
+            media_id = browse_res["data"][0].get("id") or browse_res["data"][0].get("ratingKey")
+            
+            # 2. Try to sync subtitles for this item
+            # Note: This might be slow and might return 'no subtitles found' which is a success case for the logic
+            sync_res = await (plex_rag.fn if hasattr(plex_rag, "fn") else plex_rag)(
+                operation="sync_subtitles", media_id=str(media_id)
+            )
+            
+            assert sync_res["success"] is True
+            assert sync_res["operation"] == "sync_subtitles"
+            
+            # 3. Search subtitles (even if sync added 0, the tool should run)
+            search_res = await (plex_rag.fn if hasattr(plex_rag, "fn") else plex_rag)(
+                operation="search_subtitles", query="hello", limit=5
+            )
+            
+            assert search_res["success"] is True
+            assert search_res["operation"] == "search_subtitles"
+            assert "data" in search_res

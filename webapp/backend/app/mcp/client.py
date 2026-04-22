@@ -9,6 +9,21 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
+
+def _json_safe_media_item(obj: Any) -> Any:
+    """Convert Pydantic models / objects in tool payloads to JSON-serializable dicts."""
+    if obj is None:
+        return None
+    if isinstance(obj, dict):
+        return obj
+    md = getattr(obj, "model_dump", None)
+    if callable(md):
+        return md()
+    d = getattr(obj, "dict", None)
+    if callable(d):
+        return d()
+    return obj
+
 _current_file = Path(__file__).resolve()
 project_root = _current_file.parent.parent.parent.parent.parent
 src_path = project_root / "src"
@@ -58,10 +73,10 @@ def _get_tool_function(tool_name: str) -> Any:
         tool_obj = getattr(module, func_name)
         if hasattr(tool_obj, "fn"):
             return tool_obj.fn
-        elif callable(tool_obj):
+        if callable(tool_obj):
             return tool_obj
-    except Exception as e:
-        logger.error("Failed to load tool %s: %s", tool_name, e)
+    except Exception:
+        logger.exception("Failed to load tool %s", tool_name)
 
     return None
 
@@ -78,8 +93,13 @@ class MCPClient:
             # Handle FastMCP 3.2+ ToolResult objects
             if hasattr(result, "content") and hasattr(result, "meta"):
                 # Extract content
-                out = {}
-                if hasattr(result, "content") and isinstance(result.content, list):
+                out: dict[str, Any] = {}
+                if isinstance(result.content, dict):
+                    out = dict(result.content)
+                    raw_data = out.get("data")
+                    if isinstance(raw_data, list):
+                        out["data"] = [_json_safe_media_item(x) for x in raw_data]
+                elif hasattr(result, "content") and isinstance(result.content, list):
                     for item in result.content:
                         # Extract text content (most common for tools returning dicts)
                         if hasattr(item, "text") and isinstance(item.text, str):
@@ -115,7 +135,7 @@ class MCPClient:
                 return result
             # Fallback for other types or unhandled ToolResult structure
             return {"result": result}
-        raise RuntimeError(f"Tool {tool_name} not available")
+        raise RuntimeError(tool_name)
 
 
 mcp_client = MCPClient()

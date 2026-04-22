@@ -56,6 +56,12 @@ class PlexService:
             logger.info(f"Connected to Plex: {self.server.friendlyName} ({self.base_url})")
 
         except PlexApiException as e:
+            if "unauthorized" in str(e).lower() or "(401)" in str(e):
+                logger.error(f"Plex Authentication Failed (401): {str(e)}")
+                raise RuntimeError(
+                    "Plex authentication failed. Your PLEX_TOKEN is likely invalid or expired. "
+                    "Please verify your token and update it in the settings."
+                ) from e
             logger.error(f"Failed to connect to Plex server: {str(e)}")
             raise
 

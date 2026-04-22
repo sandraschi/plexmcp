@@ -24,7 +24,7 @@ async def list_movies(
             if not movie_libs:
                 return {"success": False, "error": "No movie libraries found"}
             library_id = str(movie_libs[0]["id"])
-        
+
         # Browse media in the library
         result = await mcp_client.call_tool(
             "plex_media",
@@ -33,8 +33,10 @@ async def list_movies(
                 "library_id": library_id,
                 "media_type": "movie",
                 "limit": limit,
-            }
+                "offset": offset,
+            },
         )
-        return result
     except Exception as e:
-        raise handle_mcp_error(e)
+        raise handle_mcp_error(e) from e
+    else:
+        return result

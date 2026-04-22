@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **CI**: Markdown link check (**lychee**, non-blocking) and **Playwright** e2e smoke for the Next.js app (`webapp/frontend/e2e`, `npm run test:e2e`, `just e2e`).
+- **Webapp**: `BackendStatusBanner` when the FastAPI backend is unreachable; proxy debug logs only when `NEXT_DEBUG_PROXY=1`.
+- **Documentation**: Operational improvements checklist ([`docs/plans/OPERATIONAL_IMPROVEMENTS.md`](docs/plans/OPERATIONAL_IMPROVEMENTS.md)), GitHub PR template, `just version` (reads `pyproject.toml`); symptom table in [`TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md); [`docs/DOCKER.md`](docs/DOCKER.md) + example compose; `docs/assets/` wireframe SVGs; “suggested agent flows” in [`TOOLS.md`](docs/TOOLS.md); “Video walkthrough” placeholder in [`QUICKSTART.md`](docs/QUICKSTART.md).
+- **Webapp (Biome)**: Relaxed a few **a11y/suspicious** rules in `biome.json` for pragmatic noise control; removed `eval` from media probe FPS; `SearchForm` now carries `library_id` in the query string; `server-info-view` uses `for...of` instead of nested `forEach`.
+- **Docs** (earlier in unreleased): Troubleshooting “diagnose in order” section; RAG `docs_mcp` import verification one-liners; Caddy and nginx samples in self-hosting guide.
+
+## [2.5.0] - 2026-04-19
+### Added
+- **Dialogue RAG (Subtitle Neural Search)**: Complete end-to-end implementation for semantic search across media dialogue. 
+  - New `sync_subtitles` operation in `plex_rag` tool to index SRT/VTT tracks.
+  - New `search_subtitles` operation for deep content discovery via dialogue snippets.
+  - Robust SRT/VTT parser with timestamp extraction and dialogue normalization.
+- **Webapp Subtitle Management**: 
+  - Updated RAG Dashboard with "Sync Subtitles" control and real-time dialogue indexing telemetry.
+  - New "Dialogue Search" mode in the web search interface with timestamped results and media linking.
+- **Multi-Table Vector Store**: Extended LanceDB configuration to support concurrent metadata and subtitle indices.
+
+### Changed
+- **Tool Docstrings**: Updated `plex_rag` with detailed operation patterns for subtitle management.
+
+## [2.4.1] - 2026-04-17
+### Added
+- **High-Value Media Enrichment**: New `plex_media_enrichment` tool for fetching deep contextual summaries from Wikipedia and external metadata links.
+- **RAG Augmentation**: The `plex_rag` tool now supports an `enrich=True` flag during `sync_metadata` to augment the vector index with Wikipedia narrative context.
+- **Hardened Error Handling**: Standardized `AUTH_FAILURE` detection across all portmanteau tools to eliminate noisy tracebacks and provide actionable remediation steps for 401 Unauthorized errors.
+
+### Changed
+- **Tool Docstrings**: Updated all portmanteau tools with expanded docstrings and consistent pattern rationale sections.
+- **Zero-Console Policy**: Verified full removal of `print()` statements from production core modules.
+
 ## [2.4.0] - 2026-04-14
 ### Added
 - **SOTA 2026 Industrialization**: Fleet-wide modernization for April 2026 standards.

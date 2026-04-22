@@ -102,10 +102,11 @@ async def chat(
         if stream:
 
             async def _stream():
-                async with httpx.AsyncClient(timeout=60.0) as client:
-                    async with client.stream("POST", req_url, json=payload) as resp:
-                        async for chunk in resp.aiter_text():
-                            yield chunk
+                async with httpx.AsyncClient(timeout=60.0) as client, client.stream(
+                    "POST", req_url, json=payload
+                ) as resp:
+                    async for chunk in resp.aiter_text():
+                        yield chunk
 
             return StreamingResponse(_stream(), media_type="text/event-stream")
         async with httpx.AsyncClient(timeout=60.0) as client:
@@ -122,10 +123,11 @@ async def chat(
     if stream:
 
         async def _stream_openai():
-            async with httpx.AsyncClient(timeout=60.0) as client:
-                async with client.stream("POST", req_url, json=payload, headers=headers) as resp:
-                    async for chunk in resp.aiter_text():
-                        yield chunk
+            async with httpx.AsyncClient(timeout=60.0) as client, client.stream(
+                "POST", req_url, json=payload, headers=headers
+            ) as resp:
+                async for chunk in resp.aiter_text():
+                    yield chunk
 
         return StreamingResponse(_stream_openai(), media_type="text/event-stream")
     async with httpx.AsyncClient(timeout=60.0) as client:

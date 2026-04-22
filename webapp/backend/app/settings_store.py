@@ -10,6 +10,7 @@ _KEYS = (
     "llm_provider",
     "llm_base_url",
     "llm_api_key",
+    "tmdb_api_key",
     "radarr_url",
     "radarr_api_key",
     "sonarr_url",
@@ -23,6 +24,7 @@ _ENV_MAP = {
     "llm_provider": "LLM_PROVIDER",
     "llm_base_url": "LLM_BASE_URL",
     "llm_api_key": "LLM_API_KEY",
+    "tmdb_api_key": "TMDB_API_KEY",
     "radarr_url": "RADARR_URL",
     "radarr_api_key": "RADARR_API_KEY",
     "sonarr_url": "SONARR_URL",
@@ -42,7 +44,7 @@ def load_and_apply() -> None:
     if not p.exists():
         return
     try:
-        with open(p, encoding="utf-8") as f:
+        with p.open(encoding="utf-8") as f:
             data = json.load(f)
     except (json.JSONDecodeError, OSError):
         return
@@ -74,7 +76,7 @@ def save_overrides(body: dict) -> None:
     data: dict[str, str] = {}
     if p.exists():
         try:
-            with open(p, encoding="utf-8") as f:
+            with p.open(encoding="utf-8") as f:
                 data = json.load(f)
         except (json.JSONDecodeError, OSError):
             pass
@@ -86,5 +88,5 @@ def save_overrides(body: dict) -> None:
             if key == "plex_url":
                 os.environ["PLEX_SERVER_URL"] = s
             os.environ[env_var] = s
-    with open(p, "w", encoding="utf-8") as f:
+    with p.open("w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)

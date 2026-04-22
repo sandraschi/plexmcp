@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     API_VERSION: str = "1.0.0"
     API_DESCRIPTION: str = "HTTP API wrapper for PlexMCP server"
 
-    HOST: str = "0.0.0.0"
+    HOST: str = "0.0.0.0"  # noqa: S104
     PORT: int = 10740
     RELOAD: bool = True
 
@@ -38,6 +38,9 @@ class Settings(BaseSettings):
     LLM_PROVIDER: str = "ollama"
     LLM_BASE_URL: str = "http://127.0.0.1:11434"
     LLM_API_KEY: str = ""
+
+    # Optional: TMDB v3 for AI context panel (poster, match URL, overview)
+    TMDB_API_KEY: str = ""
 
     # Optional: light RAG over Plex metadata
     RAG_INDEX_ENABLED: bool = False

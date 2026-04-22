@@ -1,27 +1,75 @@
+set windows-shell := ["pwsh.exe", "-NoLogo", "-Command"]
+
 # PlexMCP Project Management (Justfile)
 
 # Default: List available commands
 default:
 	@just --list
 
-# Build the .mcpb package
-build:
-	@powershell -ExecutionPolicy Bypass -File webapp/start.ps1 -BuildOnly
-	@echo "Package built in dist/plex-mcp.mcpb"
+# Print `project.version` from `pyproject.toml` (source of truth; use when syncing README badges)
+version:
+	@uv run python -c "import pathlib, tomllib; p = pathlib.Path('pyproject.toml'); print(tomllib.loads(p.read_text(encoding='utf-8'))['project']['version'])"
 
-# Linting and Formatting
+# --- Basic Workflow ---
+
+# Setup development environment
+install:
+	uv sync
+	pre-commit install
+
+# Start Server (STDIO)
+start:
+	uv run plex-mcp-advanced
+
+# Start Web Interface
+webapp:
+	@powershell -ExecutionPolicy Bypass -File webapp/start.ps1
+
+# --- Quality Gates ---
+
+# Lint and check all files (Python + JS/TS + Security)
 lint:
-	@ruff check . --fix
-	@ruff format .
+	@echo "--- Checking Python (Ruff) ---"
+	ruff check .
+	@echo "--- Checking JS/TS (Biome) ---"
+	cd webapp/frontend && npx @biomejs/biome check .
+	@echo "--- Checking Security (Semgrep) ---"
+	semgrep scan --config auto .
+
+# Format all files
+fmt:
+	ruff format .
+	cd webapp/frontend && npx @biomejs/biome format --write .
+
+# Automated fix (Ruff + Biome)
+fix:
+	ruff check . --fix
+	ruff format .
+	cd webapp/frontend && npx @biomejs/biome check --write .
 
 # Run Tests
 test:
 	@pytest --cov=src/plex_mcp tests/
 
-# Start Server (STDIO)
-start:
-	@python -m plex_mcp.server
+# Playwright smoke (Next dev is started by Playwright; run `npm ci` in webapp/frontend first)
+e2e:
+	cd webapp/frontend; npm run test:e2e
 
-# Start Web Interface
-webapp:
-	@powershell -ExecutionPolicy Bypass -File webapp/start.ps1
+# Integration Tests (requires PLEX_TOKEN and PLEX_URL)
+test-integration:
+	@pytest tests/test_integration_real_plex.py -v
+
+# --- Build & CI ---
+
+# Run full CI suite locally
+ci: lint test
+
+# Build the .mcpb package
+build:
+	@powershell -ExecutionPolicy Bypass -File webapp/start.ps1 -BuildOnly
+	@echo "Package built in dist/plex-mcp.mcpb"
+
+# Cleanup
+clean:
+	@powershell -Command "Remove-Item -Recurse -Force .pytest_cache, .ruff_cache, dist, build, htmlcov -ErrorAction SilentlyContinue"
+	@find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true

@@ -18,6 +18,7 @@ from .api import (
     library,
     llm,
     logs,
+    media,
     movies,
     playback,
     rag,
@@ -79,21 +80,21 @@ try:
 
     load_and_apply()
     # Apply Settings to OS environment immediately so Tools can see them
-    for key in ["PLEX_TOKEN", "PLEX_URL", "LLM_BASE_URL", "LLM_PROVIDER", "LLM_API_KEY"]:
+    for key in ["PLEX_TOKEN", "PLEX_URL", "LLM_BASE_URL", "LLM_PROVIDER", "LLM_API_KEY", "TMDB_API_KEY"]:
         val = getattr(settings, key, None)
         if val and not os.environ.get(key):
             os.environ[key] = str(val)
             if key == "PLEX_URL":
                 os.environ["PLEX_SERVER_URL"] = str(val)
     logger.info("Initializing PlexMCP Backend (SOTA 2026)")
-except Exception as e:
-    logger.error("Failed to bootstrap settings: %s", e)
+except Exception:
+    logger.exception("Failed to bootstrap settings")
 
 # 3. Lazy imports for API routes
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(_app: FastAPI):
     """Lifespan handler (environment already synchronized at module load)."""
     yield
 
@@ -134,6 +135,7 @@ app.include_router(library.router, prefix="/api/libraries", tags=["libraries"])
 app.include_router(server.router, prefix="/api/server", tags=["server"])
 app.include_router(search.router, prefix="/api/search", tags=["search"])
 app.include_router(movies.router, prefix="/api/movies", tags=["movies"])
+app.include_router(media.router, prefix="/api/media", tags=["media"])
 app.include_router(repair.router, prefix="/api/repair", tags=["repair"])
 app.include_router(playback.router, prefix="/api/playback", tags=["playback"])
 app.include_router(images.router, prefix="/image", tags=["images"])

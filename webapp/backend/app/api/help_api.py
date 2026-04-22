@@ -28,8 +28,8 @@ Shows tail of webapp log file. Use filter/level to narrow. Refreshes on level ch
 ## Help modal
 This content. Levels: Basic, Intermediate, Advanced, Expert.
 
-## Semantic search
-Use Search with a natural-language query; optional semantic search over indexed metadata if RAG is enabled.
+## Semantic & Dialogue Search
+Use Search with natural-language. Toggle between **Metadata** (keyword/context) and **Dialogue** (index subtitles) to find exact scenes and quotes.
 """.strip()
 
 HELP_ADVANCED = HELP_INTERMEDIATE + """
@@ -40,8 +40,8 @@ HELP_ADVANCED = HELP_INTERMEDIATE + """
 - Personalities set system prompt. "Refine" uses LLM to improve your message before sending.
 - Export: download chat as Markdown or JSON.
 
-## Light RAG
-Backend can index Plex library metadata; semantic search uses embeddings (Ollama). Enable via RAG_INDEX_ENABLED in backend.
+## Neural RAG (v2.5.0)
+Backend can index Plex metadata and **Subtitles** (SRT/VTT). Use the **RAG Dashboard** to trigger reindexes and monitor vector counts.
 """.strip()
 
 HELP_EXPERT = HELP_ADVANCED + """

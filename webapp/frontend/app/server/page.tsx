@@ -1,32 +1,34 @@
-import { getServerInfo } from "@/utils/api";
-import { ErrorBanner } from "@/components/ui/error-banner";
 import { ServerInfoView } from "@/components/server/server-info-view";
+import { ErrorBanner } from "@/components/ui/error-banner";
+import { getServerInfo } from "@/utils/api";
 
 export default async function ServerPage() {
-  let data: Record<string, unknown> | null = null;
-  try {
-    data = (await getServerInfo()) as Record<string, unknown>;
-  } catch {
-    data = null;
-  }
+	let data: Record<string, unknown> | null = null;
+	try {
+		data = (await getServerInfo()) as Record<string, unknown>;
+	} catch {
+		data = null;
+	}
 
-  return (
-    <div className="container mx-auto p-6 max-w-5xl">
-      <h1 className="text-3xl font-bold mb-2 text-slate-100">Server</h1>
-      <p className="text-slate-500 text-sm mb-6">
-        Plex Media Server summary from the MCP <code className="text-amber text-xs">plex_server</code> tool (
-        <code className="text-amber text-xs">info</code>). Use <strong className="text-slate-400">Overview</strong> for
-        readable fields or <strong className="text-slate-400">Raw JSON</strong> for the full response.
-      </p>
-      {data === null ? (
-        <ErrorBanner
-          title="Could not load server info"
-          message="Backend unavailable or PLEX_TOKEN not configured."
-          hint="Set PLEX_TOKEN in webapp/backend/.env"
-        />
-      ) : (
-        <ServerInfoView payload={data} />
-      )}
-    </div>
-  );
+	return (
+		<div className="container mx-auto p-6 max-w-5xl">
+			<h1 className="text-3xl font-bold mb-2 text-slate-100">Server</h1>
+			<p className="text-slate-500 text-sm mb-6">
+				Plex Media Server summary from the MCP{" "}
+				<code className="text-amber text-xs">plex_server</code> tool (
+				<code className="text-amber text-xs">info</code>). Use{" "}
+				<strong className="text-slate-400">Overview</strong> for readable fields or{" "}
+				<strong className="text-slate-400">Raw JSON</strong> for the full response.
+			</p>
+			{data === null ? (
+				<ErrorBanner
+					title="Could not load server info"
+					message="Backend unavailable or PLEX_TOKEN not configured."
+					hint="Set PLEX_TOKEN in webapp/backend/.env"
+				/>
+			) : (
+				<ServerInfoView payload={data} />
+			)}
+		</div>
+	);
 }

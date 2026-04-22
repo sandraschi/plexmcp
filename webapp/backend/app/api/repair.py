@@ -30,9 +30,10 @@ async def probe_media(media_key: str):
                 "media_key": media_key,
             },
         )
-        return result
     except Exception as e:
-        raise handle_mcp_error(e)
+        raise handle_mcp_error(e) from e
+    else:
+        return result
 
 
 @router.post("/execute")
@@ -44,6 +45,7 @@ async def execute_repair(req: RepairRequest):
         result = await mcp_client.call_tool(
             "plex_ffmpeg_mgr", {"operation": req.operation, "media_key": req.media_key, **req.params}
         )
-        return result
     except Exception as e:
-        raise handle_mcp_error(e)
+        raise handle_mcp_error(e) from e
+    else:
+        return result

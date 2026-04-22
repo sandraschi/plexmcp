@@ -13,9 +13,10 @@ async def list_libraries():
     """List all Plex libraries."""
     try:
         result = await mcp_client.call_tool("plex_library", {"operation": "list"})
-        return result
     except Exception as e:
-        raise handle_mcp_error(e)
+        raise handle_mcp_error(e) from e
+    else:
+        return result
 
 
 @router.get("/{library_id}")
@@ -23,9 +24,10 @@ async def get_library(library_id: str):
     """Get library details."""
     try:
         result = await mcp_client.call_tool("plex_library", {"operation": "get", "library_id": library_id})
-        return result
     except Exception as e:
-        raise handle_mcp_error(e)
+        raise handle_mcp_error(e) from e
+    else:
+        return result
 
 
 @router.get("/{library_id}/items")
@@ -39,8 +41,10 @@ async def list_library_items(library_id: str, limit: int = 50, offset: int = 0):
                 "operation": "browse",
                 "library_id": library_id,
                 "limit": limit,
+                "offset": offset,
             },
         )
-        return result
     except Exception as e:
-        raise handle_mcp_error(e)
+        raise handle_mcp_error(e) from e
+    else:
+        return result

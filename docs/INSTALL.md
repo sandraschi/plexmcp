@@ -1,5 +1,7 @@
 # Installation
 
+Fast path: [**QUICKSTART.md**](QUICKSTART.md). New to Plex or tokens: [**PLEX.md**](PLEX.md). Full map: [**README.md**](README.md) (hub).
+
 ## Prerequisites
 
 - Python **3.12+**

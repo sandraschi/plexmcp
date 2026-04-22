@@ -100,6 +100,7 @@ warn_unused_configs = true
 [tool.ruff]
 line-length = 120
 target-version = "py312"
+extend-exclude = ["_llm_test_scripts"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "N", "S", "A", "C4", "T20", "RET", "SIM", "ARG", "PTH", "TRY"]

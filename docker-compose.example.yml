@@ -1,0 +1,31 @@
+# PlexMCP — example Docker Compose (optional, not used in CI)
+# Copy to `docker-compose.yml` and adapt. Prefer `uv` + `webapp/start.ps1` for local dev.
+#
+# Usage (Linux / macOS Docker, from repo root):
+#   export PLEX_TOKEN=...
+#   export PLEX_URL=http://host.docker.internal:32400
+#   docker compose -f docker-compose.example.yml up --build
+#
+# For RAG, add a second volume and PYTHONPATH, e.g.:
+#   - ../mcp-central-docs/src:/mcp-cent:ro
+#   environment:
+#     PYTHONPATH: /mcp-cent
+
+services:
+  plexmcp-api:
+    image: python:3.12-bookworm
+    working_dir: /repo
+    ports:
+      - "10740:10740"
+    environment:
+      PLEX_TOKEN: ${PLEX_TOKEN:?set PLEX_TOKEN}
+      PLEX_URL: ${PLEX_URL:-http://host.docker.internal:32400}
+    volumes:
+      - .:/repo
+    # PYTHONPATH: /path/to/mcp-central-docs/src  # uncomment for RAG (see docs/RAG.md)
+    command: >
+      sh -c "pip install --no-cache-dir uv
+      && cd /repo
+      && uv sync
+      && cd /repo/webapp/backend
+      && uv run uvicorn app.main:app --host 0.0.0.0 --port 10740"

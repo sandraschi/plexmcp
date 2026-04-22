@@ -35,18 +35,19 @@ async def semantic_search(req: SearchQuery) -> dict:
             },
         )
     except Exception as e:
-        logger.error("v1 search error: %s", e)
+        logger.exception("v1 search error")
         return {"success": False, "error": str(e)}
-    if not result.get("success", True):
+    else:
+        if not result.get("success", True):
+            return {
+                "success": False,
+                "error": result.get("error", "RAG not available"),
+                "results": [],
+            }
         return {
-            "success": False,
-            "error": result.get("error", "RAG not available"),
-            "results": [],
+            "success": True,
+            "results": result.get("data") or result.get("results") or [],
         }
-    return {
-        "success": True,
-        "results": result.get("data") or result.get("results") or [],
-    }
 
 
 @router.post("/chat")

@@ -40,6 +40,7 @@ async def patch_settings(
         "llm_provider",
         "llm_base_url",
         "llm_api_key",
+        "tmdb_api_key",
         "radarr_url",
         "radarr_api_key",
         "sonarr_url",

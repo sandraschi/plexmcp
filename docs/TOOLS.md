@@ -28,7 +28,7 @@ PlexMCP registers **portmanteau** tools: one tool per domain with an `operation`
 
 | `plex_user` | Users and permissions |
 
-| `plex_rag` | `sync_metadata`, `semantic_search` — see [RAG.md](RAG.md) |
+| `plex_rag` | `sync_metadata`, `sync_subtitles`, `semantic_search`, `search_subtitles` — see [RAG.md](RAG.md) |
 
 | `arr_stack` | Optional Radarr/Sonarr/Lidarr **read-only** HTTP status (requires env URLs + API keys) |
 
@@ -42,9 +42,16 @@ Additional portmanteau tools include `plex_metadata`, `plex_organization`, `plex
 
 
 
+## Suggested agent flows (pipelines)
+
+Use these as **recipes** for tool-calling clients (not a strict API contract).
+
+1. **“What can I watch?”** — `plex_library` → `list` → pick `library_id` → `plex_media` → `browse` with `media_type: movie` or `show` → `plex_media` → `get_details` on a `ratingKey`.
+2. **“Find that title”** — `plex_search` → `search` with `query` (+ optional `library_id`) → read `ratingKey` from results → `plex_media` → `get_details` for summary and art paths.
+3. **“Is the server healthy?”** — `plex_server` → `status` and/or `info` — then optionally `arr_stack` if *arr env is configured.
+4. **RAG (after [RAG.md](RAG.md) is satisfied)** — `plex_rag` → `sync_metadata` once, then `semantic_search` (or `search_subtitles` for dialogue).
+
 ## Responses
-
-
 
 Tools return JSON-friendly dicts with `success`, `operation`, and either `data` or `error` / `error_code` / `suggestions` for failures.
 

@@ -2,6 +2,8 @@
 
 The **FastAPI** backend (port **10740**) loads PlexMCP tools in-process and exposes REST under `/api/*`. It mounts the same FastMCP app at **`/mcp`**. The **Next.js** frontend (port **10741**) is the browser UI.
 
+See also [**ARCHITECTURE.md**](ARCHITECTURE.md), [**SELF_HOSTING.md**](SELF_HOSTING.md), and the [**documentation hub**](README.md).
+
 ## Documentation
 
 - **[webapp/README.md](../webapp/README.md)** — stack, features, API overview  
@@ -20,6 +22,18 @@ powershell -ExecutionPolicy Bypass -File .\start.ps1
 ```
 
 Open `http://127.0.0.1:10741`. API docs: `http://127.0.0.1:10740/docs`.
+
+## Screenshots (stylized wireframes)
+
+Real pixels may differ as the UI evolves. These **SVG** previews document the main surfaces:
+
+| Area | Preview |
+|------|--------|
+| **Overview** (dashboard / server) | ![Overview wireframe](assets/overview.svg) |
+| **Search** (keyword or dialogue) | ![Search wireframe](assets/search.svg) |
+| **Settings** (Plex, LLM, RAG) | ![Settings wireframe](assets/settings.svg) |
+
+Replace with PNGs if you need marketing shots — see [assets/README.md](assets/README.md).
 
 ## *arr integration
 

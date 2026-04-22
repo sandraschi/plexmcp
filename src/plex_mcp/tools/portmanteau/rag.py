@@ -16,24 +16,38 @@ logger = get_logger(__name__)
 
 @mcp.tool()
 async def plex_rag(
-    operation: Literal["semantic_search", "sync_metadata"],
+    operation: Literal["semantic_search", "sync_metadata", "sync_subtitles", "search_subtitles", "status"],
     query: str | None = None,
     limit: int = 5,
+    enrich: bool = False,
+    media_id: str | None = None,
+    library_id: str | None = None,
 ) -> dict[str, Any]:
     """
-    RAG integration for Plex Media. Semantic search over movie, show, and music (artist) descriptions.
+    RAG integration for Plex Media. Semantic search and metadata enrichment.
 
     PORTMANTEAU PATTERN RATIONALE:
-    Consolidates neural search and metadata vectorization into a single tool to manage the
-    lifecycle of the local knowledge base.
+    Consolidates neural search, metadata vectorization, and external high-value 
+    discovery (Wikipedia) into a single tool to manage the knowledge lifecycle.
 
     OPERATIONS:
-    - semantic_search: Natural language search across indexed Plex content using neural embeddings.
-    - sync_metadata: Extract and vectorize metadata into the local LanceDB store.
+    - semantic_search: Natural language search across indexed Plex metadata (Title, Plot, etc.).
+    - search_subtitles: Semantic search across indexed dialogue/subtitles for deep content discovery.
+    - sync_metadata: Extract and vectorize core metadata into the local store.
+    - sync_subtitles: Download, parse, and index subtitle tracks for semantic dialogue search.
+    - status: Check the health and document counts of RAG indices.
+
+    ENRICHMENT (sync_metadata only):
+    When 'enrich' is True, the system fetches deep contextual summaries from Wikipedia 
+    for each item and appends it to the vector index. This significantly improves 
+    semantic search accuracy for historical or thematic queries.
+
+    FILTERING (sync operations):
+    - media_id: Sync subtitles/metadata only for a specific Plex item.
+    - library_id: Sync subtitles/metadata only for a specific library.
 
     Returns:
     FastMCP 3.1+ dialogic response with top semantic matches and sync status.
-    Enables natural language discovery and contextual media recommendations.
     """
     try:
         plex = _get_plex_service()
@@ -44,7 +58,7 @@ async def plex_rag(
             err = (
                 "RAG Core dependencies not found. "
                 "Install in-repo RAG: pip install plex-mcp-advanced[rag] "
-                "(or add mcp-central-docs src to PYTHONPATH for shared vector store)."
+                "(or add mcp-central-docs src to PYTHONPATH)."
             )
             report_rag_sync_error(err)
             return {
@@ -54,12 +68,13 @@ async def plex_rag(
             }
 
         if operation == "sync_metadata":
-            count = await ingestor.extract_and_index_all()
+            count = await ingestor.extract_and_index_all(enrich=enrich)
             return {
                 "success": True,
                 "operation": "sync_metadata",
                 "indexed_count": count,
-                "message": f"Successfully synced {count} media items into RAG vector store.",
+                "enriched": enrich,
+                "message": f"Successfully synced {count} media items into RAG vector store {'with Wikipedia enrichment' if enrich else ''}.",
             }
 
         elif operation == "semantic_search":
@@ -70,13 +85,40 @@ async def plex_rag(
                     "error_code": "MISSING_PARAMETER",
                 }
 
-            results = ingestor.semantic_search(query, limit=limit)
+            results = ingestor.semantic_search(query, limit=limit, table="plex_media")
             return {
                 "success": True,
                 "operation": "semantic_search",
                 "query": query,
                 "results": results,
                 "count": len(results),
+            }
+
+        elif operation == "search_subtitles":
+            if not query:
+                return {
+                    "success": False,
+                    "error": "query is required for search_subtitles operation",
+                    "error_code": "MISSING_PARAMETER",
+                }
+
+            results = ingestor.semantic_search(query, limit=limit, table="plex_subtitles")
+            return {
+                "success": True,
+                "operation": "search_subtitles",
+                "query": query,
+                "results": results,
+                "count": len(results),
+            }
+
+        elif operation == "sync_subtitles":
+            count = await ingestor.sync_subtitles(library_id=library_id, media_id=media_id)
+            return {
+                "success": True,
+                "operation": "sync_subtitles",
+                "indexed_count": count,
+                "target": f"media_id={media_id}" if media_id else (f"library_id={library_id}" if library_id else "all"),
+                "message": f"Successfully indexed {count} subtitle chunks.",
             }
 
         elif operation == "status":
@@ -89,10 +131,40 @@ async def plex_rag(
             }
 
         else:
-            return {"success": False, "error": f"Unknown operation: {operation}"}
+            return {
+                "success": False, 
+                "error": f"Unknown operation: {operation}",
+                "error_code": "INVALID_OPERATION",
+                "suggestions": ["Use one of: semantic_search, sync_metadata, status"]
+            }
 
     except Exception as e:
-        logger.error(f"Error in plex_rag operation '{operation}': {e}", exc_info=True)
+        error_msg = str(e)
+        is_unauthorized = "unauthorized" in error_msg.lower() or "(401)" in error_msg
+        
+        logger.error(
+            f"Error in plex_rag operation '{operation}': {error_msg}",
+            exc_info=not is_unauthorized,
+        )
+        
         if operation == "sync_metadata":
-            report_rag_sync_error(str(e))
-        return {"success": False, "error": str(e), "error_code": "RAG_EXECUTION_ERROR"}
+            report_rag_sync_error(error_msg)
+            
+        suggestions = [
+            "Check Plex server is running and accessible",
+            "Verify your server URL and token in settings",
+        ]
+        
+        if is_unauthorized:
+            suggestions = [
+                "Update your PLEX_TOKEN in settings",
+                "Visit: https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/",
+            ]
+
+        return {
+            "success": False,
+            "error": f"Plex Authentication Failed: {error_msg}" if is_unauthorized else error_msg,
+            "error_code": "AUTH_FAILURE" if is_unauthorized else "RAG_EXECUTION_ERROR",
+            "operation": operation,
+            "suggestions": suggestions,
+        }

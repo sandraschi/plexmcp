@@ -41,7 +41,7 @@ async def run_workflow(
                 {"operation": "search", "query": query, "library_id": library_id, "limit": 20},
             )
         except Exception as e:
-            raise handle_mcp_error(e)
+            raise handle_mcp_error(e) from e
         if not search_result.get("success"):
             return {"success": False, "search_result": search_result, "error": "Plex search failed"}
         items = search_result.get("data") or search_result.get("results") or []

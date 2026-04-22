@@ -5,3 +5,15 @@ repos:
       - id: ruff
         args: [ --fix ]
       - id: ruff-format
+
+  - repo: https://github.com/biomejs/pre-commit
+    rev: v1.9.4
+    hooks:
+      - id: biome-check
+        additional_params: [--write]
+
+  - repo: https://github.com/returntocorp/semgrep
+    rev: v1.62.0
+    hooks:
+      - id: semgrep
+        args: [--config, auto, --error]
