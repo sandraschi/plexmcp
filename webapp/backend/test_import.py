@@ -1,5 +1,4 @@
 import sys
-from pathlib import Path
 
 print(f"Python path: {sys.path}")
 try:

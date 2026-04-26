@@ -100,7 +100,7 @@ async def plex_media(
             )
 
         # Operation: search
-        elif operation == "search":
+        if operation == "search":
             if not query:
                 return {
                     "success": False,
@@ -108,9 +108,7 @@ async def plex_media(
                     "error_code": "MISSING_QUERY",
                 }
 
-            items = await plex.search_media(
-                query, limit=limit, offset=offset, library_id=library_id
-            )
+            items = await plex.search_media(query, limit=limit, offset=offset, library_id=library_id)
             return ToolResult(
                 content={
                     "success": True,
@@ -124,7 +122,7 @@ async def plex_media(
             )
 
         # Operation: get_details
-        elif operation == "get_details":
+        if operation == "get_details":
             if not media_key:
                 return {
                     "success": False,
@@ -144,21 +142,21 @@ async def plex_media(
             )
 
         # Operation: get_recent
-        elif operation == "get_recent":
+        if operation == "get_recent":
             items = await plex.get_recently_added(library_id=library_id, limit=limit)
             return ToolResult(
-                body={
+                structured_content={
                     "success": True,
                     "operation": "get_recent",
                     "data": [item.dict() if hasattr(item, "dict") else item for item in items],
                     "count": len(items),
                     "limit": limit,
                 },
-                prefabs=["plex_media_browser"],
+                meta={"prefabs": ["plex_media_browser"]},
             )
 
         # Operation: update_metadata
-        elif operation == "update_metadata":
+        if operation == "update_metadata":
             if not media_key:
                 return {
                     "success": False,
@@ -188,16 +186,15 @@ async def plex_media(
                 "updated_fields": list(metadata.keys()),
             }
 
-        else:
-            return {
-                "success": False,
-                "error": f"Invalid operation: '{operation}'",
-                "error_code": "INVALID_OPERATION",
-                "suggestions": [
-                    "Valid operations: browse, search, get_details, get_recent, update_metadata",
-                    f"You provided: '{operation}'",
-                ],
-            }
+        return {
+            "success": False,
+            "error": f"Invalid operation: '{operation}'",
+            "error_code": "INVALID_OPERATION",
+            "suggestions": [
+                "Valid operations: browse, search, get_details, get_recent, update_metadata",
+                f"You provided: '{operation}'",
+            ],
+        }
 
     except RuntimeError as e:
         error_msg = str(e)
@@ -233,18 +230,18 @@ async def plex_media(
     except Exception as e:
         error_msg = str(e)
         is_unauthorized = "unauthorized" in error_msg.lower() or "(401)" in error_msg
-        
+
         logger.error(
             f"Error in plex_media operation '{operation}': {error_msg}",
             exc_info=not is_unauthorized,
         )
-        
+
         suggestions = [
             "Check Plex server is running and accessible",
             "Verify your server URL and token in settings",
             "Check server logs for detailed error information",
         ]
-        
+
         if is_unauthorized:
             suggestions = [
                 "Update your PLEX_TOKEN in settings",

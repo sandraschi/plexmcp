@@ -56,4 +56,4 @@ async def test_plex_rag_search(mock_plex_service):
             assert result["operation"] == "semantic_search"
             assert len(result["results"]) == 1
             assert result["results"][0]["content"] == "Result 1"
-            mock_search.assert_called_once_with("test query", limit=5)
+            mock_search.assert_called_once_with("test query", limit=5, table="plex_media")

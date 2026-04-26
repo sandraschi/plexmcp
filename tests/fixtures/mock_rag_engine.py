@@ -73,15 +73,29 @@ class MockSentenceTransformer:
         return np.random.rand(len(sentences), 384).astype(np.float32)
 
 
+def _can_patch_sentence_transformers() -> bool:
+    """True only if the full ML stack imports (optional in some dev/CI sandboxes)."""
+    try:
+        import importlib
+
+        importlib.import_module("sentence_transformers")
+    except Exception:
+        return False
+    else:
+        return True
+
+
 def patch_rag_engine():
     """Context manager or manual patcher for RAG dependencies."""
-    mock_lancedb = MockLanceDBContent("memory://")
     mock_transformer = MockSentenceTransformer()
 
-    patches = [
+    patches: list = [
         patch("lancedb.connect", side_effect=mock_lanced_connect),
-        patch("sentence_transformers.SentenceTransformer", return_value=mock_transformer),
     ]
+    if _can_patch_sentence_transformers():
+        patches.append(
+            patch("sentence_transformers.SentenceTransformer", return_value=mock_transformer),
+        )
     return patches
 
 

@@ -80,9 +80,7 @@ async def plex_organization(
                     "suggestions": ["Provide library_id parameter"],
                 }
 
-            result = await plex.organize_library(
-                library_id=library_id, dry_run=dry_run, patterns=patterns
-            )
+            result = await plex.organize_library(library_id=library_id, dry_run=dry_run, patterns=patterns)
             return {
                 "success": True,
                 "operation": "organize",
@@ -92,7 +90,7 @@ async def plex_organization(
             }
 
         # Operation: analyze
-        elif operation == "analyze":
+        if operation == "analyze":
             if not library_id:
                 return {
                     "success": False,
@@ -110,7 +108,7 @@ async def plex_organization(
             }
 
         # Operation: clean_bundles
-        elif operation == "clean_bundles":
+        if operation == "clean_bundles":
             if library_id:
                 result = await plex.clean_bundles(library_id=library_id)
             else:
@@ -125,11 +123,9 @@ async def plex_organization(
             }
 
         # Operation: optimize_database
-        elif operation == "optimize_database":
+        if operation == "optimize_database":
             # Note: This is a placeholder - actual implementation would optimize the database
-            logger.info(
-                f"Optimizing database (analyze={analyze}, vacuum={vacuum}, reindex={reindex})"
-            )
+            logger.info(f"Optimizing database (analyze={analyze}, vacuum={vacuum}, reindex={reindex})")
             return {
                 "success": True,
                 "operation": "optimize_database",
@@ -145,7 +141,7 @@ async def plex_organization(
             }
 
         # Operation: fix_issues
-        elif operation == "fix_issues":
+        if operation == "fix_issues":
             if not library_id:
                 return {
                     "success": False,
@@ -183,16 +179,15 @@ async def plex_organization(
                 },
             }
 
-        else:
-            return {
-                "success": False,
-                "error": f"Invalid operation: '{operation}'",
-                "error_code": "INVALID_OPERATION",
-                "suggestions": [
-                    "Valid operations: organize, analyze, clean_bundles, optimize_database, fix_issues",
-                    f"You provided: '{operation}'",
-                ],
-            }
+        return {
+            "success": False,
+            "error": f"Invalid operation: '{operation}'",
+            "error_code": "INVALID_OPERATION",
+            "suggestions": [
+                "Valid operations: organize, analyze, clean_bundles, optimize_database, fix_issues",
+                f"You provided: '{operation}'",
+            ],
+        }
 
     except RuntimeError as e:
         error_msg = str(e)

@@ -98,9 +98,7 @@ class PlexManager:
 
         return result
 
-    async def _make_request(
-        self, endpoint: str, params: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
+    async def _make_request(self, endpoint: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Make HTTP request to Plex server with error handling.
 
@@ -126,9 +124,9 @@ class PlexManager:
             # Check for HTTP errors
             if response.status_code == 401:
                 raise PlexAPIError("Authentication failed - check Plex token")
-            elif response.status_code == 404:
+            if response.status_code == 404:
                 raise PlexAPIError("Plex server endpoint not found")
-            elif response.status_code >= 400:
+            if response.status_code >= 400:
                 raise PlexAPIError(f"HTTP error {response.status_code}: {response.text}")
 
             # Parse XML response
@@ -180,9 +178,7 @@ class PlexManager:
 
         return results
 
-    async def get_recently_added(
-        self, library_id: str | None = None, limit: int = 20
-    ) -> list[dict[str, Any]]:
+    async def get_recently_added(self, library_id: str | None = None, limit: int = 20) -> list[dict[str, Any]]:
         """Get recently added media"""
         if library_id:
             endpoint = f"/library/sections/{library_id}/recentlyAdded"

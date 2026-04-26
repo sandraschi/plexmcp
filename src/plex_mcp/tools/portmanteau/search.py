@@ -140,9 +140,7 @@ async def plex_search(
 
                 # Filter by summary - items are dicts from get_library_items
                 results = [
-                    item
-                    for item in all_items
-                    if item.get("summary") and search_term in item.get("summary", "").lower()
+                    item for item in all_items if item.get("summary") and search_term in item.get("summary", "").lower()
                 ][:limit]
             else:
                 results = await plex.search_media(query=query, limit=limit, library_id=library_id)
@@ -150,14 +148,10 @@ async def plex_search(
                 # Filter by summary if specified
                 if summary_contains and isinstance(results, list):
                     search_term = summary_contains.lower()
-                    results = [
-                        item
-                        for item in results
-                        if item.summary and search_term in item.summary.lower()
-                    ]
+                    results = [item for item in results if item.summary and search_term in item.summary.lower()]
 
             return ToolResult(
-                body={
+                structured_content={
                     "success": True,
                     "operation": "search",
                     "query": query,
@@ -167,10 +161,10 @@ async def plex_search(
                     "limit": limit,
                     "offset": offset,
                 },
-                prefabs=["plex_media_browser"],
+                meta={"prefabs": ["plex_media_browser"]},
             )
 
-        elif operation == "advanced_search":
+        if operation == "advanced_search":
             if not query and not title and not genre and not actor:
                 return {
                     "success": False,
@@ -221,7 +215,7 @@ async def plex_search(
                 sort_dir=sort_dir,
             )
             return ToolResult(
-                content={
+                structured_content={
                     "success": True,
                     "operation": "advanced_search",
                     "results": results,
@@ -232,7 +226,7 @@ async def plex_search(
                 meta={"prefabs": ["plex_media_browser"]},
             )
 
-        elif operation == "suggest":
+        if operation == "suggest":
             if not query:
                 return {
                     "success": False,
@@ -242,9 +236,7 @@ async def plex_search(
                 }
 
             # Use search with limit=1 to get suggestions
-            suggestions = await plex.search_media(
-                query=query, limit=min(limit, 10), library_id=library_id
-            )
+            suggestions = await plex.search_media(query=query, limit=min(limit, 10), library_id=library_id)
             return {
                 "success": True,
                 "operation": "suggest",
@@ -253,7 +245,7 @@ async def plex_search(
                 "count": len(suggestions) if isinstance(suggestions, list) else 0,
             }
 
-        elif operation == "recent_searches":
+        if operation == "recent_searches":
             recent = _recent_searches[:max_recent]
             return {
                 "success": True,
@@ -262,7 +254,7 @@ async def plex_search(
                 "count": len(recent),
             }
 
-        elif operation == "save_search":
+        if operation == "save_search":
             if not search_name:
                 return {
                     "success": False,
@@ -306,31 +298,28 @@ async def plex_search(
                 "message": f"Search '{search_name}' saved successfully",
             }
 
-        else:
-            return {
-                "success": False,
-                "error": f"Unknown operation: {operation}",
-                "error_code": "INVALID_OPERATION",
-                "suggestions": [
-                    "Use one of: search, advanced_search, suggest, recent_searches, save_search"
-                ],
-            }
+        return {
+            "success": False,
+            "error": f"Unknown operation: {operation}",
+            "error_code": "INVALID_OPERATION",
+            "suggestions": ["Use one of: search, advanced_search, suggest, recent_searches, save_search"],
+        }
 
     except Exception as e:
         error_msg = str(e)
         is_unauthorized = "unauthorized" in error_msg.lower() or "(401)" in error_msg
-        
+
         logger.error(
             f"Error in plex_search operation '{operation}': {error_msg}",
             exc_info=not is_unauthorized,
         )
-        
+
         suggestions = [
             "Check Plex server is running and accessible",
             "Verify your server URL and token in settings",
             "Check server logs for detailed error information",
         ]
-        
+
         if is_unauthorized:
             suggestions = [
                 "Update your PLEX_TOKEN in settings",

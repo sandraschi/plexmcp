@@ -10,10 +10,10 @@ repos:
     rev: v1.9.4
     hooks:
       - id: biome-check
-        additional_params: [--write]
+        # Default entry already includes --write; do not use non-schema keys like additional_params
 
-  - repo: https://github.com/returntocorp/semgrep
-    rev: v1.62.0
-    hooks:
-      - id: semgrep
-        args: [--config, auto, --error]
+  # Semgrep is not run from pre-commit here: the official `repo: returntocorp/semgrep` hook
+  # clones a huge repo and can fail on Windows (bad checkout in cache), and the `language: python`
+  # install path mangles Windows shebang paths. Semgrep on Windows is also spotty (Unix-only
+  # `resource` in some code paths). CI runs `semgrep scan` on Ubuntu (see .github/workflows/ci.yml).
+  # Use WSL or `just lint` on Linux/macOS if you want local Semgrep.

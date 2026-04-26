@@ -358,18 +358,14 @@ def async_timeout(
             try:
                 return await asyncio.wait_for(func(*args, **kwargs), timeout=seconds)
             except TimeoutError as e:
-                raise TimeoutError(
-                    f"Function {func.__name__} timed out after {seconds} seconds"
-                ) from e
+                raise TimeoutError(f"Function {func.__name__} timed out after {seconds} seconds") from e
 
         return wrapper
 
     return decorator
 
 
-async def run_until_complete_with_timeout(
-    coro: Coroutine[Any, Any, T], timeout: float, default: T = None
-) -> T | None:
+async def run_until_complete_with_timeout(coro: Coroutine[Any, Any, T], timeout: float, default: T = None) -> T | None:
     """Run a coroutine with a timeout and return a default value on timeout.
 
     Args:

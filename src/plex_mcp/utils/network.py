@@ -58,9 +58,7 @@ async def async_is_port_open(
     loop = loop or asyncio.get_event_loop()
 
     try:
-        reader, writer = await asyncio.wait_for(
-            asyncio.open_connection(host, port, loop=loop), timeout=timeout
-        )
+        reader, writer = await asyncio.wait_for(asyncio.open_connection(host, port, loop=loop), timeout=timeout)
         writer.close()
         await writer.wait_closed()
         return True
@@ -160,9 +158,7 @@ async def is_plex_server_reachable(
         async with aiohttp.ClientSession() as session:
             # First, try to connect to the server root
             try:
-                async with session.get(
-                    f"{server_url}", headers=headers, timeout=timeout, ssl=ssl_verify
-                ) as response:
+                async with session.get(f"{server_url}", headers=headers, timeout=timeout, ssl=ssl_verify) as response:
                     if response.status != 200:
                         return False, None
             except (TimeoutError, aiohttp.ClientError):

@@ -94,10 +94,17 @@ if not HAS_RAG:
                 except Exception:
                     # Initialize with schema
                     if self.table_name == "plex_subtitles":
-                        data = [{"id": "", "content": "", "vector": [0.0] * dim, "metadata": {"media_id": "", "start_time": 0, "end_time": 0, "language": ""}}]
+                        data = [
+                            {
+                                "id": "",
+                                "content": "",
+                                "vector": [0.0] * dim,
+                                "metadata": {"media_id": "", "start_time": 0, "end_time": 0, "language": ""},
+                            }
+                        ]
                     else:
                         data = [{"id": "", "content": "", "vector": [0.0] * dim, "metadata": {}}]
-                    
+
                     self._table = self.db.create_table(
                         self.table_name,
                         data=data,
@@ -407,18 +414,26 @@ class PlexIngestor:
                         items_to_process.extend(result.get("items", []))
 
             total_items = len(items_to_process)
-            _report_progress({"phase": "extracting", "documents_total": total_items, "message": f"Found {total_items} items to check for subtitles."})
+            _report_progress(
+                {
+                    "phase": "extracting",
+                    "documents_total": total_items,
+                    "message": f"Found {total_items} items to check for subtitles.",
+                }
+            )
 
             all_chunks = []
             for idx, item in enumerate(items_to_process):
                 rating_key = str(item.get("id"))
                 title = item.get("title", "Unknown")
-                
-                _report_progress({
-                    "library_index": idx + 1,
-                    "library_name": title,
-                    "message": f"Processing subtitles for: {title} ({idx+1}/{total_items})"
-                })
+
+                _report_progress(
+                    {
+                        "library_index": idx + 1,
+                        "library_name": title,
+                        "message": f"Processing subtitles for: {title} ({idx + 1}/{total_items})",
+                    }
+                )
 
                 chunks = await self._extract_subtitles_for_item(rating_key, title)
                 all_chunks.extend(chunks)
@@ -426,7 +441,12 @@ class PlexIngestor:
             if all_chunks:
                 _report_progress({"phase": "embedding", "message": f"Embedding {len(all_chunks)} subtitle chunks..."})
                 await asyncio.to_thread(self.subtitle_store.add_documents, all_chunks, True)
-                _report_progress({"phase": "complete", "message": f"Successfully indexed {len(all_chunks)} subtitle chunks from {total_items} items."})
+                _report_progress(
+                    {
+                        "phase": "complete",
+                        "message": f"Successfully indexed {len(all_chunks)} subtitle chunks from {total_items} items.",
+                    }
+                )
                 return len(all_chunks)
 
             _report_progress({"phase": "complete", "message": "No subtitles found to index."})
@@ -442,7 +462,7 @@ class PlexIngestor:
         try:
             # Use the server's fetchItem to get the full object with streams
             server_item = await asyncio.to_thread(self.plex.server.fetchItem, int(media_id))
-            
+
             chunks = []
             for media in server_item.media:
                 for part in media.parts:
@@ -453,7 +473,9 @@ class PlexIngestor:
                             if codec in ("srt", "vtt"):
                                 content = await self._download_subtitle(stream.key)
                                 if content:
-                                    item_chunks = self._parse_and_chunk_subtitle(content, media_id, title, getattr(stream, "language", "en"))
+                                    item_chunks = self._parse_and_chunk_subtitle(
+                                        content, media_id, title, getattr(stream, "language", "en")
+                                    )
                                     chunks.extend(item_chunks)
                                     # Break after first successful subtitle track to avoid duplicates
                                     return chunks
@@ -465,6 +487,7 @@ class PlexIngestor:
     async def _download_subtitle(self, key: str) -> str | None:
         """Download subtitle content from Plex server."""
         import httpx
+
         url = self.plex.server.url(key)
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
@@ -477,7 +500,6 @@ class PlexIngestor:
 
     def _parse_srt(self, content: str) -> list[dict[str, Any]]:
         """Parse SRT content into a list of dialogue blocks."""
-        import re
         # Pattern for: 00:00:20,000 --> 00:00:24,400
         pattern = r"(\d{2}:\d{2}:\d{2},\d{3}) --> (\d{2}:\d{2}:\d{2},\d{3})"
         return self._slice_subtitle_content(content, pattern, ",", ":")
@@ -485,44 +507,45 @@ class PlexIngestor:
     def _parse_vtt(self, content: str) -> list[dict[str, Any]]:
         """Parse VTT content into a list of dialogue blocks."""
         import re
+
         if content.startswith("WEBVTT"):
             content = re.sub(r"WEBVTT.*\n", "", content, count=1)
         # Pattern for: 00:00:20.000 --> 00:00:24.400
         pattern = r"(\d{2}:\d{2}:\d{2}\.\d{3}) --> (\d{2}:\d{2}:\d{2}\.\d{3})"
         return self._slice_subtitle_content(content, pattern, ".", ":")
 
-    def _slice_subtitle_content(self, content: str, pattern: str, decimal_sep: str, time_sep: str) -> list[dict[str, Any]]:
+    def _slice_subtitle_content(
+        self, content: str, pattern: str, decimal_sep: str, time_sep: str
+    ) -> list[dict[str, Any]]:
         import re
+
         blocks = re.split(pattern, content)
         results = []
         for i in range(1, len(blocks), 3):
             if i + 2 >= len(blocks):
                 break
             start_ts = blocks[i].strip()
-            end_ts = blocks[i+1].strip()
-            text = blocks[i+2].strip()
-            
+            end_ts = blocks[i + 1].strip()
+            text = blocks[i + 2].strip()
+
             # Remove HTML tags and sequence numbers (including those at the end of blocks)
             text = re.sub(r"<[^>]*>", "", text)
-            text = re.sub(r"^\d+\s*\n", "", text) # Leading sequence number
-            text = re.sub(r"\n\s*\d+\s*$", "", text) # Trailing sequence number (from re.split overlap)
+            text = re.sub(r"^\d+\s*\n", "", text)  # Leading sequence number
+            text = re.sub(r"\n\s*\d+\s*$", "", text)  # Trailing sequence number (from re.split overlap)
             text = " ".join(text.split())
-            
+
             if not text:
                 continue
-                
+
             def to_ms(ts):
                 ts = ts.replace(decimal_sep, ".")
                 parts = re.split(f"[{time_sep}.]", ts)
-                if len(parts) < 4: return 0
+                if len(parts) < 4:
+                    return 0
                 h, m, s, ms = map(int, parts)
                 return (h * 3600 + m * 60 + s) * 1000 + ms
 
-            results.append({
-                "start_ms": to_ms(start_ts),
-                "end_ms": to_ms(end_ts),
-                "text": text
-            })
+            results.append({"start_ms": to_ms(start_ts), "end_ms": to_ms(end_ts), "text": text})
         return results
 
     def _chunk_dialogue(self, blocks: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -532,48 +555,47 @@ class PlexIngestor:
         chunks = []
         for i in range(0, len(blocks), chunk_size - overlap):
             group = blocks[i : i + chunk_size]
-            if not group: break
+            if not group:
+                break
             combined_text = " ".join([r["text"] for r in group])
-            chunks.append({
-                "start_ms": group[0]["start_ms"],
-                "end_ms": group[-1]["end_ms"],
-                "text": combined_text
-            })
+            chunks.append({"start_ms": group[0]["start_ms"], "end_ms": group[-1]["end_ms"], "text": combined_text})
         return chunks
 
     def _parse_and_chunk_subtitle(self, content: str, media_id: str, title: str, lang: str) -> list[dict[str, Any]]:
         """Parse SRT/VTT and create chunks of dialogue."""
         if "-->" not in content:
             return []
-            
+
         # Determine format
         if content.startswith("WEBVTT") or ".000 -->" in content:
             blocks = self._parse_vtt(content)
         else:
             blocks = self._parse_srt(content)
-            
+
         chunks = self._chunk_dialogue(blocks)
-        
+
         results = []
         for i, chunk in enumerate(chunks):
             start_time = chunk["start_ms"]
             end_time = chunk["end_ms"]
-            
+
             def format_time(ms):
                 s = ms // 1000
                 return f"{s // 3600:02d}:{(s % 3600) // 60:02d}:{s % 60:02d}"
 
-            results.append({
-                "id": f"{media_id}_sub_{i}",
-                "content": f"Media: {title}\nTime: {format_time(start_time)} - {format_time(end_time)}\nDialogue: {chunk['text']}",
-                "metadata": {
-                    "media_id": media_id,
-                    "title": title,
-                    "start_time": start_time,
-                    "end_time": end_time,
-                    "language": lang
+            results.append(
+                {
+                    "id": f"{media_id}_sub_{i}",
+                    "content": f"Media: {title}\nTime: {format_time(start_time)} - {format_time(end_time)}\nDialogue: {chunk['text']}",
+                    "metadata": {
+                        "media_id": media_id,
+                        "title": title,
+                        "start_time": start_time,
+                        "end_time": end_time,
+                        "language": lang,
+                    },
                 }
-            })
+            )
         return results
 
     def semantic_search(self, query: str, limit: int = 5, table: str = "plex_media"):

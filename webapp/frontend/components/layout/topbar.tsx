@@ -1,6 +1,13 @@
 "use client";
 
-import { ChevronDown, Container, ExternalLink, FileText, Film, HelpCircle } from "lucide-react";
+import {
+	ChevronDown,
+	Container,
+	ExternalLink,
+	FileText,
+	Film,
+	HelpCircle,
+} from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { HelpModal } from "./help-modal";
@@ -41,7 +48,11 @@ async function checkUrlUp(url: string, timeoutMs = 2500): Promise<boolean> {
 	try {
 		const c = new AbortController();
 		const t = setTimeout(() => c.abort(), timeoutMs);
-		const r = await fetch(url, { method: "GET", signal: c.signal, cache: "no-store" });
+		const r = await fetch(url, {
+			method: "GET",
+			signal: c.signal,
+			cache: "no-store",
+		});
 		clearTimeout(t);
 		return r.ok;
 	} catch {
@@ -68,7 +79,8 @@ export function Topbar() {
 	useEffect(() => {
 		if (!showZoo) return;
 		const close = (e: MouseEvent) => {
-			if (zooRef.current && !zooRef.current.contains(e.target as Node)) setShowZoo(false);
+			if (zooRef.current && !zooRef.current.contains(e.target as Node))
+				setShowZoo(false);
 		};
 		document.addEventListener("click", close);
 		return () => document.removeEventListener("click", close);
@@ -77,7 +89,10 @@ export function Topbar() {
 	useEffect(() => {
 		if (!showContainers) return;
 		const close = (e: MouseEvent) => {
-			if (containersRef.current && !containersRef.current.contains(e.target as Node))
+			if (
+				containersRef.current &&
+				!containersRef.current.contains(e.target as Node)
+			)
 				setShowContainers(false);
 		};
 		document.addEventListener("click", close);
@@ -89,7 +104,11 @@ export function Topbar() {
 		window.open(item.url, "_blank", "noopener,noreferrer");
 	};
 
-	const handleWebappClick = async (app: { label: string; url: string; port?: number }) => {
+	const handleWebappClick = async (app: {
+		label: string;
+		url: string;
+		port?: number;
+	}) => {
 		setShowZoo(false);
 		const url = app.url;
 		const up = await checkUrlUp(url);
@@ -112,13 +131,19 @@ export function Topbar() {
 			if (!r.ok) {
 				setLaunchModal((m) =>
 					m
-						? { ...m, status: "error", error: data.detail ?? data.error ?? `HTTP ${r.status}` }
+						? {
+								...m,
+								status: "error",
+								error: data.detail ?? data.error ?? `HTTP ${r.status}`,
+							}
 						: null,
 				);
 				return;
 			}
 			if (data.error) {
-				setLaunchModal((m) => (m ? { ...m, status: "error", error: data.error } : null));
+				setLaunchModal((m) =>
+					m ? { ...m, status: "error", error: data.error } : null,
+				);
 				return;
 			}
 			setLaunchModal((m) => (m ? { ...m, status: "done" } : null));
@@ -127,7 +152,11 @@ export function Topbar() {
 		} catch (e) {
 			setLaunchModal((m) =>
 				m
-					? { ...m, status: "error", error: e instanceof Error ? e.message : "Request failed" }
+					? {
+							...m,
+							status: "error",
+							error: e instanceof Error ? e.message : "Request failed",
+						}
 					: null,
 			);
 		}
@@ -169,7 +198,9 @@ export function Topbar() {
 										>
 											{app.label}
 											{app.port != null && (
-												<span className="text-slate-500 text-xs ml-1">:{app.port}</span>
+												<span className="text-slate-500 text-xs ml-1">
+													:{app.port}
+												</span>
 											)}
 										</button>
 									))}
@@ -199,7 +230,9 @@ export function Topbar() {
 											className="block w-full text-left px-4 py-2 text-sm text-slate-200 hover:bg-slate-700/80 hover:text-amber"
 										>
 											{item.label}
-											<span className="text-slate-500 text-xs ml-1">:{item.port}</span>
+											<span className="text-slate-500 text-xs ml-1">
+												:{item.port}
+											</span>
 										</button>
 									))}
 								</div>
@@ -235,7 +268,9 @@ export function Topbar() {
 					<div className="rounded-lg glass-panel border border-slate-600/50 shadow-xl px-6 py-4 max-w-sm text-center">
 						{launchModal.status === "starting" && (
 							<>
-								<p className="text-slate-200 font-medium">Starting {launchModal.label}</p>
+								<p className="text-slate-200 font-medium">
+									Starting {launchModal.label}
+								</p>
 								<p className="text-slate-400 text-sm mt-1">Please wait...</p>
 							</>
 						)}
@@ -244,8 +279,12 @@ export function Topbar() {
 						)}
 						{launchModal.status === "error" && (
 							<>
-								<p className="text-red-400 font-medium">Could not start {launchModal.label}</p>
-								<p className="text-slate-400 text-sm mt-1">{launchModal.error}</p>
+								<p className="text-red-400 font-medium">
+									Could not start {launchModal.label}
+								</p>
+								<p className="text-slate-400 text-sm mt-1">
+									{launchModal.error}
+								</p>
 								<p className="text-slate-500 text-xs mt-2">
 									Run the start script in the repo manually.
 								</p>

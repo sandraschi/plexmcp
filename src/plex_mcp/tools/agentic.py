@@ -120,9 +120,7 @@ def register_agentic_plex_tools(app: Any) -> None:
                 error="No matching tools",
                 error_code="TOOLS_NOT_FOUND",
                 message=f"None of available_tools matched. Registered include: {sorted(name_to_tool.keys())[:40]}",
-                recovery_options=[
-                    "Use exact portmanteau names: plex_library, plex_media, plex_search, ..."
-                ],
+                recovery_options=["Use exact portmanteau names: plex_library, plex_media, plex_search, ..."],
             )
 
         system_prompt = (
@@ -164,9 +162,7 @@ def register_agentic_plex_tools(app: Any) -> None:
                         "executed_tools": list(dict.fromkeys(executed_tools)),
                         "missing_tool_names": missing,
                     },
-                    recommendations=[
-                        "Narrow available_tools for faster runs or raise max_iterations."
-                    ],
+                    recommendations=["Narrow available_tools for faster runs or raise max_iterations."],
                 )
 
         return _ok(

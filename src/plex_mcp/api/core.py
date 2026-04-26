@@ -361,12 +361,8 @@ async def get_recently_added(library_id: str | None = None, limit: int = 20) -> 
                         thumb=item.thumbUrl if hasattr(item, "thumbUrl") else "",
                         art=item.artUrl if hasattr(item, "artUrl") else "",
                         duration=item.duration if hasattr(item, "duration") else 0,
-                        added_at=item.addedAt.timestamp()
-                        if hasattr(item, "addedAt") and item.addedAt
-                        else 0,
-                        updated_at=item.updatedAt.timestamp()
-                        if hasattr(item, "updatedAt") and item.updatedAt
-                        else 0,
+                        added_at=item.addedAt.timestamp() if hasattr(item, "addedAt") and item.addedAt else 0,
+                        updated_at=item.updatedAt.timestamp() if hasattr(item, "updatedAt") and item.updatedAt else 0,
                     )
                 )
             elif hasattr(item, "type") and item.type == "episode":
@@ -381,12 +377,8 @@ async def get_recently_added(library_id: str | None = None, limit: int = 20) -> 
                         thumb=item.thumbUrl if hasattr(item, "thumbUrl") else "",
                         art=item.grandparentThumb if hasattr(item, "grandparentThumb") else "",
                         duration=item.duration if hasattr(item, "duration") else 0,
-                        added_at=item.addedAt.timestamp()
-                        if hasattr(item, "addedAt") and item.addedAt
-                        else 0,
-                        updated_at=item.updatedAt.timestamp()
-                        if hasattr(item, "updatedAt") and item.updatedAt
-                        else 0,
+                        added_at=item.addedAt.timestamp() if hasattr(item, "addedAt") and item.addedAt else 0,
+                        updated_at=item.updatedAt.timestamp() if hasattr(item, "updatedAt") and item.updatedAt else 0,
                     )
                 )
             else:
@@ -465,12 +457,8 @@ async def get_media_info(media_key: str) -> dict[str, Any]:
             "thumb": item.thumbUrl if hasattr(item, "thumbUrl") else "",
             "art": item.artUrl if hasattr(item, "artUrl") else "",
             "duration": getattr(item, "duration", 0),
-            "added_at": item.addedAt.timestamp()
-            if hasattr(item, "addedAt") and item.addedAt
-            else 0,
-            "updated_at": item.updatedAt.timestamp()
-            if hasattr(item, "updatedAt") and item.updatedAt
-            else 0,
+            "added_at": item.addedAt.timestamp() if hasattr(item, "addedAt") and item.addedAt else 0,
+            "updated_at": item.updatedAt.timestamp() if hasattr(item, "updatedAt") and item.updatedAt else 0,
             "genres": [tag.tag for tag in getattr(item, "genres", [])],
             "directors": [tag.tag for tag in getattr(item, "directors", [])],
             "writers": [tag.tag for tag in getattr(item, "writers", [])],
@@ -600,9 +588,7 @@ async def help(level: str = "beginner", section: str = "all") -> dict[str, Any]:
                     if param_name == "self":
                         continue
                     param_info = {
-                        "type": str(param.annotation)
-                        if param.annotation != Parameter.empty
-                        else "any",
+                        "type": str(param.annotation) if param.annotation != Parameter.empty else "any",
                         "required": param.default == Parameter.empty,
                         "default": param.default if param.default != Parameter.empty else None,
                     }
@@ -617,9 +603,7 @@ async def help(level: str = "beginner", section: str = "all") -> dict[str, Any]:
                     "short_description": short_desc,
                     "long_description": long_desc,
                     "parameters": params,
-                    "returns": str(sig.return_annotation)
-                    if sig.return_annotation != sig.empty
-                    else "None",
+                    "returns": str(sig.return_annotation) if sig.return_annotation != sig.empty else "None",
                 }
 
     # Build response based on requested level and section

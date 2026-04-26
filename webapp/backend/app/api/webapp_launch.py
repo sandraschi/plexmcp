@@ -109,14 +109,10 @@ async def webapp_launch(body: WebappLaunchRequest) -> WebappLaunchResponse:
         _run_start_script(repo_dir, script_rel)
     except FileNotFoundError as e:
         logger.warning("Webapp launch script missing: %s", e)
-        return WebappLaunchResponse(
-            already_running=False, started=False, url=url, error=str(e)
-        )
+        return WebappLaunchResponse(already_running=False, started=False, url=url, error=str(e))
     except Exception as e:
         logger.exception("Webapp launch failed")
-        return WebappLaunchResponse(
-            already_running=False, started=False, url=url, error=str(e)
-        )
+        return WebappLaunchResponse(already_running=False, started=False, url=url, error=str(e))
     deadline = time.monotonic() + POLL_TIMEOUT
     while time.monotonic() < deadline:
         time.sleep(POLL_INTERVAL)

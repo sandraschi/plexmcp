@@ -106,7 +106,7 @@ async def plex_integration(
             }
 
         # Operation: vienna_recommendations
-        elif operation == "vienna_recommendations":
+        if operation == "vienna_recommendations":
             if not content_type:
                 return {
                     "success": False,
@@ -132,12 +132,10 @@ async def plex_integration(
             }
 
         # Operation: european_content
-        elif operation == "european_content":
+        if operation == "european_content":
             from ...api.vienna import EuropeanContentRequest
 
-            request = EuropeanContentRequest(
-                country=country, content_type=content_type, limit=limit
-            )
+            request = EuropeanContentRequest(country=country, content_type=content_type, limit=limit)
             result = await get_european_content(request)
             return {
                 "success": True,
@@ -149,7 +147,7 @@ async def plex_integration(
             }
 
         # Operation: anime_season_info
-        elif operation == "anime_season_info":
+        if operation == "anime_season_info":
             if year is None:
                 return {
                     "success": False,
@@ -178,7 +176,7 @@ async def plex_integration(
             }
 
         # Operation: configure
-        elif operation == "configure":
+        if operation == "configure":
             if not integration_name:
                 return {
                     "success": False,
@@ -204,7 +202,7 @@ async def plex_integration(
             }
 
         # Operation: sync
-        elif operation == "sync":
+        if operation == "sync":
             if not integration_name:
                 return {
                     "success": False,
@@ -222,16 +220,15 @@ async def plex_integration(
                 "data": {"synced": True, "items_synced": 0},  # Placeholder
             }
 
-        else:
-            return {
-                "success": False,
-                "error": f"Invalid operation: '{operation}'",
-                "error_code": "INVALID_OPERATION",
-                "suggestions": [
-                    "Valid operations: list_integrations, vienna_recommendations, european_content, anime_season_info, configure, sync",
-                    f"You provided: '{operation}'",
-                ],
-            }
+        return {
+            "success": False,
+            "error": f"Invalid operation: '{operation}'",
+            "error_code": "INVALID_OPERATION",
+            "suggestions": [
+                "Valid operations: list_integrations, vienna_recommendations, european_content, anime_season_info, configure, sync",
+                f"You provided: '{operation}'",
+            ],
+        }
 
     except RuntimeError as e:
         error_msg = str(e)

@@ -44,9 +44,7 @@ class ServiceInitializationError(ServiceError):
     """Raised when a service fails to initialize."""
 
     def __init__(self, message: str, details: dict[str, Any] | None = None):
-        super().__init__(
-            message=message, code="service_initialization_error", details=details, status_code=500
-        )
+        super().__init__(message=message, code="service_initialization_error", details=details, status_code=500)
 
 
 class ServiceValidationError(ServiceError):

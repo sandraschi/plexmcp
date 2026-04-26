@@ -20,7 +20,9 @@ HELP_BASIC = """
 3. Backend: http://localhost:10740  Frontend: http://localhost:10741
 """.strip()
 
-HELP_INTERMEDIATE = HELP_BASIC + """
+HELP_INTERMEDIATE = (
+    HELP_BASIC
+    + """
 
 ## Logger modal (topbar)
 Shows tail of webapp log file. Use filter/level to narrow. Refreshes on level change.
@@ -31,8 +33,11 @@ This content. Levels: Basic, Intermediate, Advanced, Expert.
 ## Semantic & Dialogue Search
 Use Search with natural-language. Toggle between **Metadata** (keyword/context) and **Dialogue** (index subtitles) to find exact scenes and quotes.
 """.strip()
+)
 
-HELP_ADVANCED = HELP_INTERMEDIATE + """
+HELP_ADVANCED = (
+    HELP_INTERMEDIATE
+    + """
 
 ## LLM (Chat)
 - Provider: Ollama (default http://127.0.0.1:11434) or LM Studio / OpenAI-compatible.
@@ -43,8 +48,11 @@ HELP_ADVANCED = HELP_INTERMEDIATE + """
 ## Neural RAG (v2.5.0)
 Backend can index Plex metadata and **Subtitles** (SRT/VTT). Use the **RAG Dashboard** to trigger reindexes and monitor vector counts.
 """.strip()
+)
 
-HELP_EXPERT = HELP_ADVANCED + """
+HELP_EXPERT = (
+    HELP_ADVANCED
+    + """
 
 ## AI Workflows
 POST /api/workflows/run with id (e.g. search_and_summarize) and params. Runs Plex search then LLM summarization.
@@ -52,6 +60,7 @@ POST /api/workflows/run with id (e.g. search_and_summarize) and params. Runs Ple
 ## API docs
 http://localhost:10740/docs
 """.strip()
+)
 
 
 @router.get("")

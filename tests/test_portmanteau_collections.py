@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from plex_mcp.tools.portmanteau.collections import plex_collections
+from tests.helpers import tool_payload
 
 
 class TestPlexCollections:
@@ -18,7 +19,7 @@ class TestPlexCollections:
             return_value=mock_plex_service,
         ):
             _fn = plex_collections.fn if hasattr(plex_collections, "fn") else plex_collections
-            result = await _fn(operation="list")
+            result = tool_payload(await _fn(operation="list"))
 
             assert result["success"] is True
             assert result["operation"] == "list"
@@ -32,7 +33,7 @@ class TestPlexCollections:
             return_value=mock_plex_service,
         ):
             _fn = plex_collections.fn if hasattr(plex_collections, "fn") else plex_collections
-            result = await _fn(operation="get", collection_id="collection123")
+            result = tool_payload(await _fn(operation="get", collection_id="collection123"))
 
             assert result["success"] is True
             assert result["operation"] == "get"
@@ -45,11 +46,13 @@ class TestPlexCollections:
             return_value=mock_plex_service,
         ):
             _fn = plex_collections.fn if hasattr(plex_collections, "fn") else plex_collections
-            result = await _fn(
-                operation="create",
-                title="My Collection",
-                library_id="1",
-                items=["12345"],
+            result = tool_payload(
+                await _fn(
+                    operation="create",
+                    title="My Collection",
+                    library_id="1",
+                    items=["12345"],
+                )
             )
 
             assert result["success"] is True
@@ -63,10 +66,12 @@ class TestPlexCollections:
             return_value=mock_plex_service,
         ):
             _fn = plex_collections.fn if hasattr(plex_collections, "fn") else plex_collections
-            result = await _fn(
-                operation="update",
-                collection_id="collection123",
-                title="Updated Collection",
+            result = tool_payload(
+                await _fn(
+                    operation="update",
+                    collection_id="collection123",
+                    title="Updated Collection",
+                )
             )
 
             assert result["success"] is True
@@ -80,7 +85,7 @@ class TestPlexCollections:
             return_value=mock_plex_service,
         ):
             _fn = plex_collections.fn if hasattr(plex_collections, "fn") else plex_collections
-            result = await _fn(operation="delete", collection_id="collection123")
+            result = tool_payload(await _fn(operation="delete", collection_id="collection123"))
 
             assert result["success"] is True
             assert result["operation"] == "delete"

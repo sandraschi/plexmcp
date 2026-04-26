@@ -40,11 +40,7 @@ def plex_mock_factory():
 @pytest.fixture
 def mock_plex_server(plex_mock_factory):
     """Mocks a plexapi.server.PlexServer."""
-    server = plex_mock_factory(
-        machineIdentifier="test-machine-id",
-        version="1.32.0",
-        friendlyName="Test Server"
-    )
+    server = plex_mock_factory(machineIdentifier="test-machine-id", version="1.32.0", friendlyName="Test Server")
     server.library = plex_mock_factory(sections=[])
     return server
 

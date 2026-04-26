@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from plex_mcp.tools.portmanteau.server import plex_server
+from tests.helpers import tool_payload
 
 
 class TestPlexServer:
@@ -13,11 +14,9 @@ class TestPlexServer:
     @pytest.mark.asyncio
     async def test_status_operation(self, mock_plex_service):
         """Test status operation."""
-        with patch(
-            "plex_mcp.tools.portmanteau.server._get_plex_service", return_value=mock_plex_service
-        ):
-            result = await (plex_server.fn if hasattr(plex_server, "fn") else plex_server)(
-                operation="status"
+        with patch("plex_mcp.tools.portmanteau.server._get_plex_service", return_value=mock_plex_service):
+            result = tool_payload(
+                await (plex_server.fn if hasattr(plex_server, "fn") else plex_server)(operation="status")
             )
 
             assert result["success"] is True
@@ -27,11 +26,9 @@ class TestPlexServer:
     @pytest.mark.asyncio
     async def test_info_operation(self, mock_plex_service):
         """Test info operation."""
-        with patch(
-            "plex_mcp.tools.portmanteau.server._get_plex_service", return_value=mock_plex_service
-        ):
-            result = await (plex_server.fn if hasattr(plex_server, "fn") else plex_server)(
-                operation="info"
+        with patch("plex_mcp.tools.portmanteau.server._get_plex_service", return_value=mock_plex_service):
+            result = tool_payload(
+                await (plex_server.fn if hasattr(plex_server, "fn") else plex_server)(operation="info")
             )
 
             assert result["success"] is True
@@ -40,11 +37,9 @@ class TestPlexServer:
     @pytest.mark.asyncio
     async def test_health_operation(self, mock_plex_service):
         """Test health operation."""
-        with patch(
-            "plex_mcp.tools.portmanteau.server._get_plex_service", return_value=mock_plex_service
-        ):
-            result = await (plex_server.fn if hasattr(plex_server, "fn") else plex_server)(
-                operation="health"
+        with patch("plex_mcp.tools.portmanteau.server._get_plex_service", return_value=mock_plex_service):
+            result = tool_payload(
+                await (plex_server.fn if hasattr(plex_server, "fn") else plex_server)(operation="health")
             )
 
             assert result["success"] is True
@@ -57,12 +52,8 @@ class TestPlexServer:
 
         from plex_mcp.api.admin import ServerMaintenanceResult
 
-        with patch(
-            "plex_mcp.tools.portmanteau.server._get_plex_service", return_value=mock_plex_service
-        ):
-            with patch(
-                "plex_mcp.api.admin.run_server_maintenance", new_callable=AsyncMock
-            ) as mock_maintenance:
+        with patch("plex_mcp.tools.portmanteau.server._get_plex_service", return_value=mock_plex_service):
+            with patch("plex_mcp.api.admin.run_server_maintenance", new_callable=AsyncMock) as mock_maintenance:
                 mock_maintenance.return_value = ServerMaintenanceResult(
                     operation="optimize",
                     status="completed",
@@ -74,8 +65,10 @@ class TestPlexServer:
                     warnings=[],
                     next_recommended=None,
                 )
-                result = await (plex_server.fn if hasattr(plex_server, "fn") else plex_server)(
-                    operation="maintenance", maintenance_operation="optimize"
+                result = tool_payload(
+                    await (plex_server.fn if hasattr(plex_server, "fn") else plex_server)(
+                        operation="maintenance", maintenance_operation="optimize"
+                    )
                 )
 
                 assert result["success"] is True

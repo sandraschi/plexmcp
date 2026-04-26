@@ -44,9 +44,7 @@ def _format_playlist(playlist) -> dict[str, Any]:
         "item_count": len(playlist.items()),
         "smart": playlist.smart,
         "created_at": int(playlist.addedAt.timestamp()),
-        "updated_at": int(playlist.updatedAt.timestamp())
-        if playlist.updatedAt
-        else int(playlist.addedAt.timestamp()),
+        "updated_at": int(playlist.updatedAt.timestamp()) if playlist.updatedAt else int(playlist.addedAt.timestamp()),
         "owner": playlist.username,
     }
 
@@ -104,15 +102,13 @@ async def plex_playlist(
             }
 
         # Operation: get
-        elif operation == "get":
+        if operation == "get":
             if not playlist_id:
                 return {
                     "success": False,
                     "error": "playlist_id is required for get operation",
                     "error_code": "MISSING_PLAYLIST_ID",
-                    "suggestions": [
-                        "Use plex_playlist(operation='list') to find available playlist IDs"
-                    ],
+                    "suggestions": ["Use plex_playlist(operation='list') to find available playlist IDs"],
                 }
 
             try:
@@ -333,9 +329,7 @@ async def plex_playlist(
                     "success": False,
                     "error": "items list is required for remove_items operation",
                     "error_code": "MISSING_ITEMS",
-                    "suggestions": [
-                        "Provide items parameter with list of media item IDs to remove"
-                    ],
+                    "suggestions": ["Provide items parameter with list of media item IDs to remove"],
                 }
 
             try:
@@ -471,18 +465,18 @@ async def plex_playlist(
     except Exception as e:
         error_msg = str(e)
         is_unauthorized = "unauthorized" in error_msg.lower() or "(401)" in error_msg
-        
+
         logger.error(
             f"Error in plex_playlist operation '{operation}': {error_msg}",
             exc_info=not is_unauthorized,
         )
-        
+
         suggestions = [
             "Check Plex server is running and accessible",
             "Verify your server URL and token in settings",
             "Check server logs for detailed error information",
         ]
-        
+
         if is_unauthorized:
             suggestions = [
                 "Update your PLEX_TOKEN in settings",

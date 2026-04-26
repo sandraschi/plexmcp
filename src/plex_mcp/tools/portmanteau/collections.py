@@ -81,17 +81,16 @@ async def plex_collections(
                     "collections": [],
                     "message": "Collection listing requires PlexAPI collection support (not yet fully implemented)",
                 }
-            else:
-                libraries = await plex.list_libraries()
-                return {
-                    "success": True,
-                    "operation": "list",
-                    "collections": [],
-                    "libraries": libraries,
-                    "message": "Collection listing requires PlexAPI collection support (not yet fully implemented)",
-                }
+            libraries = await plex.list_libraries()
+            return {
+                "success": True,
+                "operation": "list",
+                "collections": [],
+                "libraries": libraries,
+                "message": "Collection listing requires PlexAPI collection support (not yet fully implemented)",
+            }
 
-        elif operation == "get":
+        if operation == "get":
             if not collection_id:
                 return {
                     "success": False,
@@ -108,7 +107,7 @@ async def plex_collections(
                 "data": {},
             }
 
-        elif operation == "create":
+        if operation == "create":
             if not title:
                 return {
                     "success": False,
@@ -131,7 +130,7 @@ async def plex_collections(
                 "data": {},
             }
 
-        elif operation == "update":
+        if operation == "update":
             if not collection_id:
                 return {
                     "success": False,
@@ -147,7 +146,7 @@ async def plex_collections(
                 "data": {},
             }
 
-        elif operation == "delete":
+        if operation == "delete":
             if not collection_id:
                 return {
                     "success": False,
@@ -162,7 +161,7 @@ async def plex_collections(
                 "message": "Collection deletion requires PlexAPI collection support (not yet fully implemented)",
             }
 
-        elif operation == "add_items":
+        if operation == "add_items":
             if not collection_id:
                 return {
                     "success": False,
@@ -184,7 +183,7 @@ async def plex_collections(
                 "message": "Adding items to collection requires PlexAPI collection support (not yet fully implemented)",
             }
 
-        elif operation == "remove_items":
+        if operation == "remove_items":
             if not collection_id:
                 return {
                     "success": False,
@@ -206,31 +205,28 @@ async def plex_collections(
                 "message": "Removing items from collection requires PlexAPI collection support (not yet fully implemented)",
             }
 
-        else:
-            return {
-                "success": False,
-                "error": f"Unknown operation: {operation}",
-                "error_code": "INVALID_OPERATION",
-                "suggestions": [
-                    "Use one of: list, get, create, update, delete, add_items, remove_items"
-                ],
-            }
+        return {
+            "success": False,
+            "error": f"Unknown operation: {operation}",
+            "error_code": "INVALID_OPERATION",
+            "suggestions": ["Use one of: list, get, create, update, delete, add_items, remove_items"],
+        }
 
     except Exception as e:
         error_msg = str(e)
         is_unauthorized = "unauthorized" in error_msg.lower() or "(401)" in error_msg
-        
+
         logger.error(
             f"Error in plex_collections operation '{operation}': {error_msg}",
             exc_info=not is_unauthorized,
         )
-        
+
         suggestions = [
             "Check Plex server is running and accessible",
             "Verify your server URL and token in settings",
             "Check server logs for detailed error information",
         ]
-        
+
         if is_unauthorized:
             suggestions = [
                 "Update your PLEX_TOKEN in settings",

@@ -94,7 +94,7 @@ async def plex_streaming(
             )
 
         # Operation: list_clients
-        elif operation == "list_clients":
+        if operation == "list_clients":
             clients = await plex.get_clients()
             return ToolResult(
                 content={
@@ -107,7 +107,7 @@ async def plex_streaming(
             )
 
         # Operation: play (can auto-select client, so check before requiring client_id)
-        elif operation == "play":
+        if operation == "play":
             if not media_key:
                 return {
                     "success": False,
@@ -148,9 +148,7 @@ async def plex_streaming(
                     }
 
                 # Select best client for this media type
-                selected_client = await plex._run_in_executor(
-                    plex._select_client_for_media, media_type, all_clients
-                )
+                selected_client = await plex._run_in_executor(plex._select_client_for_media, media_type, all_clients)
                 if not selected_client:
                     return {
                         "success": False,
@@ -193,7 +191,7 @@ async def plex_streaming(
             }
 
         # Operation: pause
-        elif operation == "pause":
+        if operation == "pause":
             result = await plex.control_playback(
                 client_identifier=client_id,
                 action="pause",
@@ -206,7 +204,7 @@ async def plex_streaming(
             }
 
         # Operation: stop
-        elif operation == "stop":
+        if operation == "stop":
             result = await plex.control_playback(
                 client_identifier=client_id,
                 action="stop",
@@ -219,7 +217,7 @@ async def plex_streaming(
             }
 
         # Operation: seek
-        elif operation == "seek":
+        if operation == "seek":
             if seek_to is None:
                 return {
                     "success": False,
@@ -242,7 +240,7 @@ async def plex_streaming(
             }
 
         # Operation: skip_next
-        elif operation == "skip_next":
+        if operation == "skip_next":
             result = await plex.control_playback(
                 client_identifier=client_id,
                 action="skip_next",
@@ -255,7 +253,7 @@ async def plex_streaming(
             }
 
         # Operation: skip_previous
-        elif operation == "skip_previous":
+        if operation == "skip_previous":
             result = await plex.control_playback(
                 client_identifier=client_id,
                 action="skip_previous",
@@ -268,7 +266,7 @@ async def plex_streaming(
             }
 
         # Operation: set_quality
-        elif operation == "set_quality":
+        if operation == "set_quality":
             if not quality:
                 return {
                     "success": False,
@@ -290,7 +288,7 @@ async def plex_streaming(
             }
 
         # Operation: set_volume
-        elif operation == "set_volume":
+        if operation == "set_volume":
             if not client_id:
                 return {
                     "success": False,
@@ -304,9 +302,7 @@ async def plex_streaming(
                     "error_code": "MISSING_VOLUME",
                 }
 
-            result = await plex.control_playback(
-                client_identifier=client_id, action="set_volume", volume=volume
-            )
+            result = await plex.control_playback(client_identifier=client_id, action="set_volume", volume=volume)
             return {
                 "success": result,
                 "operation": "set_volume",
@@ -315,7 +311,7 @@ async def plex_streaming(
             }
 
         # Operation: control
-        elif operation == "control":
+        if operation == "control":
             if not action:
                 return {
                     "success": False,
@@ -372,32 +368,31 @@ async def plex_streaming(
                 "data": {"controlled": result},
             }
 
-        else:
-            return {
-                "success": False,
-                "error": f"Invalid operation: '{operation}'",
-                "error_code": "INVALID_OPERATION",
-                "suggestions": [
-                    "Valid operations: list_sessions, list_clients, play, pause, stop, seek, skip_next, skip_previous, set_quality, control",
-                    f"You provided: '{operation}'",
-                ],
-            }
+        return {
+            "success": False,
+            "error": f"Invalid operation: '{operation}'",
+            "error_code": "INVALID_OPERATION",
+            "suggestions": [
+                "Valid operations: list_sessions, list_clients, play, pause, stop, seek, skip_next, skip_previous, set_quality, control",
+                f"You provided: '{operation}'",
+            ],
+        }
 
     except Exception as e:
         error_msg = str(e)
         is_unauthorized = "unauthorized" in error_msg.lower() or "(401)" in error_msg
-        
+
         logger.error(
             f"Error in plex_streaming operation '{operation}': {error_msg}",
             exc_info=not is_unauthorized,
         )
-        
+
         suggestions = [
             "Check Plex server is running and accessible",
             "Verify your server URL and token in settings",
             "Check server logs for detailed error information",
         ]
-        
+
         if is_unauthorized:
             suggestions = [
                 "Update your PLEX_TOKEN in settings",

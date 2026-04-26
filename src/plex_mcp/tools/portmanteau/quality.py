@@ -77,7 +77,7 @@ async def plex_quality(
                 "count": len(profiles) if isinstance(profiles, list) else 0,
             }
 
-        elif operation == "get_profile":
+        if operation == "get_profile":
             if not profile_name:
                 return {
                     "success": False,
@@ -94,7 +94,7 @@ async def plex_quality(
                 "settings": settings,
             }
 
-        elif operation == "create_profile":
+        if operation == "create_profile":
             if not profile_name:
                 return {
                     "success": False,
@@ -108,9 +108,7 @@ async def plex_quality(
                     "error_code": "MISSING_PARAMETER",
                 }
 
-            result = await plex.create_quality_profile(
-                name=profile_name, settings=settings, is_default=is_default
-            )
+            result = await plex.create_quality_profile(name=profile_name, settings=settings, is_default=is_default)
             return {
                 "success": True,
                 "operation": "create_profile",
@@ -119,7 +117,7 @@ async def plex_quality(
                 "result": result,
             }
 
-        elif operation == "update_profile":
+        if operation == "update_profile":
             if not profile_name:
                 return {
                     "success": False,
@@ -133,9 +131,7 @@ async def plex_quality(
                     "error_code": "MISSING_PARAMETER",
                 }
 
-            result = await plex.update_transcode_settings(
-                profile_name=profile_name, settings=settings
-            )
+            result = await plex.update_transcode_settings(profile_name=profile_name, settings=settings)
             return {
                 "success": True,
                 "operation": "update_profile",
@@ -143,7 +139,7 @@ async def plex_quality(
                 "result": result,
             }
 
-        elif operation == "delete_profile":
+        if operation == "delete_profile":
             if not profile_name:
                 return {
                     "success": False,
@@ -159,7 +155,7 @@ async def plex_quality(
                 "result": result,
             }
 
-        elif operation == "set_default":
+        if operation == "set_default":
             if not profile_name:
                 return {
                     "success": False,
@@ -168,9 +164,7 @@ async def plex_quality(
                 }
 
             # Update profile to set as default
-            result = await plex.create_quality_profile(
-                name=profile_name, settings={}, is_default=True
-            )
+            result = await plex.create_quality_profile(name=profile_name, settings={}, is_default=True)
             return {
                 "success": True,
                 "operation": "set_default",
@@ -178,15 +172,14 @@ async def plex_quality(
                 "result": result,
             }
 
-        else:
-            return {
-                "success": False,
-                "error": f"Unknown operation: {operation}",
-                "error_code": "INVALID_OPERATION",
-                "suggestions": [
-                    "Use one of: list_profiles, get_profile, create_profile, update_profile, delete_profile, set_default"
-                ],
-            }
+        return {
+            "success": False,
+            "error": f"Unknown operation: {operation}",
+            "error_code": "INVALID_OPERATION",
+            "suggestions": [
+                "Use one of: list_profiles, get_profile, create_profile, update_profile, delete_profile, set_default"
+            ],
+        }
 
     except Exception as e:
         logger.error(f"Error in plex_quality operation '{operation}': {e}", exc_info=True)

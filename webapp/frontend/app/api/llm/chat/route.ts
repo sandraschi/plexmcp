@@ -20,7 +20,9 @@ export async function POST(request: NextRequest) {
 		}
 		return new Response(text, {
 			status: 200,
-			headers: { "Content-Type": res.headers.get("content-type") ?? "application/json" },
+			headers: {
+				"Content-Type": res.headers.get("content-type") ?? "application/json",
+			},
 		});
 	} catch {
 		return new Response(null, { status: 502 });

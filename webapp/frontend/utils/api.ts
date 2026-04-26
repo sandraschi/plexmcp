@@ -21,7 +21,11 @@ export async function listLibraries() {
 	return res.json();
 }
 
-export async function search(params?: { query?: string; library_id?: string; limit?: number }) {
+export async function search(params?: {
+	query?: string;
+	library_id?: string;
+	limit?: number;
+}) {
 	const sp = new URLSearchParams();
 	if (params?.query) sp.set("query", params.query);
 	if (params?.library_id) sp.set("library_id", params.library_id);
@@ -57,7 +61,9 @@ export type ArrStackResponse = {
 
 /** Radarr / Sonarr / Lidarr reachability (requires URLs + API keys in Settings or .env). */
 export async function getArrStackStatus(): Promise<ArrStackResponse> {
-	const res = await fetch(`${getBaseUrl()}/api/arr/status`, { cache: "no-store" });
+	const res = await fetch(`${getBaseUrl()}/api/arr/status`, {
+		cache: "no-store",
+	});
 	if (!res.ok) throw new Error(await res.text());
 	return res.json();
 }
@@ -101,7 +107,9 @@ export async function getMovies(params?: {
 export async function getMediaDetail(
 	ratingKey: string,
 ): Promise<{ success: boolean; data: Record<string, unknown> }> {
-	const res = await fetch(`${getBaseUrl()}/api/media/${encodeURIComponent(ratingKey)}`);
+	const res = await fetch(
+		`${getBaseUrl()}/api/media/${encodeURIComponent(ratingKey)}`,
+	);
 	if (!res.ok) {
 		const raw = await res.text();
 		const looksLikeHtml = /<!DOCTYPE|<\s*html[\s>]/i.test(raw);
@@ -215,7 +223,11 @@ export async function getSemanticSearch(params: {
 	query: string;
 	limit?: number;
 	index?: "metadata" | "subtitles";
-}): Promise<{ available: boolean; results: SemanticResult[]; error: string | null }> {
+}): Promise<{
+	available: boolean;
+	results: SemanticResult[];
+	error: string | null;
+}> {
 	const sp = new URLSearchParams({ query: params.query });
 	if (params.limit != null) sp.set("limit", String(params.limit));
 	if (params.index) sp.set("index", params.index);
@@ -238,19 +250,24 @@ export type RagSyncProgress = {
 };
 
 export async function getRagSyncStatus(): Promise<RagSyncProgress> {
-	const res = await fetch(`${getBaseUrl()}/api/rag/sync/status`, { cache: "no-store" });
+	const res = await fetch(`${getBaseUrl()}/api/rag/sync/status`, {
+		cache: "no-store",
+	});
 	if (!res.ok) throw new Error(await res.text());
 	return res.json();
 }
 
 /** Starts background reindex; poll {@link getRagSyncStatus} until phase is complete or error. */
-export async function startRagSync(type: "metadata" | "subtitles" = "metadata"): Promise<{
+export async function startRagSync(
+	type: "metadata" | "subtitles" = "metadata",
+): Promise<{
 	success: boolean;
 	started?: boolean;
 	already_running?: boolean;
 	error?: string | null;
 }> {
-	const endpoint = type === "metadata" ? "/api/rag/sync" : "/api/rag/sync/subtitles";
+	const endpoint =
+		type === "metadata" ? "/api/rag/sync" : "/api/rag/sync/subtitles";
 	const res = await fetch(`${getBaseUrl()}${endpoint}`, { method: "POST" });
 	const data = (await res.json().catch(() => ({}))) as {
 		already_running?: boolean;
@@ -258,11 +275,17 @@ export async function startRagSync(type: "metadata" | "subtitles" = "metadata"):
 		success?: boolean;
 	};
 	if (res.status === 409 && data.already_running) {
-		return { success: false, already_running: true, error: data.error ?? "Already running" };
+		return {
+			success: false,
+			already_running: true,
+			error: data.error ?? "Already running",
+		};
 	}
 	if (!res.ok) {
 		throw new Error(
-			typeof data.error === "string" ? data.error : (await res.text()) || `HTTP ${res.status}`,
+			typeof data.error === "string"
+				? data.error
+				: (await res.text()) || `HTTP ${res.status}`,
 		);
 	}
 	return data as { success: boolean; started?: boolean; error?: string | null };

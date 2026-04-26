@@ -1,6 +1,5 @@
-
-import sys
 import os
+import sys
 from pathlib import Path
 
 # Add src to path
@@ -15,6 +14,7 @@ os.environ["PLEX_URL"] = "http://127.0.0.1:32400"
 
 from app.mcp.client import _get_tool_function
 
+
 def test():
     tool_name = "plex_server"
     print(f"Testing loading tool: {tool_name}")
@@ -23,6 +23,7 @@ def test():
         print(f"SUCCESS: Loaded {tool_name}: {func}")
         # Try calling it
         import asyncio
+
         try:
             result = asyncio.run(func())
             print(f"Result: {result}")
@@ -30,6 +31,7 @@ def test():
             print(f"Error calling tool: {e}")
     else:
         print(f"FAILED to load {tool_name}")
+
 
 if __name__ == "__main__":
     test()

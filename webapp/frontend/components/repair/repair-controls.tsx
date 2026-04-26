@@ -22,7 +22,12 @@ interface RepairControlsProps {
 	onReload: () => void;
 }
 
-export function RepairControls({ item, probeData, onLog, onReload }: RepairControlsProps) {
+export function RepairControls({
+	item,
+	probeData,
+	onLog,
+	onReload,
+}: RepairControlsProps) {
 	const [audioOffset, setAudioOffset] = useState<string>("0.5");
 	const [subOffset, setSubOffset] = useState<string>("0.5");
 	const [targetAspect, setTargetAspect] = useState<string>("16:9");
@@ -46,7 +51,9 @@ export function RepairControls({ item, probeData, onLog, onReload }: RepairContr
 			});
 			const data = await res.json();
 			if (data.success) {
-				onLog(`[SUCCESS] ${operation} complete. Output: ${data.message || "File updated."}`);
+				onLog(
+					`[SUCCESS] ${operation} complete. Output: ${data.message || "File updated."}`,
+				);
 				onReload(); // Refresh probe to show changes
 			} else {
 				onLog(`[ERROR] ${operation} failed: ${data.error}`);
@@ -58,7 +65,8 @@ export function RepairControls({ item, probeData, onLog, onReload }: RepairContr
 		}
 	}
 
-	const subStreams = probeData?.streams?.filter((s: any) => s.codec_type === "subtitle") || [];
+	const subStreams =
+		probeData?.streams?.filter((s: any) => s.codec_type === "subtitle") || [];
 
 	return (
 		<div className="flex flex-col gap-4">
@@ -93,7 +101,9 @@ export function RepairControls({ item, probeData, onLog, onReload }: RepairContr
 					<button
 						disabled={pending}
 						onClick={() =>
-							execute("sync_audio", { offset_seconds: Number.parseFloat(audioOffset) })
+							execute("sync_audio", {
+								offset_seconds: Number.parseFloat(audioOffset),
+							})
 						}
 						className="p-2 rounded bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/40 border border-emerald-500/30 transition-all disabled:opacity-50"
 						title="Shift Audio"
@@ -123,7 +133,9 @@ export function RepairControls({ item, probeData, onLog, onReload }: RepairContr
 					<button
 						disabled={pending}
 						onClick={() =>
-							execute("sync_subtitles", { offset_seconds: Number.parseFloat(subOffset) })
+							execute("sync_subtitles", {
+								offset_seconds: Number.parseFloat(subOffset),
+							})
 						}
 						className="flex-1 p-2 rounded bg-purple-500/20 text-purple-400 hover:bg-purple-500/40 border border-purple-500/30 transition-all text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2"
 					>
@@ -158,11 +170,15 @@ export function RepairControls({ item, probeData, onLog, onReload }: RepairContr
 							onChange={(e) => setReencode(e.target.checked)}
 							className="rounded bg-slate-800 border-slate-700 text-amber"
 						/>
-						<span className="text-[10px] text-slate-400">Force Re-encode (Slow)</span>
+						<span className="text-[10px] text-slate-400">
+							Force Re-encode (Slow)
+						</span>
 					</label>
 					<button
 						disabled={pending}
-						onClick={() => execute("set_aspect", { aspect_ratio: targetAspect, reencode })}
+						onClick={() =>
+							execute("set_aspect", { aspect_ratio: targetAspect, reencode })
+						}
 						className="flex-1 p-2 rounded bg-amber/20 text-amber hover:bg-amber/40 border border-amber/30 transition-all text-xs font-bold uppercase"
 					>
 						Fix Ratio
@@ -193,7 +209,9 @@ export function RepairControls({ item, probeData, onLog, onReload }: RepairContr
 								</div>
 								<button
 									disabled={pending}
-									onClick={() => execute("extract_subtitles", { stream_index: s.index })}
+									onClick={() =>
+										execute("extract_subtitles", { stream_index: s.index })
+									}
 									className="px-2 py-1 rounded-sm bg-blue-500/20 text-blue-400 hover:bg-blue-500/40 text-[9px] font-bold uppercase transition-all"
 								>
 									Extract

@@ -6,6 +6,7 @@ from unittest.mock import patch
 import pytest
 
 from plex_mcp.tools.portmanteau.streaming import plex_streaming
+from tests.helpers import tool_payload
 
 
 class TestPlexStreaming:
@@ -19,11 +20,11 @@ class TestPlexStreaming:
             with contextlib.suppress(Exception):
                 await plex_service.connect()  # real server optional; mocks otherwise
 
-        with patch(
-            "plex_mcp.tools.portmanteau.streaming._get_plex_service", return_value=plex_service
-        ):
-            result = await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
-                operation="list_sessions"
+        with patch("plex_mcp.tools.portmanteau.streaming._get_plex_service", return_value=plex_service):
+            result = tool_payload(
+                await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
+                    operation="list_sessions"
+                )
             )
 
             assert result["success"] is True
@@ -38,11 +39,9 @@ class TestPlexStreaming:
             with contextlib.suppress(Exception):
                 await plex_service.connect()  # real server optional; mocks otherwise
 
-        with patch(
-            "plex_mcp.tools.portmanteau.streaming._get_plex_service", return_value=plex_service
-        ):
-            result = await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
-                operation="list_clients"
+        with patch("plex_mcp.tools.portmanteau.streaming._get_plex_service", return_value=plex_service):
+            result = tool_payload(
+                await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(operation="list_clients")
             )
 
             assert result["success"] is True
@@ -52,11 +51,11 @@ class TestPlexStreaming:
     @pytest.mark.asyncio
     async def test_play_operation(self, plex_service):
         """Test play operation (uses real server if available, otherwise mocks)."""
-        with patch(
-            "plex_mcp.tools.portmanteau.streaming._get_plex_service", return_value=plex_service
-        ):
-            result = await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
-                operation="play", client_id="client123", media_key="12345"
+        with patch("plex_mcp.tools.portmanteau.streaming._get_plex_service", return_value=plex_service):
+            result = tool_payload(
+                await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
+                    operation="play", client_id="client123", media_key="12345"
+                )
             )
 
             assert result["success"] is True
@@ -65,8 +64,8 @@ class TestPlexStreaming:
     @pytest.mark.asyncio
     async def test_play_operation_missing_params(self):
         """Test play operation requires client_id and media_key."""
-        result = await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
-            operation="play"
+        result = tool_payload(
+            await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(operation="play")
         )
 
         assert result["success"] is False
@@ -74,11 +73,11 @@ class TestPlexStreaming:
     @pytest.mark.asyncio
     async def test_pause_operation(self, plex_service):
         """Test pause operation (uses real server if available, otherwise mocks)."""
-        with patch(
-            "plex_mcp.tools.portmanteau.streaming._get_plex_service", return_value=plex_service
-        ):
-            result = await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
-                operation="pause", client_id="client123"
+        with patch("plex_mcp.tools.portmanteau.streaming._get_plex_service", return_value=plex_service):
+            result = tool_payload(
+                await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
+                    operation="pause", client_id="client123"
+                )
             )
 
             assert result["success"] is True
@@ -87,11 +86,11 @@ class TestPlexStreaming:
     @pytest.mark.asyncio
     async def test_stop_operation(self, plex_service):
         """Test stop operation (uses real server if available, otherwise mocks)."""
-        with patch(
-            "plex_mcp.tools.portmanteau.streaming._get_plex_service", return_value=plex_service
-        ):
-            result = await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
-                operation="stop", client_id="client123"
+        with patch("plex_mcp.tools.portmanteau.streaming._get_plex_service", return_value=plex_service):
+            result = tool_payload(
+                await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
+                    operation="stop", client_id="client123"
+                )
             )
 
             assert result["success"] is True
@@ -100,11 +99,11 @@ class TestPlexStreaming:
     @pytest.mark.asyncio
     async def test_seek_operation(self, plex_service):
         """Test seek operation (uses real server if available, otherwise mocks)."""
-        with patch(
-            "plex_mcp.tools.portmanteau.streaming._get_plex_service", return_value=plex_service
-        ):
-            result = await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
-                operation="seek", client_id="client123", seek_to=60000
+        with patch("plex_mcp.tools.portmanteau.streaming._get_plex_service", return_value=plex_service):
+            result = tool_payload(
+                await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
+                    operation="seek", client_id="client123", seek_to=60000
+                )
             )
 
             assert result["success"] is True
@@ -113,11 +112,11 @@ class TestPlexStreaming:
     @pytest.mark.asyncio
     async def test_skip_next_operation(self, plex_service):
         """Test skip_next operation (uses real server if available, otherwise mocks)."""
-        with patch(
-            "plex_mcp.tools.portmanteau.streaming._get_plex_service", return_value=plex_service
-        ):
-            result = await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
-                operation="skip_next", client_id="client123"
+        with patch("plex_mcp.tools.portmanteau.streaming._get_plex_service", return_value=plex_service):
+            result = tool_payload(
+                await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
+                    operation="skip_next", client_id="client123"
+                )
             )
 
             assert result["success"] is True
@@ -126,11 +125,11 @@ class TestPlexStreaming:
     @pytest.mark.asyncio
     async def test_skip_previous_operation(self, plex_service):
         """Test skip_previous operation (uses real server if available, otherwise mocks)."""
-        with patch(
-            "plex_mcp.tools.portmanteau.streaming._get_plex_service", return_value=plex_service
-        ):
-            result = await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
-                operation="skip_previous", client_id="client123"
+        with patch("plex_mcp.tools.portmanteau.streaming._get_plex_service", return_value=plex_service):
+            result = tool_payload(
+                await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
+                    operation="skip_previous", client_id="client123"
+                )
             )
 
             assert result["success"] is True
@@ -139,11 +138,11 @@ class TestPlexStreaming:
     @pytest.mark.asyncio
     async def test_control_operation(self, plex_service):
         """Test control operation (uses real server if available, otherwise mocks)."""
-        with patch(
-            "plex_mcp.tools.portmanteau.streaming._get_plex_service", return_value=plex_service
-        ):
-            result = await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
-                operation="control", client_id="client123", action="play", media_key="12345"
+        with patch("plex_mcp.tools.portmanteau.streaming._get_plex_service", return_value=plex_service):
+            result = tool_payload(
+                await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
+                    operation="control", client_id="client123", action="play", media_key="12345"
+                )
             )
 
             assert result["success"] is True
@@ -152,11 +151,11 @@ class TestPlexStreaming:
     @pytest.mark.asyncio
     async def test_set_quality_operation(self, plex_service):
         """Test set_quality operation (uses real server if available, otherwise mocks)."""
-        with patch(
-            "plex_mcp.tools.portmanteau.streaming._get_plex_service", return_value=plex_service
-        ):
-            result = await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
-                operation="set_quality", client_id="client123", quality="1080p"
+        with patch("plex_mcp.tools.portmanteau.streaming._get_plex_service", return_value=plex_service):
+            result = tool_payload(
+                await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
+                    operation="set_quality", client_id="client123", quality="1080p"
+                )
             )
 
             # set_quality is not yet fully implemented, should return NOT_IMPLEMENTED
@@ -166,11 +165,11 @@ class TestPlexStreaming:
     @pytest.mark.asyncio
     async def test_set_quality_missing_params(self, mock_plex_service):
         """Test set_quality operation requires quality parameter."""
-        with patch(
-            "plex_mcp.tools.portmanteau.streaming._get_plex_service", return_value=mock_plex_service
-        ):
-            result = await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
-                operation="set_quality", client_id="client123"
+        with patch("plex_mcp.tools.portmanteau.streaming._get_plex_service", return_value=mock_plex_service):
+            result = tool_payload(
+                await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
+                    operation="set_quality", client_id="client123"
+                )
             )
 
         assert result["success"] is False
@@ -179,11 +178,11 @@ class TestPlexStreaming:
     @pytest.mark.asyncio
     async def test_set_volume_operation(self, plex_service):
         """Test set_volume operation (uses real server if available, otherwise mocks)."""
-        with patch(
-            "plex_mcp.tools.portmanteau.streaming._get_plex_service", return_value=plex_service
-        ):
-            result = await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
-                operation="set_volume", client_id="client123", volume=75
+        with patch("plex_mcp.tools.portmanteau.streaming._get_plex_service", return_value=plex_service):
+            result = tool_payload(
+                await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
+                    operation="set_volume", client_id="client123", volume=75
+                )
             )
 
             assert result["success"] is True
@@ -193,11 +192,11 @@ class TestPlexStreaming:
     @pytest.mark.asyncio
     async def test_set_volume_missing_client_id(self, mock_plex_service):
         """Test set_volume operation requires client_id."""
-        with patch(
-            "plex_mcp.tools.portmanteau.streaming._get_plex_service", return_value=mock_plex_service
-        ):
-            result = await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
-                operation="set_volume", volume=75
+        with patch("plex_mcp.tools.portmanteau.streaming._get_plex_service", return_value=mock_plex_service):
+            result = tool_payload(
+                await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
+                    operation="set_volume", volume=75
+                )
             )
 
         assert result["success"] is False
@@ -206,11 +205,11 @@ class TestPlexStreaming:
     @pytest.mark.asyncio
     async def test_set_volume_missing_volume(self, mock_plex_service):
         """Test set_volume operation requires volume parameter."""
-        with patch(
-            "plex_mcp.tools.portmanteau.streaming._get_plex_service", return_value=mock_plex_service
-        ):
-            result = await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
-                operation="set_volume", client_id="client123"
+        with patch("plex_mcp.tools.portmanteau.streaming._get_plex_service", return_value=mock_plex_service):
+            result = tool_payload(
+                await (plex_streaming.fn if hasattr(plex_streaming, "fn") else plex_streaming)(
+                    operation="set_volume", client_id="client123"
+                )
             )
 
         assert result["success"] is False

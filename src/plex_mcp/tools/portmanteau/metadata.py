@@ -46,8 +46,7 @@ async def plex_metadata(
     item_id: str | None = None,
     library_id: str | None = None,
     match_id: str | None = None,
-    media_type: Literal["movie", "show", "season", "episode", "artist", "album", "track", "photo"]
-    | None = None,
+    media_type: Literal["movie", "show", "season", "episode", "artist", "album", "track", "photo"] | None = None,
     metadata: dict[str, Any] | None = None,
     force: bool = False,
     patterns: dict[str, str] | None = None,
@@ -88,9 +87,7 @@ async def plex_metadata(
                     ],
                 }
 
-            result = await plex.refresh_metadata(
-                item_id=item_id, library_id=library_id, force=force
-            )
+            result = await plex.refresh_metadata(item_id=item_id, library_id=library_id, force=force)
             return {
                 "success": True,
                 "operation": "refresh",
@@ -101,7 +98,7 @@ async def plex_metadata(
             }
 
         # Operation: refresh_all
-        elif operation == "refresh_all":
+        if operation == "refresh_all":
             # Get all libraries and refresh each
             libraries = await plex.list_libraries()
             results = []
@@ -124,7 +121,7 @@ async def plex_metadata(
             }
 
         # Operation: fix_match
-        elif operation == "fix_match":
+        if operation == "fix_match":
             if not item_id:
                 return {
                     "success": False,
@@ -161,7 +158,7 @@ async def plex_metadata(
             }
 
         # Operation: update
-        elif operation == "update":
+        if operation == "update":
             if not item_id:
                 return {
                     "success": False,
@@ -193,7 +190,7 @@ async def plex_metadata(
             }
 
         # Operation: analyze
-        elif operation == "analyze":
+        if operation == "analyze":
             if library_id:
                 # Analyze specific library
                 result = await plex.analyze_library(library_id=library_id)
@@ -219,7 +216,7 @@ async def plex_metadata(
             }
 
         # Operation: match
-        elif operation == "match":
+        if operation == "match":
             if not item_id:
                 return {
                     "success": False,
@@ -239,7 +236,7 @@ async def plex_metadata(
             }
 
         # Operation: organize
-        elif operation == "organize":
+        if operation == "organize":
             if not library_id:
                 return {
                     "success": False,
@@ -248,9 +245,7 @@ async def plex_metadata(
                     "suggestions": ["Provide library_id parameter"],
                 }
 
-            result = await plex.organize_library(
-                library_id=library_id, dry_run=False, patterns=patterns
-            )
+            result = await plex.organize_library(library_id=library_id, dry_run=False, patterns=patterns)
             return {
                 "success": True,
                 "operation": "organize",
@@ -258,16 +253,15 @@ async def plex_metadata(
                 "data": result,
             }
 
-        else:
-            return {
-                "success": False,
-                "error": f"Invalid operation: '{operation}'",
-                "error_code": "INVALID_OPERATION",
-                "suggestions": [
-                    "Valid operations: refresh, refresh_all, fix_match, update, analyze, match, organize",
-                    f"You provided: '{operation}'",
-                ],
-            }
+        return {
+            "success": False,
+            "error": f"Invalid operation: '{operation}'",
+            "error_code": "INVALID_OPERATION",
+            "suggestions": [
+                "Valid operations: refresh, refresh_all, fix_match, update, analyze, match, organize",
+                f"You provided: '{operation}'",
+            ],
+        }
 
     except RuntimeError as e:
         error_msg = str(e)

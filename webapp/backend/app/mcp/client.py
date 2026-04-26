@@ -24,6 +24,7 @@ def _json_safe_media_item(obj: Any) -> Any:
         return d()
     return obj
 
+
 _current_file = Path(__file__).resolve()
 project_root = _current_file.parent.parent.parent.parent.parent
 src_path = project_root / "src"

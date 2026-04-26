@@ -93,7 +93,7 @@ async def plex_performance(
             )
 
         # Operation: update_transcode_settings
-        elif operation == "update_transcode_settings":
+        if operation == "update_transcode_settings":
             if not profile_name:
                 return {
                     "success": False,
@@ -109,9 +109,7 @@ async def plex_performance(
                     "suggestions": ["Provide settings parameter with configuration dictionary"],
                 }
 
-            result = await plex.update_transcode_settings(
-                profile_name=profile_name, settings=settings
-            )
+            result = await plex.update_transcode_settings(profile_name=profile_name, settings=settings)
             return {
                 "success": result,
                 "operation": "update_transcode_settings",
@@ -120,7 +118,7 @@ async def plex_performance(
             }
 
         # Operation: get_transcoding_status
-        elif operation == "get_transcoding_status":
+        if operation == "get_transcoding_status":
             result = await plex.get_transcoding_status()
             return {
                 "success": True,
@@ -129,7 +127,7 @@ async def plex_performance(
             }
 
         # Operation: get_bandwidth
-        elif operation == "get_bandwidth":
+        if operation == "get_bandwidth":
             result = await plex.get_bandwidth_usage(time_range=time_range)
             return {
                 "success": True,
@@ -139,7 +137,7 @@ async def plex_performance(
             }
 
         # Operation: set_quality
-        elif operation == "set_quality":
+        if operation == "set_quality":
             if not profile_name:
                 return {
                     "success": False,
@@ -155,9 +153,7 @@ async def plex_performance(
                     "suggestions": ["Provide quality parameter (e.g., '1080p', '720p', '480p')"],
                 }
 
-            result = await plex.set_stream_quality(
-                profile_name=profile_name, quality=quality, bitrate=bitrate
-            )
+            result = await plex.set_stream_quality(profile_name=profile_name, quality=quality, bitrate=bitrate)
             return {
                 "success": result,
                 "operation": "set_quality",
@@ -167,7 +163,7 @@ async def plex_performance(
             }
 
         # Operation: get_throttling
-        elif operation == "get_throttling":
+        if operation == "get_throttling":
             result = await plex.get_throttling_status(profile_name=profile_name)
             return {
                 "success": True,
@@ -176,7 +172,7 @@ async def plex_performance(
             }
 
         # Operation: set_throttling
-        elif operation == "set_throttling":
+        if operation == "set_throttling":
             if not profile_name:
                 return {
                     "success": False,
@@ -207,7 +203,7 @@ async def plex_performance(
             }
 
         # Operation: list_profiles
-        elif operation == "list_profiles":
+        if operation == "list_profiles":
             result = await plex.list_quality_profiles()
             return {
                 "success": True,
@@ -217,7 +213,7 @@ async def plex_performance(
             }
 
         # Operation: create_profile
-        elif operation == "create_profile":
+        if operation == "create_profile":
             if not profile_name:
                 return {
                     "success": False,
@@ -233,9 +229,7 @@ async def plex_performance(
                     "suggestions": ["Provide settings parameter with profile configuration"],
                 }
 
-            result = await plex.create_quality_profile(
-                name=profile_name, settings=settings, is_default=is_default
-            )
+            result = await plex.create_quality_profile(name=profile_name, settings=settings, is_default=is_default)
             return {
                 "success": result,
                 "operation": "create_profile",
@@ -244,7 +238,7 @@ async def plex_performance(
             }
 
         # Operation: delete_profile
-        elif operation == "delete_profile":
+        if operation == "delete_profile":
             if not profile_name:
                 return {
                     "success": False,
@@ -262,19 +256,19 @@ async def plex_performance(
             }
 
         # Operation: get_server_status
-        elif operation == "get_server_status":
+        if operation == "get_server_status":
             status = await plex.get_server_status()
             return ToolResult(
-                body={
+                structured_content={
                     "success": True,
                     "operation": "get_server_status",
                     "data": status.dict() if hasattr(status, "dict") else status,
                 },
-                prefabs=["plex_performance_dashboard"],
+                meta={"prefabs": ["plex_performance_dashboard"]},
             )
 
         # Operation: get_server_info
-        elif operation == "get_server_info":
+        if operation == "get_server_info":
             # This combines get_server_status and list_libraries
             status = await plex.get_server_status()
             libraries = await plex.list_libraries()
@@ -287,18 +281,17 @@ async def plex_performance(
                 },
             }
 
-        else:
-            return {
-                "success": False,
-                "error": f"Invalid operation: '{operation}'",
-                "error_code": "INVALID_OPERATION",
-                "suggestions": [
-                    "Valid operations: get_transcode_settings, update_transcode_settings, get_transcoding_status, "
-                    "get_bandwidth, set_quality, get_throttling, set_throttling, list_profiles, create_profile, "
-                    "delete_profile, get_server_status, get_server_info",
-                    f"You provided: '{operation}'",
-                ],
-            }
+        return {
+            "success": False,
+            "error": f"Invalid operation: '{operation}'",
+            "error_code": "INVALID_OPERATION",
+            "suggestions": [
+                "Valid operations: get_transcode_settings, update_transcode_settings, get_transcoding_status, "
+                "get_bandwidth, set_quality, get_throttling, set_throttling, list_profiles, create_profile, "
+                "delete_profile, get_server_status, get_server_info",
+                f"You provided: '{operation}'",
+            ],
+        }
 
     except RuntimeError as e:
         error_msg = str(e)

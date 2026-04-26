@@ -55,9 +55,8 @@ def create_test_video():
         if result.returncode == 0:
             print(f"Created test video: {video_path} ({video_path.stat().st_size} bytes)")
             return video_path
-        else:
-            print(f"FFmpeg failed: {result.stderr}")
-            return None
+        print(f"FFmpeg failed: {result.stderr}")
+        return None
     except FileNotFoundError:
         print("FFmpeg not found. Creating placeholder file instead.")
         # Create a minimal valid MP4 header (262 bytes minimum)

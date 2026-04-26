@@ -21,9 +21,13 @@ function ResultCard({ r }: { r: SemanticResult }) {
 					{meta.year}
 				</div>
 			)}
-			{body && <p className="text-slate-300 text-sm mt-2 line-clamp-3">{body}</p>}
+			{body && (
+				<p className="text-slate-300 text-sm mt-2 line-clamp-3">{body}</p>
+			)}
 			{typeof r.score === "number" && (
-				<p className="text-slate-500 text-xs mt-1">Score: {r.score.toFixed(3)}</p>
+				<p className="text-slate-500 text-xs mt-1">
+					Score: {r.score.toFixed(3)}
+				</p>
 			)}
 		</div>
 	);
@@ -36,7 +40,10 @@ export default function SemanticSearchPage() {
 	const [results, setResults] = useState<SemanticResult[]>([]);
 	const [error, setError] = useState<string | null>(null);
 	const [syncLoading, setSyncLoading] = useState(false);
-	const [syncResult, setSyncResult] = useState<{ count: number; error?: string } | null>(null);
+	const [syncResult, setSyncResult] = useState<{
+		count: number;
+		error?: string;
+	} | null>(null);
 
 	async function handleSync() {
 		setSyncLoading(true);
@@ -50,7 +57,10 @@ export default function SemanticSearchPage() {
 				setSyncResult({ count: 0, error: data.error ?? "Sync failed" });
 			}
 		} catch (e) {
-			setSyncResult({ count: 0, error: e instanceof Error ? e.message : "Request failed" });
+			setSyncResult({
+				count: 0,
+				error: e instanceof Error ? e.message : "Request failed",
+			});
 		} finally {
 			setSyncLoading(false);
 		}
@@ -84,9 +94,12 @@ export default function SemanticSearchPage() {
 				Semantic search
 			</h1>
 			<p className="text-slate-400 text-sm">
-				Natural-language search over indexed Plex metadata (RAG). Index once with the button below
-				(or via MCP{" "}
-				<code className="text-amber/80">plex_rag(operation=&quot;sync_metadata&quot;)</code>).
+				Natural-language search over indexed Plex metadata (RAG). Index once
+				with the button below (or via MCP{" "}
+				<code className="text-amber/80">
+					plex_rag(operation=&quot;sync_metadata&quot;)
+				</code>
+				).
 			</p>
 
 			<div className="flex flex-wrap items-center gap-3 p-4 rounded-lg bg-slate-800/50 border border-slate-600/50">
@@ -96,7 +109,9 @@ export default function SemanticSearchPage() {
 					disabled={syncLoading}
 					className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-700 text-slate-200 font-medium hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
 				>
-					<RefreshCw className={`w-4 h-4 ${syncLoading ? "animate-spin" : ""}`} />
+					<RefreshCw
+						className={`w-4 h-4 ${syncLoading ? "animate-spin" : ""}`}
+					/>
 					{syncLoading ? "Indexing…" : "Sync / Index metadata"}
 				</button>
 				{syncResult && (
@@ -132,9 +147,11 @@ export default function SemanticSearchPage() {
 					<div>
 						<p className="font-medium">RAG unavailable</p>
 						<p className="text-sm text-slate-300 mt-1">
-							Semantic search requires the mcp-central-docs <strong>source</strong> to be on the
-							Python path (same machine as Plex MCP). The mcp-central-docs MCP server does not need
-							to be running. Run <code>plex_rag(operation=&quot;sync_metadata&quot;)</code> once to
+							Semantic search requires the mcp-central-docs{" "}
+							<strong>source</strong> to be on the Python path (same machine as
+							Plex MCP). The mcp-central-docs MCP server does not need to be
+							running. Run{" "}
+							<code>plex_rag(operation=&quot;sync_metadata&quot;)</code> once to
 							index.
 						</p>
 						{error && <p className="text-sm text-slate-400 mt-1">{error}</p>}
@@ -143,7 +160,9 @@ export default function SemanticSearchPage() {
 			)}
 
 			{available === true && results.length === 0 && !loading && (
-				<p className="text-slate-400">No results. Try a different query or sync metadata first.</p>
+				<p className="text-slate-400">
+					No results. Try a different query or sync metadata first.
+				</p>
 			)}
 
 			{results.length > 0 && (

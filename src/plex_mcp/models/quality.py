@@ -45,7 +45,5 @@ class BandwidthAnalysis(BaseModel):
     transcoding_overhead: float = Field(description="Bandwidth overhead from transcoding")
     client_breakdown: list[dict[str, Any]] = Field(description="Bandwidth usage by client")
     quality_distribution: dict[str, int] = Field(description="Stream quality distribution")
-    optimization_suggestions: list[str] = Field(
-        description="Bandwidth optimization recommendations"
-    )
+    optimization_suggestions: list[str] = Field(description="Bandwidth optimization recommendations")
     cost_estimate: float | None = Field(description="Estimated cost if using metered connection")

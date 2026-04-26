@@ -30,9 +30,7 @@ class PlaylistCreateRequest(BaseModel):
     name: str = Field(description="Playlist name")
     summary: str | None = Field(description="Playlist description")
     items: list[str] | None = Field(description="List of media keys to add")
-    smart_rules: dict[str, Any] | None = Field(
-        description="Smart playlist rules (genre, year, rating, etc)"
-    )
+    smart_rules: dict[str, Any] | None = Field(description="Smart playlist rules (genre, year, rating, etc)")
     library_id: str | None = Field(description="Library to create smart playlist from")
 
 

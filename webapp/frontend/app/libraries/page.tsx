@@ -23,7 +23,11 @@ export default async function LibrariesPage({
 		data = null;
 	}
 
-	const libraries = (data?.data ?? []) as { key?: string; title?: string; type?: string }[];
+	const libraries = (data?.data ?? []) as {
+		key?: string;
+		title?: string;
+		type?: string;
+	}[];
 
 	return (
 		<div className="container mx-auto p-6">
@@ -43,14 +47,19 @@ export default async function LibrariesPage({
 			) : (
 				<div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
 					{libraries.map(
-						(lib: { id?: string; key?: string; title?: string; type?: string }, index: number) => {
+						(
+							lib: { id?: string; key?: string; title?: string; type?: string },
+							index: number,
+						) => {
 							const sid = librarySectionId(lib);
 							const isMovie = (lib.type ?? "").toLowerCase() === "movie";
 							const href = isMovie
 								? `/movies?library_id=${encodeURIComponent(sid)}`
 								: `/search?library_id=${encodeURIComponent(sid)}`;
 							const isActive =
-								activeLibraryId != null && activeLibraryId !== "" && activeLibraryId === sid;
+								activeLibraryId != null &&
+								activeLibraryId !== "" &&
+								activeLibraryId === sid;
 							return (
 								<Link
 									key={sid || `lib-${index}`}

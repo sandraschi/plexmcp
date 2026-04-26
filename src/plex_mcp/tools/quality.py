@@ -57,9 +57,7 @@ async def update_transcode_settings(request: UpdateTranscodeSettingsRequest) -> 
         True if update was successful, False otherwise
     """
     plex = _get_plex_service()
-    return await plex.update_transcode_settings(
-        profile_name=request.profile_name, settings=request.settings
-    )
+    return await plex.update_transcode_settings(profile_name=request.profile_name, settings=request.settings)
 
 
 @mcp.tool()
@@ -76,9 +74,7 @@ async def get_transcoding_status() -> TranscodingStatus:
 class GetBandwidthUsageRequest(BaseModel):
     """Request model for getting bandwidth usage."""
 
-    time_range: str = Field(
-        "day", description="Time range for bandwidth data (hour, day, week, month)"
-    )
+    time_range: str = Field("day", description="Time range for bandwidth data (hour, day, week, month)")
 
 
 @mcp.tool()

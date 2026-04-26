@@ -21,6 +21,7 @@ from plex_mcp.tools.portmanteau import (
     plex_streaming,
     plex_user,
 )
+from tests.helpers import tool_payload
 
 
 class TestPortmanteauToolsIntegration:
@@ -49,9 +50,7 @@ class TestPortmanteauToolsIntegration:
 
         for tool in tools:
             fn = getattr(tool, "fn", tool)
-            assert callable(fn), (
-                f"{tool} is not a callable tool (FastMCP may expose .fn or the raw function)"
-            )
+            assert callable(fn), f"{tool} is not a callable tool (FastMCP may expose .fn or the raw function)"
 
     @pytest.mark.asyncio
     async def test_all_tools_have_operation_parameter(self, mock_plex_service):
@@ -68,11 +67,9 @@ class TestPortmanteauToolsIntegration:
     @pytest.mark.asyncio
     async def test_error_response_structure(self, mock_plex_service):
         """Test that all tools return consistent error response structure."""
-        with patch(
-            "plex_mcp.tools.portmanteau.library._get_plex_service", return_value=mock_plex_service
-        ):
+        with patch("plex_mcp.tools.portmanteau.library._get_plex_service", return_value=mock_plex_service):
             _fn = getattr(plex_library, "fn", plex_library)
-            result = await _fn(operation="get")  # Missing library_id
+            result = tool_payload(await _fn(operation="get"))  # Missing library_id
 
         assert "success" in result
         assert result["success"] is False
@@ -88,7 +85,7 @@ class TestPortmanteauToolsIntegration:
             return_value=mock_plex_service,
         ):
             _fn = plex_library.fn if hasattr(plex_library, "fn") else plex_library
-            result = await _fn(operation="list")
+            result = tool_payload(await _fn(operation="list"))
 
             assert "success" in result
             assert result["success"] is True

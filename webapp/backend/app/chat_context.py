@@ -83,12 +83,7 @@ async def build_chat_preprompt() -> str:
     if not lib_items:
         lib_result = await _safe_tool("plex_library", {"operation": "list"})
         if lib_result and lib_result.get("success"):
-            lib_items = (
-                lib_result.get("data")
-                or lib_result.get("libraries")
-                or lib_result.get("results")
-                or []
-            )
+            lib_items = lib_result.get("data") or lib_result.get("libraries") or lib_result.get("results") or []
     if isinstance(lib_items, list) and lib_items:
         lines = []
         for lib in lib_items[:25]:
@@ -97,9 +92,7 @@ async def build_chat_preprompt() -> str:
                 lib_type = lib.get("type") or lib.get("libraryType") or ""
                 lid = lib.get("id") or lib.get("key") or ""
                 if title or lib_type:
-                    lines.append(
-                        f"- {title or 'Unnamed'} ({lib_type})" + (f" id={lid}" if lid else "")
-                    )
+                    lines.append(f"- {title or 'Unnamed'} ({lib_type})" + (f" id={lid}" if lid else ""))
             else:
                 lines.append(f"- {lib}")
         if lines:

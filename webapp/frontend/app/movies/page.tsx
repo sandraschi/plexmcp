@@ -17,7 +17,11 @@ export default async function MoviesPage({
 	const page = Math.max(1, Number.parseInt(params.page ?? "1", 10) || 1);
 	const limit = Math.min(
 		200,
-		Math.max(1, Number.parseInt(params.limit ?? String(DEFAULT_LIMIT), 10) || DEFAULT_LIMIT),
+		Math.max(
+			1,
+			Number.parseInt(params.limit ?? String(DEFAULT_LIMIT), 10) ||
+				DEFAULT_LIMIT,
+		),
 	);
 	const offset = (page - 1) * limit;
 
@@ -41,7 +45,11 @@ export default async function MoviesPage({
 	try {
 		const libRes = await listLibraries();
 		if (libRes?.success !== false && Array.isArray(libRes?.data)) {
-			libraries = libRes.data as { key?: string; title?: string; type?: string }[];
+			libraries = libRes.data as {
+				key?: string;
+				title?: string;
+				type?: string;
+			}[];
 		}
 	} catch {
 		libraries = [];
@@ -57,7 +65,9 @@ export default async function MoviesPage({
 		moviesData = null;
 	}
 
-	const movieLibraries = libraries.filter((l) => (l.type ?? "").toLowerCase() === "movie");
+	const movieLibraries = libraries.filter(
+		(l) => (l.type ?? "").toLowerCase() === "movie",
+	);
 	const items = moviesData?.data ?? moviesData?.results ?? ([] as unknown[]);
 	const hasNext = items.length === limit;
 

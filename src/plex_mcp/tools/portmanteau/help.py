@@ -305,7 +305,7 @@ Use list_tools to see all available tools, or tool_info to get details about a s
                 "category": category,
             }
 
-        elif operation == "list_tools":
+        if operation == "list_tools":
             tools_list = list(tools_info.values())
             if category:
                 tools_list = [t for t in tools_list if t["category"] == category]
@@ -318,7 +318,7 @@ Use list_tools to see all available tools, or tool_info to get details about a s
                 "category": category,
             }
 
-        elif operation == "tool_info":
+        if operation == "tool_info":
             if not tool_name:
                 return {
                     "success": False,
@@ -343,7 +343,7 @@ Use list_tools to see all available tools, or tool_info to get details about a s
                 "usage": f"Use {tool_name} with operation parameter set to one of: {', '.join(tool['operations'])}",
             }
 
-        elif operation == "examples":
+        if operation == "examples":
             examples = {}
             if tool_name:
                 if tool_name not in tools_info:
@@ -359,9 +359,7 @@ Use list_tools to see all available tools, or tool_info to get details about a s
             for tool in tools_to_show:
                 examples[tool["name"]] = {
                     "description": tool["description"],
-                    "example_operations": tool["operations"][
-                        :3
-                    ],  # Show first 3 operations as examples
+                    "example_operations": tool["operations"][:3],  # Show first 3 operations as examples
                 }
 
             return {
@@ -371,13 +369,12 @@ Use list_tools to see all available tools, or tool_info to get details about a s
                 "tool_name": tool_name,
             }
 
-        else:
-            return {
-                "success": False,
-                "error": f"Unknown operation: {operation}",
-                "error_code": "INVALID_OPERATION",
-                "suggestions": ["Use one of: help, list_tools, tool_info, examples"],
-            }
+        return {
+            "success": False,
+            "error": f"Unknown operation: {operation}",
+            "error_code": "INVALID_OPERATION",
+            "suggestions": ["Use one of: help, list_tools, tool_info, examples"],
+        }
 
     except Exception as e:
         logger.error(f"Error in plex_help operation '{operation}': {e}", exc_info=True)

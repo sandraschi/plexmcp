@@ -107,7 +107,7 @@ async def plex_reporting(
                 "count": len(stats),
             }
 
-        elif operation == "usage_report":
+        if operation == "usage_report":
             # Placeholder for usage reporting - would need session history data
             return {
                 "success": True,
@@ -117,7 +117,7 @@ async def plex_reporting(
                 "data": {},
             }
 
-        elif operation == "content_report":
+        if operation == "content_report":
             if library_id:
                 libraries = await plex.get_library(library_id)
                 if not libraries:
@@ -134,18 +134,12 @@ async def plex_reporting(
             for lib in libraries:
                 lib_id = lib.get("key") or lib.get("id")
                 items_result = await plex.get_library_items(library_id=lib_id, limit=1000, offset=0)
-                items = (
-                    items_result.get("items", [])
-                    if isinstance(items_result, dict)
-                    else items_result
-                )
+                items = items_result.get("items", []) if isinstance(items_result, dict) else items_result
                 reports.append(
                     {
                         "library_id": lib_id,
                         "library_name": lib.get("title") or lib.get("name"),
-                        "total_items": len(items)
-                        if isinstance(items, list)
-                        else items_result.get("total", 0),
+                        "total_items": len(items) if isinstance(items, list) else items_result.get("total", 0),
                         "content_types": {},
                     }
                 )
@@ -157,7 +151,7 @@ async def plex_reporting(
                 "count": len(reports),
             }
 
-        elif operation == "user_activity":
+        if operation == "user_activity":
             # Placeholder for user activity reporting
             return {
                 "success": True,
@@ -167,7 +161,7 @@ async def plex_reporting(
                 "data": {},
             }
 
-        elif operation == "performance_report":
+        if operation == "performance_report":
             status = await plex.get_server_status()
             return {
                 "success": True,
@@ -176,7 +170,7 @@ async def plex_reporting(
                 "recommendations": [],
             }
 
-        elif operation == "export_report":
+        if operation == "export_report":
             if not format:
                 return {
                     "success": False,
@@ -193,15 +187,14 @@ async def plex_reporting(
                 "message": f"[SIMULATED] Report export to {format} format (not yet fully implemented)",
             }
 
-        else:
-            return {
-                "success": False,
-                "error": f"Unknown operation: {operation}",
-                "error_code": "INVALID_OPERATION",
-                "suggestions": [
-                    "Use one of: library_stats, usage_report, content_report, user_activity, performance_report, export_report"
-                ],
-            }
+        return {
+            "success": False,
+            "error": f"Unknown operation: {operation}",
+            "error_code": "INVALID_OPERATION",
+            "suggestions": [
+                "Use one of: library_stats, usage_report, content_report, user_activity, performance_report, export_report"
+            ],
+        }
 
     except Exception as e:
         logger.error(f"Error in plex_reporting operation '{operation}': {e}", exc_info=True)

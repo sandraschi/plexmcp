@@ -60,15 +60,9 @@ class Session(BaseModel):
     view_offset: int = Field(0, description="Current position in the media")
     duration: int = Field(0, description="Total duration of the media in milliseconds")
     media: MediaItem = Field(..., description="The media being played")
-    extra_metadata: dict[str, Any] = Field(
-        default_factory=dict, description="Additional metadata about the session"
-    )
-    created_at: datetime = Field(
-        default_factory=datetime.utcnow, description="When the session was created"
-    )
-    updated_at: datetime = Field(
-        default_factory=datetime.utcnow, description="When the session was last updated"
-    )
+    extra_metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata about the session")
+    created_at: datetime = Field(default_factory=datetime.utcnow, description="When the session was created")
+    updated_at: datetime = Field(default_factory=datetime.utcnow, description="When the session was last updated")
 
 
 class SessionList(BaseModel):

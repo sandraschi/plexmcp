@@ -72,9 +72,7 @@ async def analyze_library(request: AnalyzeLibraryRequest) -> dict[str, Any]:
     plex = _get_plex_service()
     try:
         result = await plex.analyze_library(library_id=request.library_id)
-        logger.info(
-            f"Analyzed library {request.library_id}, found {result.get('issues_found', 0)} issues"
-        )
+        logger.info(f"Analyzed library {request.library_id}, found {result.get('issues_found', 0)} issues")
         return result
     except Exception as e:
         logger.error(f"Error analyzing library {request.library_id}: {e}")
@@ -164,9 +162,7 @@ async def clean_bundles(request: CleanBundlesRequest) -> dict[str, Any]:
     try:
         # In a real implementation, this would clean up old bundles
         # For now, we'll just log the action
-        logger.info(
-            f"Cleaning bundles (dry_run={request.dry_run}, threshold_days={request.threshold_days})"
-        )
+        logger.info(f"Cleaning bundles (dry_run={request.dry_run}, threshold_days={request.threshold_days})")
         return {
             "cleaned": 0 if request.dry_run else 10,  # Example count
             "freed_space": "0B" if request.dry_run else "1.2GB",  # Example size

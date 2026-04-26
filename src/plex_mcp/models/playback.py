@@ -35,9 +35,7 @@ class RemotePlaybackRequest(BaseModel):
     """Request model for remote playback control"""
 
     client_id: str = Field(description="Target client machine identifier")
-    action: str = Field(
-        description="Playback action (play, pause, stop, seek, next, previous, volume)"
-    )
+    action: str = Field(description="Playback action (play, pause, stop, seek, next, previous, volume)")
     media_key: str | None = Field(description="Media key for play action")
     seek_offset: int | None = Field(description="Seek position in milliseconds")
     volume_level: int | None = Field(description="Volume level (0-100)")

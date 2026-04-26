@@ -27,7 +27,7 @@ async def plex_rag(
     RAG integration for Plex Media. Semantic search and metadata enrichment.
 
     PORTMANTEAU PATTERN RATIONALE:
-    Consolidates neural search, metadata vectorization, and external high-value 
+    Consolidates neural search, metadata vectorization, and external high-value
     discovery (Wikipedia) into a single tool to manage the knowledge lifecycle.
 
     OPERATIONS:
@@ -38,8 +38,8 @@ async def plex_rag(
     - status: Check the health and document counts of RAG indices.
 
     ENRICHMENT (sync_metadata only):
-    When 'enrich' is True, the system fetches deep contextual summaries from Wikipedia 
-    for each item and appends it to the vector index. This significantly improves 
+    When 'enrich' is True, the system fetches deep contextual summaries from Wikipedia
+    for each item and appends it to the vector index. This significantly improves
     semantic search accuracy for historical or thematic queries.
 
     FILTERING (sync operations):
@@ -77,7 +77,7 @@ async def plex_rag(
                 "message": f"Successfully synced {count} media items into RAG vector store {'with Wikipedia enrichment' if enrich else ''}.",
             }
 
-        elif operation == "semantic_search":
+        if operation == "semantic_search":
             if not query:
                 return {
                     "success": False,
@@ -94,7 +94,7 @@ async def plex_rag(
                 "count": len(results),
             }
 
-        elif operation == "search_subtitles":
+        if operation == "search_subtitles":
             if not query:
                 return {
                     "success": False,
@@ -111,7 +111,7 @@ async def plex_rag(
                 "count": len(results),
             }
 
-        elif operation == "sync_subtitles":
+        if operation == "sync_subtitles":
             count = await ingestor.sync_subtitles(library_id=library_id, media_id=media_id)
             return {
                 "success": True,
@@ -121,7 +121,7 @@ async def plex_rag(
                 "message": f"Successfully indexed {count} subtitle chunks.",
             }
 
-        elif operation == "status":
+        if operation == "status":
             stats = ingestor.get_stats()
             return {
                 "success": True,
@@ -130,31 +130,30 @@ async def plex_rag(
                 "message": f"RAG Status: {stats.get('count', 0)} items indexed using {stats.get('backend', 'unknown')} backend.",
             }
 
-        else:
-            return {
-                "success": False, 
-                "error": f"Unknown operation: {operation}",
-                "error_code": "INVALID_OPERATION",
-                "suggestions": ["Use one of: semantic_search, sync_metadata, status"]
-            }
+        return {
+            "success": False,
+            "error": f"Unknown operation: {operation}",
+            "error_code": "INVALID_OPERATION",
+            "suggestions": ["Use one of: semantic_search, sync_metadata, status"],
+        }
 
     except Exception as e:
         error_msg = str(e)
         is_unauthorized = "unauthorized" in error_msg.lower() or "(401)" in error_msg
-        
+
         logger.error(
             f"Error in plex_rag operation '{operation}': {error_msg}",
             exc_info=not is_unauthorized,
         )
-        
+
         if operation == "sync_metadata":
             report_rag_sync_error(error_msg)
-            
+
         suggestions = [
             "Check Plex server is running and accessible",
             "Verify your server URL and token in settings",
         ]
-        
+
         if is_unauthorized:
             suggestions = [
                 "Update your PLEX_TOKEN in settings",

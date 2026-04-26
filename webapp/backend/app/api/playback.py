@@ -40,9 +40,7 @@ async def play_media(request: PlayRequest) -> dict[str, Any]:
 async def list_clients() -> dict[str, Any]:
     """List available Plex clients."""
     try:
-        result = await mcp_client.call_tool(
-            "plex_streaming", {"operation": "list_clients"}
-        )
+        result = await mcp_client.call_tool("plex_streaming", {"operation": "list_clients"})
     except Exception as e:
         raise handle_mcp_error(e) from e
     else:

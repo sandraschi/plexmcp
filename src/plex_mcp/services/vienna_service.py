@@ -101,9 +101,7 @@ class ViennaService:
 
             # Time context adjustment
             time_bonus = 0
-            if time_context == "morning" and duration <= 60:
-                time_bonus = 0.5
-            elif time_context == "evening" and duration > 60:
+            if time_context == "morning" and duration <= 60 or time_context == "evening" and duration > 60:
                 time_bonus = 0.5
 
             vienna_score += time_bonus

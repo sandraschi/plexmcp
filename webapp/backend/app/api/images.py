@@ -13,9 +13,7 @@ router = APIRouter()
 
 
 def _get_plex_config():
-    base_url = os.getenv("PLEX_URL") or os.getenv(
-        "PLEX_SERVER_URL", "http://localhost:32400"
-    )
+    base_url = os.getenv("PLEX_URL") or os.getenv("PLEX_SERVER_URL", "http://localhost:32400")
     token = os.getenv("PLEX_TOKEN")
     return base_url, token
 
@@ -67,9 +65,7 @@ async def proxy_image(
         async def iter_content():
             async with httpx.AsyncClient() as client, client.stream("GET", url, params=params) as response:
                 if response.status_code != 200:
-                    logger.error(
-                        f"Failed to fetch image: {response.status_code} {url}"
-                    )
+                    logger.error(f"Failed to fetch image: {response.status_code} {url}")
                     yield b""
                     return
 

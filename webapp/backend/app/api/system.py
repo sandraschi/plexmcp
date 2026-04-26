@@ -10,9 +10,19 @@ from ..settings_store import get_current, save_overrides
 router = APIRouter()
 
 
-@router.get("/status")
-async def system_status():
-    """Health and system status."""
+@router.get("/api-docs-info")
+async def get_api_docs_info():
+    """Return Swagger UI, ReDoc, and OpenAPI schema URLs for this server."""
+    base = f"http://localhost:{settings.PORT}"
+    return {
+        "swagger_ui": f"{base}/docs",
+        "redoc": f"{base}/redoc",
+        "openapi_json": f"{base}/openapi.json",
+        "backend_port": settings.PORT,
+        "webapp_url": f"http://localhost:{settings.PORT + 1}/api-docs",
+        "note": "Open swagger_ui in a browser to explore and test all plex-mcp REST endpoints.",
+    }
+
     token = os.environ.get("PLEX_TOKEN") or settings.PLEX_TOKEN
     return {
         "status": "healthy",

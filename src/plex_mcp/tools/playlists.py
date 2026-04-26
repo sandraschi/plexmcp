@@ -74,9 +74,7 @@ async def create_playlist(request: CreatePlaylistRequest) -> PlexPlaylist:
         item_count=len(playlist.items()),
         smart=playlist.smart,
         created_at=int(playlist.addedAt.timestamp()),
-        updated_at=int(playlist.updatedAt.timestamp())
-        if playlist.updatedAt
-        else int(playlist.addedAt.timestamp()),
+        updated_at=int(playlist.updatedAt.timestamp()) if playlist.updatedAt else int(playlist.addedAt.timestamp()),
         owner=playlist.username,
     )
 
@@ -112,9 +110,7 @@ async def get_playlist(request: GetPlaylistRequest) -> PlexPlaylist | None:
             item_count=len(playlist.items()),
             smart=playlist.smart,
             created_at=int(playlist.addedAt.timestamp()),
-            updated_at=int(playlist.updatedAt.timestamp())
-            if playlist.updatedAt
-            else int(playlist.addedAt.timestamp()),
+            updated_at=int(playlist.updatedAt.timestamp()) if playlist.updatedAt else int(playlist.addedAt.timestamp()),
             owner=playlist.username,
         )
     except Exception as e:
@@ -161,9 +157,7 @@ class UpdatePlaylistRequest(BaseModel):
     """Request model for updating a playlist."""
 
     playlist_id: str = Field(..., description="ID of the playlist to update")
-    title: str | None = Field(
-        None, min_length=1, max_length=255, description="New title for the playlist"
-    )
+    title: str | None = Field(None, min_length=1, max_length=255, description="New title for the playlist")
     description: str | None = Field(None, description="New description for the playlist")
     public: bool | None = Field(None, description="Whether the playlist should be publicly visible")
     sort: str | None = Field(None, description="New sort order for playlist items")
@@ -209,9 +203,7 @@ async def update_playlist(request: UpdatePlaylistRequest) -> PlexPlaylist:
             item_count=len(playlist.items()),
             smart=playlist.smart,
             created_at=int(playlist.addedAt.timestamp()),
-            updated_at=int(playlist.updatedAt.timestamp())
-            if playlist.updatedAt
-            else int(playlist.addedAt.timestamp()),
+            updated_at=int(playlist.updatedAt.timestamp()) if playlist.updatedAt else int(playlist.addedAt.timestamp()),
             owner=playlist.username,
         )
     except Exception as e:
@@ -297,9 +289,7 @@ async def add_to_playlist(request: AddToPlaylistRequest) -> PlexPlaylist:
             item_count=len(playlist.items()),
             smart=playlist.smart,
             created_at=int(playlist.addedAt.timestamp()),
-            updated_at=int(playlist.updatedAt.timestamp())
-            if playlist.updatedAt
-            else int(playlist.addedAt.timestamp()),
+            updated_at=int(playlist.updatedAt.timestamp()) if playlist.updatedAt else int(playlist.addedAt.timestamp()),
             owner=playlist.username,
         )
     except Exception as e:
@@ -358,9 +348,7 @@ async def remove_from_playlist(request: RemoveFromPlaylistRequest) -> PlexPlayli
             item_count=len(playlist.items()),
             smart=playlist.smart,
             created_at=int(playlist.addedAt.timestamp()),
-            updated_at=int(playlist.updatedAt.timestamp())
-            if playlist.updatedAt
-            else int(playlist.addedAt.timestamp()),
+            updated_at=int(playlist.updatedAt.timestamp()) if playlist.updatedAt else int(playlist.addedAt.timestamp()),
             owner=playlist.username,
         )
     except Exception as e:
@@ -411,12 +399,8 @@ async def get_playlist_analytics(request: GetPlaylistAnalyticsRequest) -> Playli
             popular_items=[str(item.ratingKey) for item in popular_items],
             skip_rate=10.0,  # This would require more detailed tracking
             recommendations=[
-                "Consider adding more recent content"
-                if len(items) > 10
-                else "Add more items to this playlist",
-                "Create a themed playlist"
-                if "mix" not in playlist.title.lower()
-                else "Great themed playlist!",
+                "Consider adding more recent content" if len(items) > 10 else "Add more items to this playlist",
+                "Create a themed playlist" if "mix" not in playlist.title.lower() else "Great themed playlist!",
             ],
             last_played=max(
                 [

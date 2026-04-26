@@ -57,29 +57,19 @@ class MediaItem(BaseModel):
     tagline: str | None = Field(None, description="Tagline for the media")
 
     # Dates
-    added_at: float | None = Field(
-        None, description="Timestamp when the item was added to the library"
-    )
+    added_at: float | None = Field(None, description="Timestamp when the item was added to the library")
     updated_at: float | None = Field(None, description="Timestamp when the item was last updated")
-    originally_available_at: float | None = Field(
-        None, description="Original release date as timestamp"
-    )
-    last_viewed_at: float | None = Field(
-        None, description="Timestamp when the item was last viewed"
-    )
+    originally_available_at: float | None = Field(None, description="Original release date as timestamp")
+    last_viewed_at: float | None = Field(None, description="Timestamp when the item was last viewed")
 
     # Media info
     duration: float | None = Field(None, description="Duration in minutes")
-    media_info: dict[str, Any] = Field(
-        default_factory=dict, description="Technical media information"
-    )
+    media_info: dict[str, Any] = Field(default_factory=dict, description="Technical media information")
 
     # People
     directors: list[str] = Field(default_factory=list, description="List of directors")
     writers: list[str] = Field(default_factory=list, description="List of writers")
-    actors: list[dict[str, str]] = Field(
-        default_factory=list, description="List of actors with roles"
-    )
+    actors: list[dict[str, str]] = Field(default_factory=list, description="List of actors with roles")
     genres: list[str] = Field(default_factory=list, description="List of genres")
 
     # Type-specific fields
@@ -95,9 +85,7 @@ class MediaItem(BaseModel):
     show_title: str | None = Field(None, description="Title of the parent show")
     season_number: int | None = Field(None, description="Season number")
     episode_number: int | None = Field(None, description="Episode number")
-    season_episode: str | None = Field(
-        None, description="Formatted season and episode (e.g., 'S01E03')"
-    )
+    season_episode: str | None = Field(None, description="Formatted season and episode (e.g., 'S01E03')")
 
     # For music
     album_title: str | None = Field(None, description="Album title (for tracks)")
@@ -106,9 +94,7 @@ class MediaItem(BaseModel):
 
     # View status
     view_count: int | None = Field(None, description="Number of times the item has been viewed")
-    last_viewed_at: float | None = Field(
-        None, description="When the item was last viewed (timestamp)"
-    )
+    last_viewed_at: float | None = Field(None, description="When the item was last viewed (timestamp)")
 
     # Additional metadata
     chapter_source: str | None = Field(None, description="Source of chapter information")
@@ -150,9 +136,7 @@ class MediaFilter(BaseModel):
     """Filter criteria for media queries."""
 
     field: str = Field(..., description="Field to filter on")
-    operator: str = Field(
-        "=", description="Comparison operator (e.g., '=', '!=', '>', '<', '>=', '<=', '~', '!~')"
-    )
+    operator: str = Field("=", description="Comparison operator (e.g., '=', '!=', '>', '<', '>=', '<=', '~', '!~')")
     value: Any = Field(..., description="Value to compare against")
 
 

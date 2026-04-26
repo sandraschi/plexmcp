@@ -1,6 +1,5 @@
-
 from fastmcp.tools import ToolResult
-import json
+
 
 def test_result():
     # Test common pattern
@@ -11,6 +10,7 @@ def test_result():
         # Some versions of FastMCP use 'content' for the body
     except Exception as e:
         print(f"Error with content/meta: {e}")
+
 
 if __name__ == "__main__":
     test_result()

@@ -1,6 +1,10 @@
 import { ArrStackCard } from "@/components/overview/arr-stack-card";
 import { ErrorBanner } from "@/components/ui/error-banner";
-import { type ArrStackResponse, getArrStackStatus, getServerStatus } from "@/utils/api";
+import {
+	type ArrStackResponse,
+	getArrStackStatus,
+	getServerStatus,
+} from "@/utils/api";
 import { Library, Search, Server } from "lucide-react";
 import Link from "next/link";
 
@@ -8,7 +12,11 @@ const BACKEND_HINT =
 	"Set PLEX_TOKEN in webapp/backend/.env. Run: cd webapp; powershell -ExecutionPolicy Bypass -File .\\start.ps1";
 
 export default async function Home() {
-	let status: { success?: boolean; message?: string; [key: string]: unknown } | null = null;
+	let status: {
+		success?: boolean;
+		message?: string;
+		[key: string]: unknown;
+	} | null = null;
 	try {
 		status = await getServerStatus();
 	} catch {
@@ -39,7 +47,9 @@ export default async function Home() {
 						hint={BACKEND_HINT}
 					/>
 				) : status.success ? (
-					<p className="text-slate-500 mb-6">{String(status.message ?? "Connected to Plex")}</p>
+					<p className="text-slate-500 mb-6">
+						{String(status.message ?? "Connected to Plex")}
+					</p>
 				) : (
 					<p className="text-amber/80 mb-6">
 						{String(status.message ?? status.error ?? "Check PLEX_TOKEN")}

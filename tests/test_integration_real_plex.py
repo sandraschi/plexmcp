@@ -32,12 +32,8 @@ class TestRealPlexIntegration:
             pytest.skip(f"Failed to connect to Plex server: {str(e)}")
 
         # Patch _get_plex_service to use our real service instance
-        with patch(
-            "plex_mcp.tools.portmanteau.library._get_plex_service", return_value=real_plex_service
-        ):
-            result = await (plex_library.fn if hasattr(plex_library, "fn") else plex_library)(
-                operation="list"
-            )
+        with patch("plex_mcp.tools.portmanteau.library._get_plex_service", return_value=real_plex_service):
+            result = await (plex_library.fn if hasattr(plex_library, "fn") else plex_library)(operation="list")
 
             assert result["success"] is True
             assert result["operation"] == "list"
@@ -58,9 +54,7 @@ class TestRealPlexIntegration:
         if not real_plex_service._initialized:
             await real_plex_service.connect()
 
-        with patch(
-            "plex_mcp.tools.portmanteau.library._get_plex_service", return_value=real_plex_service
-        ):
+        with patch("plex_mcp.tools.portmanteau.library._get_plex_service", return_value=real_plex_service):
             result = await (plex_library.fn if hasattr(plex_library, "fn") else plex_library)(
                 operation="get", library_id=test_library_id
             )
@@ -77,12 +71,8 @@ class TestRealPlexIntegration:
         if not real_plex_service._initialized:
             await real_plex_service.connect()
 
-        with patch(
-            "plex_mcp.tools.portmanteau.server._get_plex_service", return_value=real_plex_service
-        ):
-            result = await (plex_server.fn if hasattr(plex_server, "fn") else plex_server)(
-                operation="status"
-            )
+        with patch("plex_mcp.tools.portmanteau.server._get_plex_service", return_value=real_plex_service):
+            result = await (plex_server.fn if hasattr(plex_server, "fn") else plex_server)(operation="status")
 
             assert result["success"] is True
             assert result["operation"] == "status"
@@ -97,9 +87,7 @@ class TestRealPlexIntegration:
         if not real_plex_service._initialized:
             await real_plex_service.connect()
 
-        with patch(
-            "plex_mcp.tools.portmanteau.media._get_plex_service", return_value=real_plex_service
-        ):
+        with patch("plex_mcp.tools.portmanteau.media._get_plex_service", return_value=real_plex_service):
             result = await (plex_media.fn if hasattr(plex_media, "fn") else plex_media)(
                 operation="browse", library_id=test_library_id, limit=10
             )
@@ -119,9 +107,7 @@ class TestRealPlexIntegration:
         if not real_plex_service._initialized:
             await real_plex_service.connect()
 
-        with patch(
-            "plex_mcp.tools.portmanteau.media._get_plex_service", return_value=real_plex_service
-        ):
+        with patch("plex_mcp.tools.portmanteau.media._get_plex_service", return_value=real_plex_service):
             # Search for something common (empty string searches all)
             result = await (plex_media.fn if hasattr(plex_media, "fn") else plex_media)(
                 operation="search", query="", limit=5
@@ -136,7 +122,7 @@ class TestRealPlexIntegration:
     async def test_subtitle_rag_real(self, real_plex_service, plex_available, test_library_id):
         """Test subtitle RAG sync and search on real Plex server."""
         from plex_mcp.tools.portmanteau.rag import plex_rag
-        
+
         # Ensure connected
         if not real_plex_service._initialized:
             await real_plex_service.connect()
@@ -146,23 +132,23 @@ class TestRealPlexIntegration:
             browse_res = await plex_media(operation="browse", library_id=test_library_id, limit=5)
             if not browse_res["success"] or not browse_res["data"]:
                 pytest.skip("No media found in test library to index subtitles for.")
-            
+
             media_id = browse_res["data"][0].get("id") or browse_res["data"][0].get("ratingKey")
-            
+
             # 2. Try to sync subtitles for this item
             # Note: This might be slow and might return 'no subtitles found' which is a success case for the logic
             sync_res = await (plex_rag.fn if hasattr(plex_rag, "fn") else plex_rag)(
                 operation="sync_subtitles", media_id=str(media_id)
             )
-            
+
             assert sync_res["success"] is True
             assert sync_res["operation"] == "sync_subtitles"
-            
+
             # 3. Search subtitles (even if sync added 0, the tool should run)
             search_res = await (plex_rag.fn if hasattr(plex_rag, "fn") else plex_rag)(
                 operation="search_subtitles", query="hello", limit=5
             )
-            
+
             assert search_res["success"] is True
             assert search_res["operation"] == "search_subtitles"
             assert "data" in search_res

@@ -34,6 +34,15 @@ lint:
 	@echo "--- Checking JS/TS (Biome) ---"
 	cd webapp/frontend && npx @biomejs/biome check .
 	@echo "--- Checking Security (Semgrep) ---"
+	@just _semgrep-if-supported
+
+# On Windows, Semgrep’s installed CLI is often broken in the same ways as in pre-commit; CI runs it on Ubuntu.
+[windows]
+_semgrep-if-supported:
+	@echo "Skipping local Semgrep on Windows; use CI or WSL, or install Semgrep and run: semgrep scan --config auto ."
+
+[unix]
+_semgrep-if-supported:
 	semgrep scan --config auto .
 
 # Format all files
@@ -72,4 +81,4 @@ build:
 # Cleanup
 clean:
 	@powershell -Command "Remove-Item -Recurse -Force .pytest_cache, .ruff_cache, dist, build, htmlcov -ErrorAction SilentlyContinue"
-	@find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+	@powershell -Command "Get-ChildItem -Path . -Recurse -Directory -Filter __pycache__ -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue"

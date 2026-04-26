@@ -93,7 +93,7 @@ async def post_rag_sync(operation: str = "sync_metadata") -> dict:
 
 @router.post("/sync/subtitles")
 async def post_rag_sync_subtitles():
-    """Convinience endpoint to start subtitle sync."""
+    """Convenience endpoint to start subtitle sync."""
     return await post_rag_sync(operation="sync_subtitles")
 
 

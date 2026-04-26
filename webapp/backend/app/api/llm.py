@@ -59,11 +59,7 @@ async def list_models(
                 return {"models": [], "error": r.text}
             data = r.json()
             items = data.get("data", data.get("models", []))
-            names = [
-                x.get("id") or x.get("name") or str(x)
-                for x in (items or [])
-                if isinstance(x, (dict, str))
-            ]
+            names = [x.get("id") or x.get("name") or str(x) for x in (items or []) if isinstance(x, (dict, str))]
             if not isinstance(items, list):
                 names = []
             return {"models": names, "provider": "openai-compatible"}
@@ -102,9 +98,10 @@ async def chat(
         if stream:
 
             async def _stream():
-                async with httpx.AsyncClient(timeout=60.0) as client, client.stream(
-                    "POST", req_url, json=payload
-                ) as resp:
+                async with (
+                    httpx.AsyncClient(timeout=60.0) as client,
+                    client.stream("POST", req_url, json=payload) as resp,
+                ):
                     async for chunk in resp.aiter_text():
                         yield chunk
 
@@ -123,9 +120,10 @@ async def chat(
     if stream:
 
         async def _stream_openai():
-            async with httpx.AsyncClient(timeout=60.0) as client, client.stream(
-                "POST", req_url, json=payload, headers=headers
-            ) as resp:
+            async with (
+                httpx.AsyncClient(timeout=60.0) as client,
+                client.stream("POST", req_url, json=payload, headers=headers) as resp,
+            ):
                 async for chunk in resp.aiter_text():
                     yield chunk
 
@@ -173,7 +171,5 @@ async def refine_prompt(
         if r.status_code != 200:
             return {"refined": text, "error": r.text}
         data = r.json()
-        content = (data.get("choices") or [{}])[0].get("message", {}).get(
-            "content", ""
-        ).strip() or text
+        content = (data.get("choices") or [{}])[0].get("message", {}).get("content", "").strip() or text
         return {"refined": content}

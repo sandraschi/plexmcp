@@ -103,15 +103,15 @@ async def plex_ffmpeg_mgr(
 
         if operation == "probe":
             return await _handle_probe(source_path)
-        elif operation == "sync_audio":
+        if operation == "sync_audio":
             return await _handle_sync_audio(source_path, offset_seconds, plex, media_key)
-        elif operation == "sync_subtitles":
+        if operation == "sync_subtitles":
             return await _handle_sync_subtitles(source_path, offset_seconds, plex, media_key)
-        elif operation == "revert":
+        if operation == "revert":
             return await _handle_revert(source_path, plex, media_key)
-        elif operation == "set_aspect":
+        if operation == "set_aspect":
             return await _handle_set_aspect(source_path, aspect_ratio, reencode, plex, media_key)
-        elif operation == "extract_subtitles":
+        if operation == "extract_subtitles":
             return await _handle_extract_subtitles(source_path, stream_index, plex, media_key)
 
         return json.dumps(

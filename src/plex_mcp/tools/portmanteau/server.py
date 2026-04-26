@@ -80,7 +80,7 @@ async def plex_server(
             )
 
         # Operation: info
-        elif operation == "info":
+        if operation == "info":
             status = await plex.get_server_status()
             libraries = await plex.list_libraries()
             return ToolResult(
@@ -96,7 +96,7 @@ async def plex_server(
             )
 
         # Operation: health
-        elif operation == "health":
+        if operation == "health":
             # Import admin service for health check
             from ...api.admin import get_server_health
 
@@ -108,7 +108,7 @@ async def plex_server(
             }
 
         # Operation: maintenance
-        elif operation == "maintenance":
+        if operation == "maintenance":
             if not maintenance_operation:
                 return {
                     "success": False,
@@ -123,9 +123,7 @@ async def plex_server(
             # Import admin service for maintenance
             from ...api.admin import run_server_maintenance
 
-            result = await run_server_maintenance(
-                operation=maintenance_operation, options=options or {}
-            )
+            result = await run_server_maintenance(operation=maintenance_operation, options=options or {})
             return {
                 "success": True,
                 "operation": "maintenance",
@@ -134,7 +132,7 @@ async def plex_server(
             }
 
         # Operation: restart
-        elif operation == "restart":
+        if operation == "restart":
             # Note: Plex API may not support programmatic restart
             logger.warning("Server restart operation may not be fully supported by Plex API")
             return {
@@ -148,7 +146,7 @@ async def plex_server(
             }
 
         # Operation: update
-        elif operation == "update":
+        if operation == "update":
             # Note: Plex API may not support programmatic updates
             logger.warning("Server update operation may not be fully supported by Plex API")
             return {
@@ -161,16 +159,15 @@ async def plex_server(
                 ],
             }
 
-        else:
-            return {
-                "success": False,
-                "error": f"Invalid operation: '{operation}'",
-                "error_code": "INVALID_OPERATION",
-                "suggestions": [
-                    "Valid operations: status, info, health, maintenance, restart, update",
-                    f"You provided: '{operation}'",
-                ],
-            }
+        return {
+            "success": False,
+            "error": f"Invalid operation: '{operation}'",
+            "error_code": "INVALID_OPERATION",
+            "suggestions": [
+                "Valid operations: status, info, health, maintenance, restart, update",
+                f"You provided: '{operation}'",
+            ],
+        }
 
     except RuntimeError as e:
         error_msg = str(e)
@@ -194,18 +191,18 @@ async def plex_server(
     except Exception as e:
         error_msg = str(e)
         is_unauthorized = "unauthorized" in error_msg.lower() or "(401)" in error_msg
-        
+
         logger.error(
             f"Error in plex_server operation '{operation}': {error_msg}",
-            exc_info=not is_unauthorized, # Minimize noise for auth errors
+            exc_info=not is_unauthorized,  # Minimize noise for auth errors
         )
-        
+
         suggestions = [
             "Check server logs for detailed error information",
             "Verify all required parameters are provided",
             "Try the operation again with valid parameters",
         ]
-        
+
         if is_unauthorized:
             suggestions = [
                 "Update your PLEX_TOKEN in the settings",
@@ -216,7 +213,9 @@ async def plex_server(
 
         return {
             "success": False,
-            "error": f"Plex Authentication Failed: {error_msg}" if is_unauthorized else f"Unexpected error during {operation}: {error_msg}",
+            "error": f"Plex Authentication Failed: {error_msg}"
+            if is_unauthorized
+            else f"Unexpected error during {operation}: {error_msg}",
             "error_code": "AUTH_FAILURE" if is_unauthorized else "UNEXPECTED_ERROR",
             "operation": operation,
             "suggestions": suggestions,

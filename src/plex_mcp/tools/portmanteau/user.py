@@ -77,7 +77,7 @@ async def plex_user(
             }
 
         # Operation: get
-        elif operation == "get":
+        if operation == "get":
             if not user_id:
                 return {
                     "success": False,
@@ -100,7 +100,7 @@ async def plex_user(
             return {"success": True, "operation": "get", "data": user_data}
 
         # Operation: create
-        elif operation == "create":
+        if operation == "create":
             if not username:
                 return {
                     "success": False,
@@ -153,7 +153,7 @@ async def plex_user(
             }
 
         # Operation: update
-        elif operation == "update":
+        if operation == "update":
             if not user_id:
                 return {
                     "success": False,
@@ -206,7 +206,7 @@ async def plex_user(
             }
 
         # Operation: delete
-        elif operation == "delete":
+        if operation == "delete":
             if not user_id:
                 return {
                     "success": False,
@@ -224,7 +224,7 @@ async def plex_user(
             }
 
         # Operation: update_permissions
-        elif operation == "update_permissions":
+        if operation == "update_permissions":
             if not user_id:
                 return {
                     "success": False,
@@ -253,32 +253,31 @@ async def plex_user(
                 "data": user_data or result,
             }
 
-        else:
-            return {
-                "success": False,
-                "error": f"Invalid operation: '{operation}'",
-                "error_code": "INVALID_OPERATION",
-                "suggestions": [
-                    "Valid operations: list, get, create, update, delete, update_permissions",
-                    f"You provided: '{operation}'",
-                ],
-            }
+        return {
+            "success": False,
+            "error": f"Invalid operation: '{operation}'",
+            "error_code": "INVALID_OPERATION",
+            "suggestions": [
+                "Valid operations: list, get, create, update, delete, update_permissions",
+                f"You provided: '{operation}'",
+            ],
+        }
 
     except Exception as e:
         error_msg = str(e)
         is_unauthorized = "unauthorized" in error_msg.lower() or "(401)" in error_msg
-        
+
         logger.error(
             f"Error in plex_user operation '{operation}': {error_msg}",
             exc_info=not is_unauthorized,
         )
-        
+
         suggestions = [
             "Check Plex server is running and accessible",
             "Verify your server URL and token in settings",
             "Check server logs for detailed error information",
         ]
-        
+
         if is_unauthorized:
             suggestions = [
                 "Update your PLEX_TOKEN in settings",

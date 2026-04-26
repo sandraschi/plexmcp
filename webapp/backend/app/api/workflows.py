@@ -47,7 +47,10 @@ async def run_workflow(
         items = search_result.get("data") or search_result.get("results") or []
         text_blob = str(items)[:8000]
         messages = [
-            {"role": "system", "content": "Summarize the following Plex search results in a few short sentences. List key titles or categories."},
+            {
+                "role": "system",
+                "content": "Summarize the following Plex search results in a few short sentences. List key titles or categories.",
+            },
             {"role": "user", "content": f"Query: {query}\n\nResults:\n{text_blob}"},
         ]
         try:
@@ -58,9 +61,21 @@ async def run_workflow(
                 )
         except Exception as e:
             logger.warning("LLM summarize failed: %s", e)
-            return {"success": True, "workflow_id": workflow_id, "search_result": search_result, "summary": None, "error": str(e)}
+            return {
+                "success": True,
+                "workflow_id": workflow_id,
+                "search_result": search_result,
+                "summary": None,
+                "error": str(e),
+            }
         if r.status_code != 200:
-            return {"success": True, "workflow_id": workflow_id, "search_result": search_result, "summary": None, "error": r.text}
+            return {
+                "success": True,
+                "workflow_id": workflow_id,
+                "search_result": search_result,
+                "summary": None,
+                "error": r.text,
+            }
         data = r.json()
         summary = (data.get("message") or {}).get("content", "").strip()
         return {"success": True, "workflow_id": workflow_id, "search_result": search_result, "summary": summary}

@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from plex_mcp.tools.portmanteau.performance import plex_performance
+from tests.helpers import tool_payload
 
 
 class TestPlexPerformance:
@@ -17,9 +18,11 @@ class TestPlexPerformance:
             "plex_mcp.tools.portmanteau.performance._get_plex_service",
             return_value=mock_plex_service,
         ):
-            result = await (
-                plex_performance.fn if hasattr(plex_performance, "fn") else plex_performance
-            )(operation="get_transcode_settings")
+            result = tool_payload(
+                await (plex_performance.fn if hasattr(plex_performance, "fn") else plex_performance)(
+                    operation="get_transcode_settings"
+                )
+            )
 
             assert result["success"] is True
             assert result["operation"] == "get_transcode_settings"
@@ -31,9 +34,11 @@ class TestPlexPerformance:
             "plex_mcp.tools.portmanteau.performance._get_plex_service",
             return_value=mock_plex_service,
         ):
-            result = await (
-                plex_performance.fn if hasattr(plex_performance, "fn") else plex_performance
-            )(operation="get_transcoding_status")
+            result = tool_payload(
+                await (plex_performance.fn if hasattr(plex_performance, "fn") else plex_performance)(
+                    operation="get_transcoding_status"
+                )
+            )
 
             assert result["success"] is True
             assert result["operation"] == "get_transcoding_status"
@@ -45,9 +50,11 @@ class TestPlexPerformance:
             "plex_mcp.tools.portmanteau.performance._get_plex_service",
             return_value=mock_plex_service,
         ):
-            result = await (
-                plex_performance.fn if hasattr(plex_performance, "fn") else plex_performance
-            )(operation="get_bandwidth")
+            result = tool_payload(
+                await (plex_performance.fn if hasattr(plex_performance, "fn") else plex_performance)(
+                    operation="get_bandwidth"
+                )
+            )
 
             assert result["success"] is True
             assert result["operation"] == "get_bandwidth"
@@ -59,9 +66,11 @@ class TestPlexPerformance:
             "plex_mcp.tools.portmanteau.performance._get_plex_service",
             return_value=mock_plex_service,
         ):
-            result = await (
-                plex_performance.fn if hasattr(plex_performance, "fn") else plex_performance
-            )(operation="get_server_status")
+            result = tool_payload(
+                await (plex_performance.fn if hasattr(plex_performance, "fn") else plex_performance)(
+                    operation="get_server_status"
+                )
+            )
 
             assert result["success"] is True
             assert result["operation"] == "get_server_status"
@@ -73,9 +82,11 @@ class TestPlexPerformance:
             "plex_mcp.tools.portmanteau.performance._get_plex_service",
             return_value=mock_plex_service,
         ):
-            result = await (
-                plex_performance.fn if hasattr(plex_performance, "fn") else plex_performance
-            )(operation="get_server_info")
+            result = tool_payload(
+                await (plex_performance.fn if hasattr(plex_performance, "fn") else plex_performance)(
+                    operation="get_server_info"
+                )
+            )
 
             assert result["success"] is True
             assert result["operation"] == "get_server_info"

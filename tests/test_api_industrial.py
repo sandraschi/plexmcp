@@ -4,10 +4,13 @@ Verifies and validates the new RAG and Repair Hub endpoints
 using mocked services for CI/CD compatibility.
 """
 
+import asyncio
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from httpx import ASGITransport, AsyncClient
+
+from webapp.backend.app.api import rag as rag_api
 
 
 @pytest.mark.asyncio
@@ -22,6 +25,11 @@ async def test_api_rag_sync_trigger(webapp_app):
             assert response.status_code == 200
             assert response.json()["success"] is True
             assert response.json()["started"] is True
+            # Allow the background run_sync() task to finish so pytest shutdown does not
+            # log "Task was destroyed but it is still pending!".
+            bg = getattr(rag_api, "_sync_task", None)
+            if bg is not None:
+                await asyncio.wait_for(bg, timeout=5.0)
 
 
 @pytest.mark.asyncio

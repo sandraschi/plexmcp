@@ -34,38 +34,24 @@ class MediaSearchRequest(BaseModel):
         "",
         description="General search term that searches across multiple fields (title, description, etc.)",
     )
-    limit: int = Field(
-        100, ge=1, le=1000, description="Maximum number of results to return (1-1000)"
-    )
-    offset: int = Field(
-        0, ge=0, description="Pagination offset for retrieving subsequent pages of results"
-    )
-    library_id: str | None = Field(
-        None, description="Optional library ID to search within a specific library"
-    )
+    limit: int = Field(100, ge=1, le=1000, description="Maximum number of results to return (1-1000)")
+    offset: int = Field(0, ge=0, description="Pagination offset for retrieving subsequent pages of results")
+    library_id: str | None = Field(None, description="Optional library ID to search within a specific library")
 
     # Media type and basic filters
-    media_type: (
-        Literal["movie", "show", "season", "episode", "artist", "album", "track", "photo"] | None
-    ) = Field(None, description="Filter by specific media type")
-    title: str | None = Field(
-        None, description="Filter by title (supports wildcards with * for partial matches)"
+    media_type: Literal["movie", "show", "season", "episode", "artist", "album", "track", "photo"] | None = Field(
+        None, description="Filter by specific media type"
     )
+    title: str | None = Field(None, description="Filter by title (supports wildcards with * for partial matches)")
 
     # Date/Year filters
     year: int | list[int] | str | None = Field(
         None,
         description="Filter by specific year, list of years, or year range (e.g., '2020-2022')",
     )
-    decade: int | None = Field(
-        None, ge=1900, le=2100, description="Filter by decade (e.g., 2020 for 2020s)"
-    )
-    min_year: int | None = Field(
-        None, ge=1900, le=2100, description="Minimum release year (inclusive)"
-    )
-    max_year: int | None = Field(
-        None, ge=1900, le=2100, description="Maximum release year (inclusive)"
-    )
+    decade: int | None = Field(None, ge=1900, le=2100, description="Filter by decade (e.g., 2020 for 2020s)")
+    min_year: int | None = Field(None, ge=1900, le=2100, description="Minimum release year (inclusive)")
+    max_year: int | None = Field(None, ge=1900, le=2100, description="Maximum release year (inclusive)")
 
     # People filters
     actor: str | list[str] | None = Field(None, description="Filter by actor name(s)")
@@ -77,12 +63,8 @@ class MediaSearchRequest(BaseModel):
         None, description="Filter by content rating(s) (e.g., 'PG', 'R', 'TV-MA')"
     )
     studio: str | list[str] | None = Field(None, description="Filter by studio(s)")
-    country: str | list[str] | None = Field(
-        None, description="Filter by country/countries of origin"
-    )
-    language: str | list[str] | None = Field(
-        None, description="Filter by language code(s) (e.g., 'en', 'ja', 'es')"
-    )
+    country: str | list[str] | None = Field(None, description="Filter by country/countries of origin")
+    language: str | list[str] | None = Field(None, description="Filter by language code(s) (e.g., 'en', 'ja', 'es')")
     collection: str | list[str] | None = Field(None, description="Filter by collection name(s)")
 
     # Rating filters
@@ -254,6 +236,4 @@ async def get_library_items(request: LibraryItemsRequest) -> list[MediaItem]:
         List of media items in the specified library
     """
     plex = _get_plex_service()
-    return await plex.get_library_items(
-        library_id=request.library_id, limit=request.limit, offset=request.offset
-    )
+    return await plex.get_library_items(library_id=request.library_id, limit=request.limit, offset=request.offset)

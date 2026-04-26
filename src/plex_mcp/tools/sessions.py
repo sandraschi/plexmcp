@@ -69,12 +69,8 @@ class PlaybackControlRequest(BaseModel):
         description="Action to perform (play, pause, stop, skip_next, skip_previous, step_forward, step_back, seek_to)",
     )
     media_key: str | None = Field(None, description="Media key to play (required for play action)")
-    seek_to: int | None = Field(
-        None, description="Position in milliseconds to seek to (for seek_to action)"
-    )
-    offset: int | None = Field(
-        30, description="Time offset in seconds (for step_forward/step_back actions)"
-    )
+    seek_to: int | None = Field(None, description="Position in milliseconds to seek to (for seek_to action)")
+    offset: int | None = Field(30, description="Time offset in seconds (for step_forward/step_back actions)")
 
 
 @mcp.tool()

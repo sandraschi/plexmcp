@@ -17,11 +17,11 @@ logger = get_logger(__name__)
 
 def _get_plex_service():
     """Get PlexService instance with proper environment variable handling."""
-    from ...services.plex_service import PlexService
     from ...config import get_settings
+    from ...services.plex_service import PlexService
 
     settings = get_settings()
-    
+
     if not settings.plex_token:
         raise RuntimeError(
             "PLEX_TOKEN environment variable is required. "
@@ -94,7 +94,7 @@ async def plex_library(
             )
 
         # Operation: get
-        elif operation == "get":
+        if operation == "get":
             if not library_id:
                 return {
                     "success": False,
@@ -115,12 +115,12 @@ async def plex_library(
                     ],
                 }
             return ToolResult(
-                body={"success": True, "operation": "get", "data": library},
-                prefabs=["plex_library_detail"],
+                structured_content={"success": True, "operation": "get", "data": library},
+                meta={"prefabs": ["plex_library_detail"]},
             )
 
         # Operation: scan
-        elif operation == "scan":
+        if operation == "scan":
             if not library_id:
                 return {
                     "success": False,
@@ -139,7 +139,7 @@ async def plex_library(
             }
 
         # Operation: refresh
-        elif operation == "refresh":
+        if operation == "refresh":
             if not library_id:
                 return {
                     "success": False,
@@ -157,7 +157,7 @@ async def plex_library(
             }
 
         # Operation: empty_trash
-        elif operation == "empty_trash":
+        if operation == "empty_trash":
             if not library_id:
                 return {
                     "success": False,
@@ -175,7 +175,7 @@ async def plex_library(
             }
 
         # Operation: create
-        elif operation == "create":
+        if operation == "create":
             if not name:
                 return {
                     "success": False,
@@ -224,7 +224,7 @@ async def plex_library(
             }
 
         # Operation: update
-        elif operation == "update":
+        if operation == "update":
             if not library_id:
                 return {
                     "success": False,
@@ -273,7 +273,7 @@ async def plex_library(
             }
 
         # Operation: delete
-        elif operation == "delete":
+        if operation == "delete":
             if not library_id:
                 return {
                     "success": False,
@@ -291,7 +291,7 @@ async def plex_library(
             }
 
         # Operation: optimize
-        elif operation == "optimize":
+        if operation == "optimize":
             if not library_id:
                 return {
                     "success": False,
@@ -309,7 +309,7 @@ async def plex_library(
             }
 
         # Operation: add_location
-        elif operation == "add_location":
+        if operation == "add_location":
             if not library_id:
                 return {
                     "success": False,
@@ -335,7 +335,7 @@ async def plex_library(
             }
 
         # Operation: remove_location
-        elif operation == "remove_location":
+        if operation == "remove_location":
             if not library_id:
                 return {
                     "success": False,
@@ -361,7 +361,7 @@ async def plex_library(
             }
 
         # Operation: clean_bundles
-        elif operation == "clean_bundles":
+        if operation == "clean_bundles":
             result = await plex.clean_bundles(library_id=library_id)
             return {
                 "success": result.get("cleaned", False),
@@ -370,32 +370,31 @@ async def plex_library(
                 "data": result,
             }
 
-        else:
-            return {
-                "success": False,
-                "error": f"Invalid operation: '{operation}'",
-                "error_code": "INVALID_OPERATION",
-                "suggestions": [
-                    "Valid operations: list, get, create, update, delete, scan, refresh, optimize, empty_trash, add_location, remove_location, clean_bundles",
-                    f"You provided: '{operation}'",
-                ],
-            }
+        return {
+            "success": False,
+            "error": f"Invalid operation: '{operation}'",
+            "error_code": "INVALID_OPERATION",
+            "suggestions": [
+                "Valid operations: list, get, create, update, delete, scan, refresh, optimize, empty_trash, add_location, remove_location, clean_bundles",
+                f"You provided: '{operation}'",
+            ],
+        }
 
     except Exception as e:
         error_msg = str(e)
         is_unauthorized = "unauthorized" in error_msg.lower() or "(401)" in error_msg
-        
+
         logger.error(
             f"Error in plex_library operation '{operation}': {error_msg}",
             exc_info=not is_unauthorized,
         )
-        
+
         suggestions = [
             "Check Plex server is running and accessible",
             "Verify your server URL and token in settings",
             "Check server logs for detailed error information",
         ]
-        
+
         if is_unauthorized:
             suggestions = [
                 "Update your PLEX_TOKEN in settings",

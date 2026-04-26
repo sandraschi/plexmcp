@@ -1,14 +1,18 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
-	content: ["./app/**/*.{js,ts,jsx,tsx,mdx}", "./components/**/*.{js,ts,jsx,tsx,mdx}"],
+	content: [
+		"./app/**/*.{js,ts,jsx,tsx,mdx}",
+		"./components/**/*.{js,ts,jsx,tsx,mdx}",
+	],
 	theme: {
 		extend: {
 			colors: {
 				background: "var(--background)",
 				foreground: "var(--foreground)",
-				amber: "#c9a227",
-				slate: "#1a1f2e",
+				// Do not set `slate` or `amber` to a single hex string here: that replaces the
+				// entire default color scale and breaks utilities like `text-slate-100`,
+				// `bg-slate-800`, `border-amber-800` (appears as a blank / “black” UI).
 			},
 		},
 	},

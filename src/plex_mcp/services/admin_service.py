@@ -6,6 +6,7 @@ operations like user management and server maintenance.
 """
 
 import logging
+import os
 import time
 from typing import Any
 
@@ -14,7 +15,6 @@ from plexapi.exceptions import Unauthorized
 from ..models import ServerMaintenanceResult, UserPermissions
 from .base import BaseService, ServiceError
 from .rag_ingestor import HAS_RAG, get_rag_sync_progress
-import os
 
 logger = logging.getLogger(__name__)
 
@@ -83,9 +83,7 @@ class AdminService(BaseService):
             logger.error(error_msg)
             raise ServiceError(error_msg, code="get_users_failed") from e
 
-    async def update_user_permissions(
-        self, user_id: str, permissions: dict[str, Any]
-    ) -> UserPermissions:
+    async def update_user_permissions(self, user_id: str, permissions: dict[str, Any]) -> UserPermissions:
         """Update user permissions and restrictions.
 
         Args:
@@ -164,20 +162,20 @@ class AdminService(BaseService):
                 await self.plex_service._run_in_executor(self.plex.library.update)
 
             duration = time.time() - start_time
-            
+
             result_details = {
                 "operation": operation,
                 "options": options or {},
                 "completed_at": int(time.time()),
                 "status": "completed",
-                "duration_seconds": round(duration, 2)
+                "duration_seconds": round(duration, 2),
             }
 
             return ServerMaintenanceResult(
                 operation=operation,
                 status="success",
                 details=result_details,
-                space_freed_gb=0.0, # Plex API doesn't return space freed directly
+                space_freed_gb=0.0,  # Plex API doesn't return space freed directly
                 items_processed=0,
                 duration_seconds=duration,
                 recommendations=[
@@ -212,7 +210,7 @@ class AdminService(BaseService):
 
             # Check for any active alerts
             alerts = []
-            
+
             # Surface version as health data
             return {
                 "status": "healthy",
@@ -228,8 +226,8 @@ class AdminService(BaseService):
                     "transcode_sessions": len(transcode_sessions),
                 },
                 "background_tasks": {
-                    "running": 0, # Plex API doesn't expose task counts easily
-                    "status": "operational"
+                    "running": 0,  # Plex API doesn't expose task counts easily
+                    "status": "operational",
                 },
                 "rag": self._get_rag_stats(),
                 "alerts": alerts,
@@ -244,12 +242,13 @@ class AdminService(BaseService):
         """Get RAG indexing and storage statistics."""
         if not HAS_RAG:
             return {"available": False}
-        
+
         try:
             from .rag_ingestor import PlexIngestor
+
             ingestor = PlexIngestor(self.plex_service)
             db_path = ingestor.db_path
-            
+
             # Calculate directory size
             total_size_mb = 0.0
             item_count = 0
@@ -258,18 +257,18 @@ class AdminService(BaseService):
                     for f in filenames:
                         fp = os.path.join(dirpath, f)
                         total_size_mb += os.path.getsize(fp) / (1024 * 1024)
-                
+
                 # Try to get item count from progress if idle, or assume 0 if first run
                 progress = get_rag_sync_progress()
                 item_count = progress.get("indexed_count", 0)
-            
+
             return {
                 "available": True,
                 "backend": "lancedb",
                 "storage_mb": round(total_size_mb, 2),
                 "item_count": item_count,
                 "db_path": db_path,
-                "sync_status": get_rag_sync_progress().get("phase", "idle")
+                "sync_status": get_rag_sync_progress().get("phase", "idle"),
             }
         except Exception as e:
             logger.error(f"Error gathering RAG stats: {e}")

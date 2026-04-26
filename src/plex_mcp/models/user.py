@@ -38,9 +38,7 @@ class User(BaseModel):
     thumb: str | None = Field(None, description="URL to user's avatar")
     title: str | None = Field(None, description="User's display name")
     role: UserRole = Field(UserRole.USER, description="User's role")
-    permissions: UserPermissions = Field(
-        default_factory=UserPermissions, description="User's permissions"
-    )
+    permissions: UserPermissions = Field(default_factory=UserPermissions, description="User's permissions")
     auth_token: str | None = Field(
         None, description="Authentication token (only available for the current user)", exclude=True
     )
@@ -52,9 +50,7 @@ class User(BaseModel):
     last_seen: datetime | None = Field(None, description="When the user was last active")
     created_at: datetime | None = Field(None, description="When the user was created")
     updated_at: datetime | None = Field(None, description="When the user was last updated")
-    extra_metadata: dict[str, Any] = Field(
-        default_factory=dict, description="Additional metadata about the user"
-    )
+    extra_metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata about the user")
 
 
 class UserList(BaseModel):

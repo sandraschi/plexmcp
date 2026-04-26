@@ -94,9 +94,7 @@ async def plex_audio_mgr(
                     "error_code": "MISSING_VOLUME",
                 }
 
-            result = await plex.control_playback(
-                client_identifier=client_id, action="set_volume", volume=target_volume
-            )
+            result = await plex.control_playback(client_identifier=client_id, action="set_volume", volume=target_volume)
             return {
                 "success": result,
                 "operation": operation,
@@ -105,7 +103,7 @@ async def plex_audio_mgr(
             }
 
         # Operation: get_volume
-        elif operation == "get_volume":
+        if operation == "get_volume":
             if not client_id:
                 return {
                     "success": False,
@@ -123,7 +121,7 @@ async def plex_audio_mgr(
             }
 
         # Operation: list_streams
-        elif operation == "list_streams":
+        if operation == "list_streams":
             if not media_key:
                 return {
                     "success": False,
@@ -141,7 +139,7 @@ async def plex_audio_mgr(
             }
 
         # Operation: select_stream
-        elif operation == "select_stream":
+        if operation == "select_stream":
             if not client_id or not stream_id:
                 return {
                     "success": False,
@@ -158,7 +156,7 @@ async def plex_audio_mgr(
             }
 
         # Operation: handover
-        elif operation == "handover":
+        if operation == "handover":
             if not client_id or not target_client_id:
                 return {
                     "success": False,
@@ -174,12 +172,11 @@ async def plex_audio_mgr(
                 "target_client_id": target_client_id,
             }
 
-        else:
-            return {
-                "success": False,
-                "error": f"Operation {operation} not yet fully implemented or recognized",
-                "error_code": "NOT_IMPLEMENTED",
-            }
+        return {
+            "success": False,
+            "error": f"Operation {operation} not yet fully implemented or recognized",
+            "error_code": "NOT_IMPLEMENTED",
+        }
 
     except Exception as e:
         logger.error(f"Error in plex_audio_mgr({operation}): {str(e)}")

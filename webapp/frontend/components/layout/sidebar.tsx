@@ -4,6 +4,7 @@ import {
 	BookOpen,
 	ChevronLeft,
 	ChevronRight,
+	Code2,
 	Database,
 	Film,
 	LayoutDashboard,
@@ -27,6 +28,7 @@ const navItems = [
 	{ href: "/search/semantic", label: "Semantic search", icon: Sparkles },
 	{ href: "/rag", label: "RAG Management", icon: Database },
 	{ href: "/chat", label: "Chat", icon: MessageSquare },
+	{ href: "/api-docs", label: "API Docs", icon: Code2 },
 	{ href: "/server", label: "Server", icon: Server },
 	{ href: "/help", label: "Help", icon: BookOpen },
 	{ href: "/settings", label: "Settings", icon: Settings },
@@ -46,7 +48,8 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 		>
 			<nav className="flex-1 py-4 px-2 space-y-0.5 overflow-y-auto">
 				{navItems.map(({ href, label, icon: Icon }) => {
-					const isActive = pathname === href || (href !== "/" && pathname.startsWith(href));
+					const isActive =
+						pathname === href || (href !== "/" && pathname.startsWith(href));
 					return (
 						<Link
 							key={href}
@@ -70,7 +73,11 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 				className="flex items-center justify-center py-2 border-t border-slate-700 text-slate-400 hover:text-slate-200 hover:bg-slate-800"
 				title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
 			>
-				{collapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
+				{collapsed ? (
+					<ChevronRight className="w-5 h-5" />
+				) : (
+					<ChevronLeft className="w-5 h-5" />
+				)}
 			</button>
 		</aside>
 	);

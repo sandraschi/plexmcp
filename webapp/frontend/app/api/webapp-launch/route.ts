@@ -6,6 +6,8 @@ export async function POST(request: NextRequest) {
 		const body = await request.json();
 		return await proxyPost("/api/webapp-launch", body, { timeoutMs: 95000 });
 	} catch {
-		return new Response(JSON.stringify({ error: "Backend unreachable" }), { status: 502 });
+		return new Response(JSON.stringify({ error: "Backend unreachable" }), {
+			status: 502,
+		});
 	}
 }

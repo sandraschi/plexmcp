@@ -46,9 +46,7 @@ def test_imports():
 
         try:
             settings = get_settings()
-            print(
-                f"      [OK] Config loaded (token: {'SET' if settings.plex_token else 'NOT SET'})"
-            )
+            print(f"      [OK] Config loaded (token: {'SET' if settings.plex_token else 'NOT SET'})")
         except Exception as e:
             print(f"      [WARN] Config error (expected if PLEX_TOKEN not set): {type(e).__name__}")
 

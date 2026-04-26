@@ -47,7 +47,9 @@ export async function proxyGet(
 		}
 		return new NextResponse(res.body, {
 			status: res.status,
-			headers: { "Content-Type": res.headers.get("content-type") ?? "application/json" },
+			headers: {
+				"Content-Type": res.headers.get("content-type") ?? "application/json",
+			},
 		});
 	} catch (err) {
 		console.error("[PROXY] Error:", err);
@@ -94,7 +96,8 @@ export async function proxyPost(
 			return NextResponse.json(errBody, { status: res.status });
 		}
 		const text = await res.text();
-		if (!text) return NextResponse.json({ error: "Empty response" }, { status: 502 });
+		if (!text)
+			return NextResponse.json({ error: "Empty response" }, { status: 502 });
 		const data = JSON.parse(text);
 		return NextResponse.json(data);
 	} catch (e) {

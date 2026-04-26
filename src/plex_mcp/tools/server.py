@@ -9,8 +9,35 @@ from ..utils import get_logger
 
 logger = get_logger(__name__)
 
+BACKEND_PORT = 10740  # fleet-registered port
 
-def _get_plex_service():
+
+@mcp.tool()
+async def show_api_docs() -> dict:
+    """
+    Return Swagger UI, ReDoc, and OpenAPI schema URLs for the plex-mcp REST API.
+
+    Rationale: plex-mcp exposes a rich FastAPI surface (libraries, movies, search,
+    RAG, server, playback, repair, arr stack, workflows, LLM chat, and more).
+    This tool surfaces the docs URLs so Claude can direct the user without them
+    needing to remember the port.
+
+    Returns: dict with swagger_ui, redoc, openapi_json URLs and a usage note.
+    """
+    base = f"http://localhost:{BACKEND_PORT}"
+    return {
+        "swagger_ui": f"{base}/docs",
+        "redoc": f"{base}/redoc",
+        "openapi_json": f"{base}/openapi.json",
+        "backend_port": BACKEND_PORT,
+        "webapp_url": f"http://localhost:{BACKEND_PORT + 1}/api-docs",
+        "note": (
+            "Open swagger_ui in a browser to explore and interactively test all "
+            "plex-mcp REST endpoints. The webapp /api-docs page embeds it with "
+            "the fleet dark theme."
+        ),
+    }
+
     """Get PlexService instance with proper environment variable handling."""
     from ..services.plex_service import PlexService
 

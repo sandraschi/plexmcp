@@ -147,9 +147,7 @@ async def get_arr_stack_status() -> dict[str, Any]:
             "error": None,
         }
 
-    any_configured = any(
-        x.get("configured") for x in (radarr, sonarr, lidarr) if isinstance(x, dict)
-    )
+    any_configured = any(x.get("configured") for x in (radarr, sonarr, lidarr) if isinstance(x, dict))
     return {
         "success": True,
         "any_configured": any_configured,

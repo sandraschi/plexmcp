@@ -135,9 +135,7 @@ def format_error_response(
     return response
 
 
-def get_error_suggestions(
-    exception: Exception, tool_name: str, operation: str | None = None
-) -> list[str]:
+def get_error_suggestions(exception: Exception, tool_name: str, operation: str | None = None) -> list[str]:
     """Get contextual suggestions based on error type.
 
     Args:
