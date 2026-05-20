@@ -98,6 +98,7 @@ from contextlib import asynccontextmanager  # noqa: E402
 
 from fastmcp import FastMCP  # noqa: E402
 from fastmcp.prompts import Message  # noqa: E402
+from fastmcp.server import create_proxy  # noqa: E402
 
 from .sampling import PlexSamplingConfig, PlexSamplingHandler  # noqa: E402
 
@@ -129,6 +130,18 @@ mcp = FastMCP(
     on_duplicate="replace",
     strict_input_validation=True,
 )
+
+_bridge_proxies: list[str] = []
+bridge_urls = os.getenv("MCP_BRIDGE_URLS", "")
+if bridge_urls:
+    for url in bridge_urls.split(","):
+        url = url.strip()
+        if url:
+            try:
+                mcp.add_provider(create_proxy(url))
+                _bridge_proxies.append(url)
+            except Exception:
+                pass
 
 
 @mcp.resource("resource://plex/capabilities")

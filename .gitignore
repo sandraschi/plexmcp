@@ -95,3 +95,4 @@ webapp/frontend/blob-report/
 
 # Rust (if present at repo root)
 target/
+_dashboard/

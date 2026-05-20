@@ -49,7 +49,7 @@ async def organize_library(request: OrganizeRequest) -> dict[str, Any]:
         logger.info(f"Organized library {request.library_id}")
         return result
     except Exception as e:
-        logger.error(f"Error organizing library {request.library_id}: {e}")
+        logger.exception(f"Error organizing library {request.library_id}: {e}")
         raise
 
 
@@ -75,7 +75,7 @@ async def analyze_library(request: AnalyzeLibraryRequest) -> dict[str, Any]:
         logger.info(f"Analyzed library {request.library_id}, found {result.get('issues_found', 0)} issues")
         return result
     except Exception as e:
-        logger.error(f"Error analyzing library {request.library_id}: {e}")
+        logger.exception(f"Error analyzing library {request.library_id}: {e}")
         raise
 
 
@@ -104,7 +104,7 @@ async def fix_media_match(request: FixMatchRequest) -> bool:
         logger.info(f"Fixing match for item {request.item_id} with match ID {request.match_id}")
         return True
     except Exception as e:
-        logger.error(f"Error fixing match for item {request.item_id}: {e}")
+        logger.exception(f"Error fixing match for item {request.item_id}: {e}")
         return False
 
 
@@ -136,7 +136,7 @@ async def refresh_metadata(request: RefreshMetadataRequest) -> dict[str, Any]:
         )
         return result
     except Exception as e:
-        logger.error(f"Error refreshing metadata: {e}")
+        logger.exception(f"Error refreshing metadata: {e}")
         raise
         raise ValueError("Either item_id or library_id must be provided")
 
@@ -169,7 +169,7 @@ async def clean_bundles(request: CleanBundlesRequest) -> dict[str, Any]:
             "dry_run": request.dry_run,
         }
     except Exception as e:
-        logger.error(f"Error cleaning bundles: {e}")
+        logger.exception(f"Error cleaning bundles: {e}")
         raise
 
 
@@ -208,5 +208,5 @@ async def optimize_database(request: OptimizeDatabaseRequest) -> dict[str, Any]:
             "result": "Database optimization completed successfully",
         }
     except Exception as e:
-        logger.error(f"Error optimizing database: {e}")
+        logger.exception(f"Error optimizing database: {e}")
         raise

@@ -356,7 +356,7 @@ class PlexIngestor:
                     }
                     docs.append(doc)
             except Exception as e:
-                logger.error("Error extracting items from library %s: %s", lib_name, e)
+                logger.exception("Error extracting items from library %s: %s", lib_name, e)
 
         if docs:
             _report_progress(
@@ -481,7 +481,7 @@ class PlexIngestor:
                                     return chunks
             return chunks
         except Exception as e:
-            logger.error(f"Error extracting subtitles for {title} ({media_id}): {e}")
+            logger.exception(f"Error extracting subtitles for {title} ({media_id}): {e}")
             return []
 
     async def _download_subtitle(self, key: str) -> str | None:
@@ -495,7 +495,7 @@ class PlexIngestor:
                 if response.status_code == 200:
                     return response.text
         except Exception as e:
-            logger.error(f"Failed to download subtitle from {url}: {e}")
+            logger.exception(f"Failed to download subtitle from {url}: {e}")
         return None
 
     def _parse_srt(self, content: str) -> list[dict[str, Any]]:

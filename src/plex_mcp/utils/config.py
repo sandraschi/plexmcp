@@ -162,10 +162,10 @@ def load_config(config_file: str | Path = None) -> dict[str, Any]:
         return merged_config
 
     except json.JSONDecodeError as e:
-        logger.error(f"Invalid JSON in config file {config_path}: {e}")
+        logger.exception(f"Invalid JSON in config file {config_path}: {e}")
         return DEFAULT_CONFIG
     except Exception as e:
-        logger.error(f"Error loading config from {config_path}: {e}")
+        logger.exception(f"Error loading config from {config_path}: {e}")
         return DEFAULT_CONFIG
 
 
@@ -193,7 +193,7 @@ def save_config(config: dict[str, Any], config_file: str | Path = None) -> bool:
 
         return True
     except Exception as e:
-        logger.error(f"Error saving config to {config_path}: {e}")
+        logger.exception(f"Error saving config to {config_path}: {e}")
         return False
 
 
@@ -213,7 +213,7 @@ def validate_config(config: dict[str, Any]) -> bool:
         AppConfig(**config)
         return True
     except ValidationError as e:
-        logger.error(f"Configuration validation failed: {e}")
+        logger.exception(f"Configuration validation failed: {e}")
         raise
 
 

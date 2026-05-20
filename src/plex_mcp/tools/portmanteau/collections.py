@@ -6,7 +6,10 @@ FastMCP 2.13+ compliant with comprehensive docstrings and AI-friendly error mess
 """
 
 import os
-from typing import Any, Literal
+from typing import Annotated, Literal
+
+from fastmcp.tools import ToolResult
+from pydantic import Field
 
 from ...app import mcp
 from ...utils import get_logger
@@ -32,191 +35,223 @@ def _get_plex_service():
     return PlexService(base_url=base_url, token=token)
 
 
-@mcp.tool()
+@mcp.tool(version="1.0.0", annotations={"readOnlyHint": False, "destructiveHint": False})
 async def plex_collections(
-    operation: Literal["list", "get", "create", "update", "delete", "add_items", "remove_items"],
-    collection_id: str | None = None,
-    library_id: str | None = None,
-    title: str | None = None,
-    summary: str | None = None,
-    items: list[str] | None = None,
-) -> dict[str, Any]:
-    """
-    Comprehensive collections management tool for Plex Media Server.
+    operation: Annotated[
+        Literal["list", "get", "create", "update", "delete", "add_items", "remove_items"],
+        Field(description="Operation to perform."),
+    ],
+    collection_id: Annotated[str | None, Field(description="Collection ID.")] = None,
+    library_id: Annotated[str | None, Field(description="Library ID for scoping.")] = None,
+    title: Annotated[str | None, Field(description="Collection title.")] = None,
+    summary: Annotated[str | None, Field(description="Collection summary.")] = None,
+    items: Annotated[list[str] | None, Field(description="List of media item keys.")] = None,
+) -> ToolResult:
+    """Comprehensive collections management tool for Plex Media Server.
 
     PORTMANTEAU PATTERN RATIONALE:
     Consolidates 7 collection-related operations into a single tool to facilitate
     the thematic grouping and organization of cross-library media.
 
-    OPERATIONS:
-    - list: Retrieve all collections within a specific library or the entire server.
-    - get: Inspect collection metadata and list all contained media items.
-    - create: Initialize a new collection with optional initial items and descriptions.
-    - update: Modify existing collection titles or summaries.
-    - delete: Permanently remove a collection (media items are preserved).
-    - add_items: Append new media items to an existing collection.
-    - remove_items: Detach specific media items from a collection.
+    ## Return Format
+    {"success": bool, "data": dict, "message": str}
 
-    Returns:
-    FastMCP 3.1+ dialogic response with collection state and member list.
-    Enables autonomous curation and systematic content organization.
+    ## Examples
+    await plex_collections(operation="list")
+    await plex_collections(operation="create", title="My Collection", library_id="lib1")
     """
     try:
         plex = _get_plex_service()
 
         if operation == "list":
-            # Collections are typically accessed through libraries
             if library_id:
                 library = await plex.get_library(library_id)
                 if not library:
-                    return {
-                        "success": False,
-                        "error": f"Library with ID '{library_id}' not found",
-                        "error_code": "LIBRARY_NOT_FOUND",
+                    return ToolResult(
+                        content={
+                            "success": False,
+                            "error": f"Library with ID '{library_id}' not found",
+                            "error_code": "LIBRARY_NOT_FOUND",
+                        }
+                    )
+                return ToolResult(
+                    content={
+                        "success": True,
+                        "operation": "list",
+                        "collections": [],
+                        "message": "Collection listing requires PlexAPI collection support (not yet fully implemented)",
                     }
-                # Get collections from library (would need PlexAPI collection access)
-                return {
+                )
+            libraries = await plex.list_libraries()
+            return ToolResult(
+                content={
                     "success": True,
                     "operation": "list",
                     "collections": [],
+                    "libraries": libraries,
                     "message": "Collection listing requires PlexAPI collection support (not yet fully implemented)",
                 }
-            libraries = await plex.list_libraries()
-            return {
-                "success": True,
-                "operation": "list",
-                "collections": [],
-                "libraries": libraries,
-                "message": "Collection listing requires PlexAPI collection support (not yet fully implemented)",
-            }
+            )
 
         if operation == "get":
             if not collection_id:
-                return {
-                    "success": False,
-                    "error": "collection_id is required for get operation",
-                    "error_code": "MISSING_PARAMETER",
-                    "suggestions": ["Provide a collection ID"],
-                }
+                return ToolResult(
+                    content={
+                        "success": False,
+                        "error": "collection_id is required for get operation",
+                        "error_code": "MISSING_PARAMETER",
+                        "suggestions": ["Provide a collection ID"],
+                    }
+                )
 
-            return {
-                "success": True,
-                "operation": "get",
-                "collection_id": collection_id,
-                "message": "Collection retrieval requires PlexAPI collection support (not yet fully implemented)",
-                "data": {},
-            }
+            return ToolResult(
+                content={
+                    "success": True,
+                    "operation": "get",
+                    "collection_id": collection_id,
+                    "message": "Collection retrieval requires PlexAPI collection support (not yet fully implemented)",
+                    "data": {},
+                }
+            )
 
         if operation == "create":
             if not title:
-                return {
-                    "success": False,
-                    "error": "title is required for create operation",
-                    "error_code": "MISSING_PARAMETER",
-                }
+                return ToolResult(
+                    content={
+                        "success": False,
+                        "error": "title is required for create operation",
+                        "error_code": "MISSING_PARAMETER",
+                    }
+                )
             if not library_id:
-                return {
-                    "success": False,
-                    "error": "library_id is required for create operation",
-                    "error_code": "MISSING_PARAMETER",
-                }
+                return ToolResult(
+                    content={
+                        "success": False,
+                        "error": "library_id is required for create operation",
+                        "error_code": "MISSING_PARAMETER",
+                    }
+                )
 
-            return {
-                "success": True,
-                "operation": "create",
-                "title": title,
-                "library_id": library_id,
-                "message": "Collection creation requires PlexAPI collection support (not yet fully implemented)",
-                "data": {},
-            }
+            return ToolResult(
+                content={
+                    "success": True,
+                    "operation": "create",
+                    "title": title,
+                    "library_id": library_id,
+                    "message": "Collection creation requires PlexAPI collection support (not yet fully implemented)",
+                    "data": {},
+                }
+            )
 
         if operation == "update":
             if not collection_id:
-                return {
-                    "success": False,
-                    "error": "collection_id is required for update operation",
-                    "error_code": "MISSING_PARAMETER",
-                }
+                return ToolResult(
+                    content={
+                        "success": False,
+                        "error": "collection_id is required for update operation",
+                        "error_code": "MISSING_PARAMETER",
+                    }
+                )
 
-            return {
-                "success": True,
-                "operation": "update",
-                "collection_id": collection_id,
-                "message": "Collection update requires PlexAPI collection support (not yet fully implemented)",
-                "data": {},
-            }
+            return ToolResult(
+                content={
+                    "success": True,
+                    "operation": "update",
+                    "collection_id": collection_id,
+                    "message": "Collection update requires PlexAPI collection support (not yet fully implemented)",
+                    "data": {},
+                }
+            )
 
         if operation == "delete":
             if not collection_id:
-                return {
-                    "success": False,
-                    "error": "collection_id is required for delete operation",
-                    "error_code": "MISSING_PARAMETER",
-                }
+                return ToolResult(
+                    content={
+                        "success": False,
+                        "error": "collection_id is required for delete operation",
+                        "error_code": "MISSING_PARAMETER",
+                    }
+                )
 
-            return {
-                "success": True,
-                "operation": "delete",
-                "collection_id": collection_id,
-                "message": "Collection deletion requires PlexAPI collection support (not yet fully implemented)",
-            }
+            return ToolResult(
+                content={
+                    "success": True,
+                    "operation": "delete",
+                    "collection_id": collection_id,
+                    "message": "Collection deletion requires PlexAPI collection support (not yet fully implemented)",
+                }
+            )
 
         if operation == "add_items":
             if not collection_id:
-                return {
-                    "success": False,
-                    "error": "collection_id is required for add_items operation",
-                    "error_code": "MISSING_PARAMETER",
-                }
+                return ToolResult(
+                    content={
+                        "success": False,
+                        "error": "collection_id is required for add_items operation",
+                        "error_code": "MISSING_PARAMETER",
+                    }
+                )
             if not items:
-                return {
-                    "success": False,
-                    "error": "items is required for add_items operation",
-                    "error_code": "MISSING_PARAMETER",
-                }
+                return ToolResult(
+                    content={
+                        "success": False,
+                        "error": "items is required for add_items operation",
+                        "error_code": "MISSING_PARAMETER",
+                    }
+                )
 
-            return {
-                "success": True,
-                "operation": "add_items",
-                "collection_id": collection_id,
-                "items": items,
-                "message": "Adding items to collection requires PlexAPI collection support (not yet fully implemented)",
-            }
+            return ToolResult(
+                content={
+                    "success": True,
+                    "operation": "add_items",
+                    "collection_id": collection_id,
+                    "items": items,
+                    "message": "Adding items to collection requires PlexAPI collection support (not yet fully implemented)",
+                }
+            )
 
         if operation == "remove_items":
             if not collection_id:
-                return {
-                    "success": False,
-                    "error": "collection_id is required for remove_items operation",
-                    "error_code": "MISSING_PARAMETER",
-                }
+                return ToolResult(
+                    content={
+                        "success": False,
+                        "error": "collection_id is required for remove_items operation",
+                        "error_code": "MISSING_PARAMETER",
+                    }
+                )
             if not items:
-                return {
-                    "success": False,
-                    "error": "items is required for remove_items operation",
-                    "error_code": "MISSING_PARAMETER",
+                return ToolResult(
+                    content={
+                        "success": False,
+                        "error": "items is required for remove_items operation",
+                        "error_code": "MISSING_PARAMETER",
+                    }
+                )
+
+            return ToolResult(
+                content={
+                    "success": True,
+                    "operation": "remove_items",
+                    "collection_id": collection_id,
+                    "items": items,
+                    "message": "Removing items from collection requires PlexAPI collection support (not yet fully implemented)",
                 }
+            )
 
-            return {
-                "success": True,
-                "operation": "remove_items",
-                "collection_id": collection_id,
-                "items": items,
-                "message": "Removing items from collection requires PlexAPI collection support (not yet fully implemented)",
+        return ToolResult(
+            content={
+                "success": False,
+                "error": f"Unknown operation: {operation}",
+                "error_code": "INVALID_OPERATION",
+                "suggestions": ["Use one of: list, get, create, update, delete, add_items, remove_items"],
             }
-
-        return {
-            "success": False,
-            "error": f"Unknown operation: {operation}",
-            "error_code": "INVALID_OPERATION",
-            "suggestions": ["Use one of: list, get, create, update, delete, add_items, remove_items"],
-        }
+        )
 
     except Exception as e:
         error_msg = str(e)
         is_unauthorized = "unauthorized" in error_msg.lower() or "(401)" in error_msg
 
-        logger.error(
+        logger.exception(
             f"Error in plex_collections operation '{operation}': {error_msg}",
             exc_info=not is_unauthorized,
         )
@@ -234,10 +269,12 @@ async def plex_collections(
                 "Visit: https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/",
             ]
 
-        return {
-            "success": False,
-            "error": f"Plex Authentication Failed: {error_msg}" if is_unauthorized else error_msg,
-            "error_code": "AUTH_FAILURE" if is_unauthorized else "EXECUTION_ERROR",
-            "operation": operation,
-            "suggestions": suggestions,
-        }
+        return ToolResult(
+            content={
+                "success": False,
+                "error": f"Plex Authentication Failed: {error_msg}" if is_unauthorized else error_msg,
+                "error_code": "AUTH_FAILURE" if is_unauthorized else "EXECUTION_ERROR",
+                "operation": operation,
+                "suggestions": suggestions,
+            }
+        )

@@ -1131,7 +1131,7 @@ class PlexMediaService(BaseService):
                 )
                 results["terminated_sessions"] += 1
             except Exception as e:
-                self.logger.error(f"Failed to terminate session {session.get('session_key')}: {e}")
+                self.logger.exception(f"Failed to terminate session {session.get('session_key')}: {e}")
                 results["sessions"].append(
                     {
                         "session_key": session["session_key"],
@@ -1844,7 +1844,7 @@ class PlexMediaService(BaseService):
             raise ServiceError("Plex server not connected", code="not_connected")
 
         try:
-            sections = await asyncio.to_thread(
+            return await asyncio.to_thread(
                 lambda: [
                     LibrarySectionModel(
                         id=section.key,
@@ -1862,7 +1862,6 @@ class PlexMediaService(BaseService):
                     for section in self._plex.library.sections()
                 ]
             )
-            return sections
         except Exception as e:
             self.logger.error(f"Failed to get library sections: {e}", exc_info=True)
             raise ServiceError(f"Failed to get library sections: {str(e)}", code="library_error") from e
@@ -1922,8 +1921,8 @@ class PlexMediaService(BaseService):
             title=item.title,
             type=self._get_media_type(item),
             summary=item.summary,
-            thumb=item.thumbUrl if hasattr(item, "thumbUrl") else None,
-            art=item.artUrl if hasattr(item, "artUrl") else None,
+            thumb=item.thumb if hasattr(item, "thumb") else None,
+            art=item.art if hasattr(item, "art") else None,
             added_at=item.addedAt.timestamp() if item.addedAt else None,
             updated_at=item.updatedAt.timestamp() if item.updatedAt else None,
             year=item.year,

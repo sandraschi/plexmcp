@@ -50,7 +50,7 @@ def validate_required(value: Any, field: str = "field") -> None:
         raise ValidationError(f"{field} is required", field=field, code="required")
 
 
-def validate_type(value: Any, expected_type: type[T], field: str = "field") -> None:
+def validate_type[T](value: Any, expected_type: type[T], field: str = "field") -> None:
     """Validate that a value is of the expected type.
 
     Args:
@@ -356,10 +356,7 @@ def validate_pydantic_model(
         ValidationError: If the data is invalid according to the model.
     """
     try:
-        if context:
-            instance = model_class(**data, __context__=context)
-        else:
-            instance = model_class(**data)
+        instance = model_class(**data, __context__=context) if context else model_class(**data)
 
         return instance.dict()
     except ValidationError as e:
@@ -395,10 +392,7 @@ def validate_with_schema(schema: dict[str, Any], data: dict[str, Any], allow_ext
         validator = validator_for(schema)
 
         # Configure the validator
-        if allow_extra:
-            validator = validator(schema)
-        else:
-            validator = validator(schema, additional_properties=False)
+        validator = validator(schema) if allow_extra else validator(schema, additional_properties=False)
 
         # Validate the data
         validator.validate(data)

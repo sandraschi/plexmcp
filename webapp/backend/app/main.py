@@ -95,7 +95,9 @@ except Exception:
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    """Lifespan handler (environment already synchronized at module load)."""
+    """Lifespan handler — starts lazy FastMCP mount in background."""
+    # Start loading FastMCP in background (takes ~90s, non-blocking)
+    _asyncio.create_task(_lazy_mount_mcp())
     yield
 
 
@@ -106,21 +108,30 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# 3. FastMCP Mounting
-try:
-    from plex_mcp.app import http_app
+# 3. FastMCP Mounting (lazy — loaded in background after API is up)
+# fastmcp takes ~90s to import and the webapp doesn't use /mcp (tools are
+# called directly via mcp_client.py). We mount in background so the API
+# starts instantly and /mcp becomes available ~90s later.
+import asyncio as _asyncio
 
-    mcp_app = http_app()
-    if mcp_app:
-        app.mount("/mcp", mcp_app)
-        logger.info("SOTA: FastMCP HTTP endpoints successfully mounted at /mcp")
-        logger.info("SOTA: PLEX_URL used: %s", os.environ.get("PLEX_URL"))
-        if not os.environ.get("PLEX_TOKEN"):
-            logger.warning("SOTA: PLEX_TOKEN is missing in environment!")
-    else:
-        logger.error("CRITICAL: FastMCP http_app() returned None")
-except Exception as e:
-    logger.error("CRITICAL: Could not mount FastMCP HTTP app: %s", e, exc_info=True)
+_mcp_loaded = False
+
+
+async def _lazy_mount_mcp():
+    try:
+        from plex_mcp.app import http_app
+
+        mcp_app = http_app()
+        if mcp_app:
+            app.mount("/mcp", mcp_app)
+            global _mcp_loaded
+            _mcp_loaded = True
+            logger.info("FastMCP mounted at /mcp (lazy-loaded)")
+        else:
+            logger.error("FastMCP http_app() returned None")
+    except Exception as e:
+        logger.error("Could not mount FastMCP HTTP app: %s", e, exc_info=True)
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -131,6 +142,7 @@ app.add_middleware(
 )
 
 # 4. Route Registration
+app.include_router(images.router, prefix="/api/image", tags=["images"])
 app.include_router(library.router, prefix="/api/libraries", tags=["libraries"])
 app.include_router(server.router, prefix="/api/server", tags=["server"])
 app.include_router(search.router, prefix="/api/search", tags=["search"])
@@ -163,3 +175,8 @@ async def root():
 @app.get("/health")
 async def health():
     return {"status": "healthy"}
+
+
+@app.get("/mcp/status")
+async def mcp_status():
+    return {"loaded": _mcp_loaded, "message": "FastMCP mounts in background ~90s after startup"}

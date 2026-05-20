@@ -37,8 +37,37 @@ except ImportError as e:
 
 
 # ASGI app for uvicorn (webapp/start.ps1): plex_mcp.server:app
+# Only build http_app in non-stdio mode -- StarletteWithLifespan (FastMCP 3.2)
+# does not support @app.get() routing; use Starlette middleware param for CORS
+# and wrap with an outer Starlette app for extra routes like /health.
 
-app = mcp.http_app()
+from .app import _is_stdio_mode  # noqa: E402
+
+if not _is_stdio_mode:
+    from starlette.applications import Starlette  # noqa: E402
+    from starlette.middleware import Middleware  # noqa: E402
+    from starlette.middleware.cors import CORSMiddleware  # noqa: E402
+    from starlette.responses import JSONResponse  # noqa: E402
+    from starlette.routing import Mount, Route  # noqa: E402
+
+    async def health(request):
+        return JSONResponse({"status": "ok"})
+
+    _mcp_app = mcp.http_app(
+        middleware=[
+            Middleware(
+                CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"]
+            )
+        ]
+    )
+
+    # Outer Starlette app: /health handled here, everything else passed to MCP
+    app = Starlette(
+        routes=[
+            Route("/health", health),
+            Mount("/", app=_mcp_app),
+        ]
+    )
 
 
 # NOTE: Old individual tools (server, media, sessions, users, playlists, organization, quality, library)

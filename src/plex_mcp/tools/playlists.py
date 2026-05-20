@@ -114,7 +114,7 @@ async def get_playlist(request: GetPlaylistRequest) -> PlexPlaylist | None:
             owner=playlist.username,
         )
     except Exception as e:
-        logger.error(f"Error getting playlist {request.playlist_id}: {e}")
+        logger.exception(f"Error getting playlist {request.playlist_id}: {e}")
         return None
 
 
@@ -149,7 +149,7 @@ async def list_playlists() -> list[PlexPlaylist]:
             for playlist in playlists
         ]
     except Exception as e:
-        logger.error(f"Error listing playlists: {e}")
+        logger.exception(f"Error listing playlists: {e}")
         return []
 
 
@@ -207,7 +207,7 @@ async def update_playlist(request: UpdatePlaylistRequest) -> PlexPlaylist:
             owner=playlist.username,
         )
     except Exception as e:
-        logger.error(f"Error updating playlist {request.playlist_id}: {e}")
+        logger.exception(f"Error updating playlist {request.playlist_id}: {e}")
         raise
 
 
@@ -235,7 +235,7 @@ async def delete_playlist(request: DeletePlaylistRequest) -> bool:
         await playlist.delete()
         return True
     except Exception as e:
-        logger.error(f"Error deleting playlist {request.playlist_id}: {e}")
+        logger.exception(f"Error deleting playlist {request.playlist_id}: {e}")
         return False
 
 
@@ -293,7 +293,7 @@ async def add_to_playlist(request: AddToPlaylistRequest) -> PlexPlaylist:
             owner=playlist.username,
         )
     except Exception as e:
-        logger.error(f"Error adding items to playlist {request.playlist_id}: {e}")
+        logger.exception(f"Error adding items to playlist {request.playlist_id}: {e}")
         raise
 
 
@@ -352,7 +352,7 @@ async def remove_from_playlist(request: RemoveFromPlaylistRequest) -> PlexPlayli
             owner=playlist.username,
         )
     except Exception as e:
-        logger.error(f"Error removing items from playlist {request.playlist_id}: {e}")
+        logger.exception(f"Error removing items from playlist {request.playlist_id}: {e}")
         raise
 
 
@@ -412,5 +412,5 @@ async def get_playlist_analytics(request: GetPlaylistAnalyticsRequest) -> Playli
             ),
         )
     except Exception as e:
-        logger.error(f"Error getting analytics for playlist {request.playlist_id}: {e}")
+        logger.exception(f"Error getting analytics for playlist {request.playlist_id}: {e}")
         raise

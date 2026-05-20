@@ -10,10 +10,10 @@ def tool_payload(result: Any) -> Any:
     """Normalize tool return value to a dict (or pass through) for assertions."""
     if isinstance(result, dict):
         return result
-    sc = getattr(result, "structured_content", None)
-    if isinstance(sc, dict):
-        return sc
+    # Conversational content comes first (has operation, success, data)
     content = getattr(result, "content", None)
+    if isinstance(content, dict):
+        return content
     if content:
         for block in content:
             text = getattr(block, "text", None)
@@ -24,4 +24,8 @@ def tool_payload(result: Any) -> Any:
                         return parsed
                 except json.JSONDecodeError:
                     continue
+    # Fall back to structured_content (Prefab wire JSON, etc.)
+    sc = getattr(result, "structured_content", None)
+    if isinstance(sc, dict):
+        return sc
     return result

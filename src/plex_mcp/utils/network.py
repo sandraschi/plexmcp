@@ -232,10 +232,7 @@ def check_plex_url_connectivity(url: str) -> bool:
             return False
 
         # Check if the port is valid (if specified)
-        if parsed.port is not None and not is_valid_port(parsed.port):
-            return False
-
-        return True
+        return not (parsed.port is not None and not is_valid_port(parsed.port))
     except Exception:
         return False
 

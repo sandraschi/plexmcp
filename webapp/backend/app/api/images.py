@@ -6,6 +6,7 @@ import os
 import httpx
 from fastapi import APIRouter, Query, Response
 from fastapi.responses import StreamingResponse
+from starlette.background import BackgroundTask
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +27,16 @@ async def proxy_image(
     min_size: int | None = Query(None, alias="minSize"),
 ):
     """Proxy image requests to Plex."""
+    return await _proxy_image(path, width, height, min_size)
+
+
+async def _proxy_image(
+    path: str,
+    width: int | None = None,
+    height: int | None = None,
+    min_size: int | None = None,
+):
+    """Shared image proxy logic."""
     base_url, token = _get_plex_config()
     if not token:
         return Response(status_code=500, content="PLEX_TOKEN not set")
@@ -60,25 +71,8 @@ async def proxy_image(
     # But wait, next.config.js rewrites /image/:path* -> backend/image/:path*
     # So if frontend requests /image/library/metadata/1/thumb/123, backend gets path="library/metadata/1/thumb/123"
 
+    client = httpx.AsyncClient(follow_redirects=True)
     try:
-
-        async def iter_content():
-            async with httpx.AsyncClient() as client, client.stream("GET", url, params=params) as response:
-                if response.status_code != 200:
-                    logger.error(f"Failed to fetch image: {response.status_code} {url}")
-                    yield b""
-                    return
-
-                async for chunk in response.aiter_bytes():
-                    yield chunk
-
-        # We can't easily set headers from the inner stream without fetching first
-        # But for images, usually content-type is enough.
-        # Let's do a simple fetch to get headers first?
-        # Stream is better for large images.
-
-        # Simpler: just return StreamingResponse
-        client = httpx.AsyncClient()
         req = client.build_request("GET", url, params=params)
         r = await client.send(req, stream=True)
 
@@ -86,9 +80,9 @@ async def proxy_image(
             r.aiter_bytes(),
             status_code=r.status_code,
             media_type=r.headers.get("content-type"),
-            background=None,  # client.aclose() should be handled...
-            # httpx AsyncClient needs to be closed. StreamingResponse background task?
+            background=BackgroundTask(client.aclose),
         )
     except Exception:
+        await client.aclose()
         logger.exception("Image proxy error")
         return Response(status_code=500, content="Image proxy failed")

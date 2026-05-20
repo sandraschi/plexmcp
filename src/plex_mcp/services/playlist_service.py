@@ -86,11 +86,11 @@ class PlaylistService(BaseService):
 
         except BadRequest as e:
             error_msg = f"Invalid playlist creation request: {str(e)}"
-            logger.error(error_msg)
+            logger.exception(error_msg)
             raise ServiceError(error_msg, code="invalid_request") from e
         except Exception as e:
             error_msg = f"Failed to create playlist: {str(e)}"
-            logger.error(error_msg)
+            logger.exception(error_msg)
             raise ServiceError(error_msg, code="playlist_creation_failed") from e
 
     async def get_playlists(self, playlist_type: str | None = None, user_playlists: bool = True) -> list[PlexPlaylist]:
@@ -122,7 +122,7 @@ class PlaylistService(BaseService):
 
         except Exception as e:
             error_msg = f"Failed to get playlists: {str(e)}"
-            logger.error(error_msg)
+            logger.exception(error_msg)
             raise ServiceError(error_msg, code="get_playlists_failed") from e
 
     async def get_playlist(self, playlist_id: str) -> PlexPlaylist:
@@ -142,11 +142,11 @@ class PlaylistService(BaseService):
 
         except NotFound as e:
             error_msg = f"Playlist {playlist_id} not found"
-            logger.error(error_msg)
+            logger.exception(error_msg)
             raise ServiceError(error_msg, code="not_found") from e
         except Exception as e:
             error_msg = f"Failed to get playlist {playlist_id}: {str(e)}"
-            logger.error(error_msg)
+            logger.exception(error_msg)
             raise ServiceError(error_msg, code="get_playlist_failed") from e
 
     async def get_playlist_items(self, playlist_id: str) -> list[MediaItem]:
@@ -166,11 +166,11 @@ class PlaylistService(BaseService):
 
         except NotFound as e:
             error_msg = f"Playlist {playlist_id} not found"
-            logger.error(error_msg)
+            logger.exception(error_msg)
             raise ServiceError(error_msg, code="not_found") from e
         except Exception as e:
             error_msg = f"Failed to get playlist items for {playlist_id}: {str(e)}"
-            logger.error(error_msg)
+            logger.exception(error_msg)
             raise ServiceError(error_msg, code="get_playlist_items_failed") from e
 
     async def analyze_playlist(self, playlist_id: str) -> PlaylistAnalytics:
@@ -226,11 +226,11 @@ class PlaylistService(BaseService):
 
         except NotFound as e:
             error_msg = f"Playlist {playlist_id} not found"
-            logger.error(error_msg)
+            logger.exception(error_msg)
             raise ServiceError(error_msg, code="not_found") from e
         except Exception as e:
             error_msg = f"Failed to analyze playlist {playlist_id}: {str(e)}"
-            logger.error(error_msg)
+            logger.exception(error_msg)
             raise ServiceError(error_msg, code="analyze_playlist_failed") from e
 
     # Helper methods

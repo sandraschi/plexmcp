@@ -76,11 +76,11 @@ class AdminService(BaseService):
 
         except Unauthorized as e:
             error_msg = "Unauthorized: Admin privileges required to access user information"
-            logger.error(error_msg)
+            logger.exception(error_msg)
             raise ServiceError(error_msg, code="unauthorized") from e
         except Exception as e:
             error_msg = f"Failed to get users: {str(e)}"
-            logger.error(error_msg)
+            logger.exception(error_msg)
             raise ServiceError(error_msg, code="get_users_failed") from e
 
     async def update_user_permissions(self, user_id: str, permissions: dict[str, Any]) -> UserPermissions:
@@ -126,7 +126,7 @@ class AdminService(BaseService):
 
         except Exception as e:
             error_msg = f"Failed to update user permissions: {str(e)}"
-            logger.error(error_msg)
+            logger.exception(error_msg)
             raise ServiceError(error_msg, code="update_user_failed") from e
 
     async def run_server_maintenance(
@@ -187,7 +187,7 @@ class AdminService(BaseService):
 
         except Exception as e:
             error_msg = f"Failed to run maintenance operation {operation}: {str(e)}"
-            logger.error(error_msg)
+            logger.exception(error_msg)
             raise ServiceError(error_msg, code="maintenance_failed") from e
 
     async def get_server_health(self) -> dict[str, Any]:
@@ -235,7 +235,7 @@ class AdminService(BaseService):
 
         except Exception as e:
             error_msg = f"Failed to get server health: {str(e)}"
-            logger.error(error_msg)
+            logger.exception(error_msg)
             raise ServiceError(error_msg, code="health_check_failed") from e
 
     def _get_rag_stats(self) -> dict[str, Any]:
@@ -271,7 +271,7 @@ class AdminService(BaseService):
                 "sync_status": get_rag_sync_progress().get("phase", "idle"),
             }
         except Exception as e:
-            logger.error(f"Error gathering RAG stats: {e}")
+            logger.exception(f"Error gathering RAG stats: {e}")
             return {"available": True, "error": str(e)}
 
     # Helper methods

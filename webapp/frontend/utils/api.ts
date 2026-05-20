@@ -197,8 +197,17 @@ export async function updateSettings(body: {
 	return res.json();
 }
 
-export async function getLlmModels() {
-	const res = await fetch(`${getBaseUrl()}/api/llm/models`);
+export async function getLlmModels(params?: {
+	provider?: string;
+	base_url?: string;
+}) {
+	const sp = new URLSearchParams();
+	if (params?.provider) sp.set("provider", params.provider);
+	if (params?.base_url) sp.set("base_url", params.base_url);
+	const qs = sp.toString();
+	const res = await fetch(
+		`${getBaseUrl()}/api/llm/models${qs ? `?${qs}` : ""}`,
+	);
 	if (!res.ok) throw new Error(await res.text());
 	return res.json();
 }

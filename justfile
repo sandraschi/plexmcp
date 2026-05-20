@@ -2,9 +2,9 @@ set windows-shell := ["pwsh.exe", "-NoLogo", "-Command"]
 
 # PlexMCP Project Management (Justfile)
 
-# Default: List available commands
+# Open the interactive recipe dashboard in the browser
 default:
-	@just --list
+    @pwsh.exe -NoProfile -ExecutionPolicy Bypass -File ../mcp-central-docs/scripts/just-dashboard.ps1 -Path .
 
 # Print `project.version` from `pyproject.toml` (source of truth; use when syncing README badges)
 version:
@@ -67,6 +67,10 @@ e2e:
 # Integration Tests (requires PLEX_TOKEN and PLEX_URL)
 test-integration:
 	@pytest tests/test_integration_real_plex.py -v
+
+# Serve docs locally (via docsify or similar)
+docs-serve:
+	@echo "Open docs/README.md in your editor or run: npx docsify-cli serve ./docs"
 
 # --- Build & CI ---
 

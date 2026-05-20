@@ -2,6 +2,14 @@
 
 # PlexMCP
 
+<p align="center">
+  <a href="https://github.com/casey/just"><img src="https://img.shields.io/badge/just-ready_to_go-7c5cfc?style=flat-square&logo=just&logoColor=white" alt="Just"></a>
+  <a href="https://github.com/astral-sh/ruff"><img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json" alt="Ruff"></a>
+  <a href="https://python.org"><img src="https://img.shields.io/badge/Python-3.13+-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python"></a>
+  <a href="https://biomejs.dev"><img src="https://img.shields.io/badge/Linted_with-Biome-60a5fa?style=flat-square&logo=biome&logoColor=white" alt="Biome"></a>
+  <a href="https://github.com/PrefectHQ/fastmcp"><img src="https://img.shields.io/badge/FastMCP-3.2-7c5cfc?style=flat-square" alt="FastMCP"></a>
+</p>
+
 **Talk to your library.** An open [Model Context Protocol](https://modelcontextprotocol.io/) server for [Plex Media Server](https://www.plex.tv/) — plus an optional glass-style web app for browsing, search, and chat.
 
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-0c4a6e?style=flat-square)](https://www.python.org/downloads/)
@@ -15,33 +23,19 @@
 
 ---
 
-## Why PlexMCP?
-
-| You want… | PlexMCP gives you… |
-|-----------|---------------------|
-| **Agents that “see” your Plex** | MCP tools for libraries, media, search, playlists, playback helpers, server health |
-| **Semantic search over your titles** | Optional RAG (`plex_rag`) when vector dependencies are configured |
-| **A real UI** | FastAPI + Next.js web app — libraries, movies, keyword + semantic search, chat, settings |
-| **One server, many clients** | stdio for Claude / Cursor; HTTP + `/mcp` when using the bundled backend |
-
----
-
-## Quick start (MCP over stdio)
+## Quick Start
 
 ```powershell
-git clone https://github.com/sandraschi/plex-mcp.git
+git clone https://github.com/sandraschi/plex-mcp
 cd plex-mcp
-uv sync
-$env:PLEX_TOKEN = "your-x-plex-token"
-$env:PLEX_URL = "http://127.0.0.1:32400"
-uv run plex-mcp-advanced
+just
 ```
 
-Point your MCP client at that process. **Even shorter path** → [docs/QUICKSTART.md](docs/QUICKSTART.md). **Tokens, URLs, and clients** → [docs/INSTALL.md](docs/INSTALL.md).
+This opens an interactive dashboard showing all available commands. Run `just bootstrap` to install dependencies, then `just serve` or `just dev` to start.
 
-**Browser UI** → [docs/WEBAPP.md](docs/WEBAPP.md) (ports **10740** / **10741**).
+### Manual Setup
 
----
+If you don't have `just` installed:
 
 ## Documentation map
 

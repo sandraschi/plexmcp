@@ -121,6 +121,10 @@ class MCPClient:
                 if result.meta:
                     out["_meta"] = result.meta
 
+                # Extract structured content (Prefab wire JSON for interactive cards)
+                if hasattr(result, "structured_content") and result.structured_content:
+                    out["_prefab"] = result.structured_content
+
                 # Ensure success flag if present in tool design but lost in ToolResult wrapping
                 if "success" not in out and not any(k in out for k in ["error", "error_code"]):
                     out["success"] = True

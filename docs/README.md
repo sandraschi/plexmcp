@@ -36,6 +36,15 @@ Everything below links from the [project README](../README.md). Pick a path by *
 
 ---
 
+## Understand the ecosystem
+
+| Guide | Purpose |
+|-------|---------|
+| [**PLEX_ECOSYSTEM.md**](PLEX_ECOSYSTEM.md) | What Plex is, costs, self-hosted vs Plex-provided content, the *arr stack |
+| [**ARR_SCENE.md**](ARR_SCENE.md) | Radarr, Sonarr, Prowlarr, download clients — detailed *arr overview |
+
+---
+
 ## Run it like a service
 
 | Guide | Purpose |

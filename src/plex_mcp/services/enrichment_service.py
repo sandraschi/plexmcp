@@ -18,11 +18,10 @@ class MediaEnrichmentService:
 
     async def enrich_media(self, title: str, year: int | None = None, media_type: str = "movie") -> dict[str, Any]:
         """Fetch enrichment data from Wikipedia and other sources."""
-        results = {"wikipedia": await self.fetch_wikipedia_summary(title, year, media_type), "external_sources": []}
+        return {"wikipedia": await self.fetch_wikipedia_summary(title, year, media_type), "external_sources": []}
 
         # In a real implementation, we would add TMDB/TVDB search here.
         # For SOTA 2026, we prioritize Wikipedia for its high-quality narrative context.
-        return results
 
     async def fetch_wikipedia_summary(
         self, title: str, year: int | None = None, media_type: str = "movie"
@@ -62,7 +61,7 @@ class MediaEnrichmentService:
 
             return None
         except Exception as e:
-            logger.error(f"Error fetching Wikipedia summary for {title}: {e}")
+            logger.exception(f"Error fetching Wikipedia summary for {title}: {e}")
             return None
 
 

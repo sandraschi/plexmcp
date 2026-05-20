@@ -1,5 +1,4 @@
-Param([switch]$Headless)
-$SkipFrontend = $Headless
+﻿Param([switch]$Headless)
 
 # --- SOTA Headless Standard ---
 if ($Headless -and ($Host.UI.RawUI.WindowTitle -notmatch 'Hidden')) {
@@ -83,19 +82,17 @@ if ($backendReady) {
     Write-Host " [TIMEOUT/ERROR]" -ForegroundColor Red
 }
 
-# 5. Start frontend in development mode (fast, hot reload)
+# 5. Start Next.js frontend
 Set-Location $NpmRoot
-
 Write-Host "Starting Next.js frontend on port $WebPort ..." -ForegroundColor Green
 
-# Launch background task to open browser once frontend is ready
+# 4b. Launch background task to open browser once frontend is ready (Auto-opened by Antigravity)
 $frontendUrl = "http://127.0.0.1:$WebPort/"
 $pollAndOpen = "for (`$i = 0; `$i -lt 60; `$i++) { try { `$null = Invoke-WebRequest -Uri '$frontendUrl' -TimeoutSec 2 -UseBasicParsing -ErrorAction Stop; Start-Process '$frontendUrl'; exit } catch { Start-Sleep -Seconds 1 } }"
 Start-Process powershell -ArgumentList "-NoProfile", "-WindowStyle", "Hidden", "-Command", $pollAndOpen
 
-Write-Host "Browser will open automatically when frontend is ready." -ForegroundColor Gray
-if ($SkipFrontend) { return }
-npm run dev
+Write-Host "Browser will open automatically when Vite is ready." -ForegroundColor Gray
+npm run dev -- --port $WebPort
 
 
 

@@ -2,11 +2,14 @@
 PlexMCP Reporting & Analytics Portmanteau Tool
 
 Consolidates all reporting and analytics operations into a single comprehensive interface.
-FastMCP 2.13+ compliant with comprehensive docstrings and AI-friendly error messages.
+FastMCP 3.2 compliant.
 """
 
 import os
-from typing import Any, Literal
+from typing import Annotated, Literal
+
+from fastmcp.tools import ToolResult
+from pydantic import Field
 
 from ...app import mcp
 from ...utils import get_logger
@@ -32,21 +35,26 @@ def _get_plex_service():
     return PlexService(base_url=base_url, token=token)
 
 
-@mcp.tool()
+@mcp.tool(version="1.0.0", annotations={"readOnlyHint": True})
 async def plex_reporting(
-    operation: Literal[
-        "library_stats",
-        "usage_report",
-        "content_report",
-        "user_activity",
-        "performance_report",
-        "export_report",
+    operation: Annotated[
+        Literal[
+            "library_stats",
+            "usage_report",
+            "content_report",
+            "user_activity",
+            "performance_report",
+            "export_report",
+        ],
+        Field(description="Reporting operation to execute."),
     ],
-    library_id: str | None = None,
-    time_range: str | None = None,
-    format: Literal["json", "csv", "html"] | None = None,
-    output_path: str | None = None,
-) -> dict[str, Any]:
+    library_id: Annotated[str | None, Field(description="Target library ID for scoped reports.")] = None,
+    time_range: Annotated[str | None, Field(description="Time range filter (e.g. '7d', '30d', 'all').")] = None,
+    format: Annotated[
+        Literal["json", "csv", "html"] | None, Field(description="Export format for export_report operation.")
+    ] = None,
+    output_path: Annotated[str | None, Field(description="File path for export_report output.")] = None,
+) -> ToolResult:
     """
     Comprehensive reporting and analytics tool for Plex Media Server.
 
@@ -54,17 +62,13 @@ async def plex_reporting(
     Consolidates 6 reporting and server diagnostic operations into a single tool to provide
     a systematic overview of library growth and server health.
 
-    OPERATIONS:
-    - library_stats: Total media counts, storage consumption, and metadata health per library.
-    - usage_report: Aggregate viewing time and peak activity periods.
-    - content_report: Detailed breakdown of codecs, resolutions, and content age.
-    - user_activity: Audit user session history and individual consumption patterns.
-    - performance_report: Real-time server resource utilization and hardware health.
-    - export_report: Generate portable report files for external analysis.
+    ## Return Format
+    ToolResult with content dict: {"success": bool, "operation": str, "stats"/"reports"/"server_status": ...}
 
-    Returns:
-    FastMCP 3.1+ dialogic response with detailed statistics and health metrics.
-    Enables autonomous infrastructure reporting and capacity planning.
+    ## Examples
+    await plex_reporting(operation="library_stats")
+    await plex_reporting(operation="performance_report")
+    await plex_reporting(operation="library_stats", library_id="1")
     """
     try:
         plex = _get_plex_service()
@@ -73,15 +77,17 @@ async def plex_reporting(
             if library_id:
                 libraries = await plex.get_library(library_id)
                 if not libraries:
-                    return {
-                        "success": False,
-                        "error": f"Library with ID '{library_id}' not found",
-                        "error_code": "LIBRARY_NOT_FOUND",
-                        "suggestions": [
-                            "Verify library_id is correct",
-                            "List libraries to see available IDs",
-                        ],
-                    }
+                    return ToolResult(
+                        content={
+                            "success": False,
+                            "error": f"Library with ID '{library_id}' not found",
+                            "error_code": "LIBRARY_NOT_FOUND",
+                            "suggestions": [
+                                "Verify library_id is correct",
+                                "List libraries to see available IDs",
+                            ],
+                        }
+                    )
                 libraries = [libraries]
             else:
                 libraries = await plex.list_libraries()
@@ -100,32 +106,37 @@ async def plex_reporting(
                     }
                 )
 
-            return {
-                "success": True,
-                "operation": "library_stats",
-                "stats": stats,
-                "count": len(stats),
-            }
+            return ToolResult(
+                content={
+                    "success": True,
+                    "operation": "library_stats",
+                    "stats": stats,
+                    "count": len(stats),
+                }
+            )
 
         if operation == "usage_report":
-            # Placeholder for usage reporting - would need session history data
-            return {
-                "success": True,
-                "operation": "usage_report",
-                "time_range": time_range or "all",
-                "message": "[SIMULATED] Usage reporting requires session history data (not yet implemented)",
-                "data": {},
-            }
+            return ToolResult(
+                content={
+                    "success": True,
+                    "operation": "usage_report",
+                    "time_range": time_range or "all",
+                    "message": "[SIMULATED] Usage reporting requires session history data (not yet implemented)",
+                    "data": {},
+                }
+            )
 
         if operation == "content_report":
             if library_id:
                 libraries = await plex.get_library(library_id)
                 if not libraries:
-                    return {
-                        "success": False,
-                        "error": f"Library with ID '{library_id}' not found",
-                        "error_code": "LIBRARY_NOT_FOUND",
-                    }
+                    return ToolResult(
+                        content={
+                            "success": False,
+                            "error": f"Library with ID '{library_id}' not found",
+                            "error_code": "LIBRARY_NOT_FOUND",
+                        }
+                    )
                 libraries = [libraries]
             else:
                 libraries = await plex.list_libraries()
@@ -144,67 +155,80 @@ async def plex_reporting(
                     }
                 )
 
-            return {
-                "success": True,
-                "operation": "content_report",
-                "reports": reports,
-                "count": len(reports),
-            }
+            return ToolResult(
+                content={
+                    "success": True,
+                    "operation": "content_report",
+                    "reports": reports,
+                    "count": len(reports),
+                }
+            )
 
         if operation == "user_activity":
-            # Placeholder for user activity reporting
-            return {
-                "success": True,
-                "operation": "user_activity",
-                "time_range": time_range or "all",
-                "message": "[SIMULATED] User activity reporting requires session history data (not yet implemented)",
-                "data": {},
-            }
+            return ToolResult(
+                content={
+                    "success": True,
+                    "operation": "user_activity",
+                    "time_range": time_range or "all",
+                    "message": "[SIMULATED] User activity reporting requires session history data (not yet implemented)",
+                    "data": {},
+                }
+            )
 
         if operation == "performance_report":
             status = await plex.get_server_status()
-            return {
-                "success": True,
-                "operation": "performance_report",
-                "server_status": status.dict() if hasattr(status, "dict") else status,
-                "recommendations": [],
-            }
+            return ToolResult(
+                content={
+                    "success": True,
+                    "operation": "performance_report",
+                    "server_status": status.model_dump() if hasattr(status, "model_dump") else status,
+                    "recommendations": [],
+                }
+            )
 
         if operation == "export_report":
             if not format:
-                return {
-                    "success": False,
-                    "error": "format is required for export_report operation",
-                    "error_code": "MISSING_PARAMETER",
-                    "suggestions": ["Specify format: json, csv, or html"],
+                return ToolResult(
+                    content={
+                        "success": False,
+                        "error": "format is required for export_report operation",
+                        "error_code": "MISSING_PARAMETER",
+                        "suggestions": ["Specify format: json, csv, or html"],
+                    }
+                )
+
+            return ToolResult(
+                content={
+                    "success": True,
+                    "operation": "export_report",
+                    "format": format,
+                    "output_path": output_path,
+                    "message": f"[SIMULATED] Report export to {format} format (not yet fully implemented)",
                 }
+            )
 
-            return {
-                "success": True,
-                "operation": "export_report",
-                "format": format,
-                "output_path": output_path,
-                "message": f"[SIMULATED] Report export to {format} format (not yet fully implemented)",
+        return ToolResult(
+            content={
+                "success": False,
+                "error": f"Unknown operation: {operation}",
+                "error_code": "INVALID_OPERATION",
+                "suggestions": [
+                    "Use one of: library_stats, usage_report, content_report, user_activity, performance_report, export_report"
+                ],
             }
-
-        return {
-            "success": False,
-            "error": f"Unknown operation: {operation}",
-            "error_code": "INVALID_OPERATION",
-            "suggestions": [
-                "Use one of: library_stats, usage_report, content_report, user_activity, performance_report, export_report"
-            ],
-        }
+        )
 
     except Exception as e:
         logger.error(f"Error in plex_reporting operation '{operation}': {e}", exc_info=True)
-        return {
-            "success": False,
-            "error": str(e),
-            "error_code": "EXECUTION_ERROR",
-            "suggestions": [
-                "Verify Plex server is accessible",
-                "Check PLEX_TOKEN is set correctly",
-                "Verify library_id is valid if provided",
-            ],
-        }
+        return ToolResult(
+            content={
+                "success": False,
+                "error": str(e),
+                "error_code": "EXECUTION_ERROR",
+                "suggestions": [
+                    "Verify Plex server is accessible",
+                    "Check PLEX_TOKEN is set correctly",
+                    "Verify library_id is valid if provided",
+                ],
+            }
+        )

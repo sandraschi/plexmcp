@@ -321,7 +321,7 @@ async def search_media(
                     )
                 )
             except Exception as e:
-                logger.error(f"Error processing media item: {e}")
+                logger.exception(f"Error processing media item: {e}")
                 continue
 
         return media_items

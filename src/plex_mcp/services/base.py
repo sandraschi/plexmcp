@@ -8,7 +8,7 @@ import asyncio
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Coroutine
 from functools import wraps
-from typing import Any, Generic, TypeVar
+from typing import Any, TypeVar
 
 from pydantic import BaseModel
 
@@ -216,7 +216,7 @@ class BaseService(ABC):
         pass
 
 
-class CRUDService(BaseService, Generic[T]):
+class CRUDService[T: BaseModel](BaseService):
     """Base class for CRUD services."""
 
     @abstractmethod

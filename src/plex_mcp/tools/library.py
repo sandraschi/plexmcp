@@ -45,7 +45,7 @@ async def scan_library(request: ScanLibraryRequest) -> dict[str, Any]:
         logger.info(f"Successfully scanned library {request.library_id} (force={request.force})")
         return result
     except Exception as e:
-        logger.error(f"Error scanning library {request.library_id}: {e}")
+        logger.exception(f"Error scanning library {request.library_id}: {e}")
         raise
 
 
@@ -74,7 +74,7 @@ async def refresh_library(request: RefreshLibraryRequest) -> bool:
             logger.warning(f"Failed to refresh metadata for library {request.library_id}")
         return success
     except Exception as e:
-        logger.error(f"Error refreshing library {request.library_id}: {e}")
+        logger.exception(f"Error refreshing library {request.library_id}: {e}")
         return False
 
 
@@ -103,7 +103,7 @@ async def optimize_library(request: OptimizeLibraryRequest) -> bool:
             logger.warning(f"Failed to optimize library {request.library_id}")
         return success
     except Exception as e:
-        logger.error(f"Error optimizing library {request.library_id}: {e}")
+        logger.exception(f"Error optimizing library {request.library_id}: {e}")
         return False
 
 
@@ -131,7 +131,7 @@ async def get_library(request: GetLibraryRequest) -> LibrarySection | None:
             return None
         return LibrarySection(**library)
     except Exception as e:
-        logger.error(f"Error getting library {request.library_id}: {e}")
+        logger.exception(f"Error getting library {request.library_id}: {e}")
         return None
 
 
@@ -153,7 +153,7 @@ async def list_libraries() -> list[LibrarySection]:
         return [LibrarySection(**lib) for lib in libraries]
     except Exception as e:
         error_msg = f"Failed to list libraries: {str(e)}"
-        logger.error(error_msg)
+        logger.exception(error_msg)
         raise RuntimeError(error_msg) from e
 
 

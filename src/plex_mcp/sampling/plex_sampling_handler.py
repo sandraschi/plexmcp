@@ -208,10 +208,7 @@ def _sampling_messages_to_openai(
                 tool_calls = []
                 for tu in tool_uses:
                     args = tu.input
-                    if isinstance(args, dict):
-                        arg_str = json.dumps(args, ensure_ascii=False)
-                    else:
-                        arg_str = str(args)
+                    arg_str = json.dumps(args, ensure_ascii=False) if isinstance(args, dict) else str(args)
                     tool_calls.append(
                         {
                             "id": tu.id or str(uuid.uuid4()),

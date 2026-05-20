@@ -70,7 +70,7 @@ dev = [
 ]
 
 [project.scripts]
-plex-mcp = "plex_mcp.server:main"
+schip-mcp-plex = "plex_mcp.server:main"
 
 [project.urls]
 Homepage = "https://github.com/yourusername/plex-mcp"
@@ -104,7 +104,7 @@ extend-exclude = ["_llm_test_scripts"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "N", "S", "A", "C4", "T20", "RET", "SIM", "ARG", "PTH", "TRY"]
-ignore = ["E501", "B008", "TRY003", "TRY300", "TRY301", "TRY400", "TRY401", "ARG001", "ARG002", "A002", "PTH100", "PTH118", "PTH120", "PTH123"]
+ignore = ["E501", "B008"]
 
 [tool.ruff.format]
 quote-style = "double"

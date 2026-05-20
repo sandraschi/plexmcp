@@ -52,7 +52,7 @@ async def create_user(request: CreateUserRequest) -> User:
         )
         return User(**user_data)
     except Exception as e:
-        logger.error(f"Failed to create user {request.username}: {e}")
+        logger.exception(f"Failed to create user {request.username}: {e}")
         raise
 
 
@@ -94,7 +94,7 @@ async def update_user(request: UpdateUserRequest) -> User:
         user_data = await plex.update_user(user_id=request.user_id, **update_data)
         return User(**user_data)
     except Exception as e:
-        logger.error(f"Failed to update user {request.user_id}: {e}")
+        logger.exception(f"Failed to update user {request.user_id}: {e}")
         raise
 
 
@@ -123,7 +123,7 @@ async def delete_user(request: DeleteUserRequest) -> bool:
             logger.warning(f"Failed to delete user {request.user_id}")
         return success
     except Exception as e:
-        logger.error(f"Error deleting user {request.user_id}: {e}")
+        logger.exception(f"Error deleting user {request.user_id}: {e}")
         return False
 
 
@@ -140,7 +140,7 @@ async def list_users() -> UserList:
         users = [User(**user_data) for user_data in users_data]
         return UserList(users=users)
     except Exception as e:
-        logger.error(f"Error listing users: {e}")
+        logger.exception(f"Error listing users: {e}")
         return UserList(users=[])
 
 
@@ -167,7 +167,7 @@ async def get_user(request: GetUserRequest) -> User | None:
             return User(**user_data)
         return None
     except Exception as e:
-        logger.error(f"Error getting user {request.user_id}: {e}")
+        logger.exception(f"Error getting user {request.user_id}: {e}")
         return None
 
 
@@ -197,5 +197,5 @@ async def update_user_permissions(request: UpdateUserPermissionsRequest) -> User
             raise ValueError(f"User {request.user_id} not found after updating permissions")
         return User(**user_data)
     except Exception as e:
-        logger.error(f"Error updating permissions for user {request.user_id}: {e}")
+        logger.exception(f"Error updating permissions for user {request.user_id}: {e}")
         raise

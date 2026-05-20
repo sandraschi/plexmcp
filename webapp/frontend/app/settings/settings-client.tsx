@@ -54,6 +54,7 @@ export function SettingsClient({ settings }: SettingsClientProps) {
 	const [defaultLlmModel, setDefaultLlmModel] = useState("");
 	const [defaultMoviesLibrary, setDefaultMoviesLibrary] = useState("");
 	const [models, setModels] = useState<string[]>([]);
+	const [modelError, setModelError] = useState<string | null>(null);
 	const [saving, setSaving] = useState(false);
 	const [message, setMessage] = useState<{
 		type: "ok" | "err";
@@ -74,20 +75,45 @@ export function SettingsClient({ settings }: SettingsClientProps) {
 		}
 	}, []);
 
+	// Elicit models from the LLM endpoint
+	const loadModels = useCallback(async (provider: string, baseUrl: string) => {
+		setModelError(null);
+		try {
+			const d = await getLlmModels({
+				provider,
+				base_url: baseUrl || undefined,
+			});
+			setModels(d.models ?? []);
+			if (!d.models?.length && d.error) setModelError(d.error);
+		} catch (e) {
+			setModels([]);
+			setModelError(e instanceof Error ? e.message : "Failed to fetch models");
+		}
+	}, []);
+
 	useEffect(() => {
+		const p = settings.llm_provider ?? "ollama";
+		const u = settings.llm_base_url ?? "";
 		setPlexUrl(settings.plex_url ?? "");
-		setLlmProvider(settings.llm_provider ?? "ollama");
-		setLlmBaseUrl(settings.llm_base_url ?? "");
+		setLlmProvider(p);
+		setLlmBaseUrl(u);
 		if (typeof window !== "undefined") {
 			setDefaultMoviesLibrary(
 				localStorage.getItem(DEFAULT_MOVIES_LIBRARY_KEY) ?? "",
 			);
 			setDefaultLlmModel(localStorage.getItem(DEFAULT_LLM_MODEL_KEY) ?? "");
 		}
-		getLlmModels()
-			.then((d: { models?: string[] }) => setModels(d.models ?? []))
-			.catch(() => setModels([]));
-	}, [settings]);
+		void loadModels(p, u);
+	}, [settings, loadModels]);
+
+	// Re-elicit when provider or base_url changes (500ms debounce)
+	useEffect(() => {
+		const timer = setTimeout(
+			() => void loadModels(llmProvider, llmBaseUrl),
+			500,
+		);
+		return () => clearTimeout(timer);
+	}, [llmProvider, llmBaseUrl, loadModels]);
 
 	useEffect(() => {
 		return () => stopRagPoll();
@@ -328,8 +354,19 @@ export function SettingsClient({ settings }: SettingsClientProps) {
 								</option>
 							))}
 						</select>
+						{modelError && (
+							<p className="text-red-400 text-xs mt-1">{modelError}</p>
+						)}
 						<p className="text-xs text-slate-500 mt-1">
-							Fetched from LLM endpoint. Save to store preference.
+							Fetched from LLM endpoint
+							{models.length > 0 ? ` (${models.length} available)` : ""}.{" "}
+							<button
+								type="button"
+								onClick={() => void loadModels(llmProvider, llmBaseUrl)}
+								className="text-amber/90 hover:text-amber underline underline-offset-2"
+							>
+								Refresh
+							</button>
 						</p>
 					</div>
 				</div>

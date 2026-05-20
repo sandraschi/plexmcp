@@ -2,10 +2,12 @@
 PlexMCP Help & Discovery Portmanteau Tool
 
 Provides help, tool discovery, and usage examples for PlexMCP.
-FastMCP 3.1+ compliant with comprehensive docstrings and AI-friendly error messages.
 """
 
-from typing import Any, Literal
+from typing import Annotated, Literal
+
+from fastmcp.tools import ToolResult
+from pydantic import Field
 
 from ...app import mcp
 from ...utils import get_logger
@@ -13,12 +15,14 @@ from ...utils import get_logger
 logger = get_logger(__name__)
 
 
-@mcp.tool()
+@mcp.tool(version="1.0.0", annotations={"readOnlyHint": True})
 async def plex_help(
-    operation: Literal["help", "list_tools", "tool_info", "examples"],
-    tool_name: str | None = None,
-    category: str | None = None,
-) -> dict[str, Any]:
+    operation: Annotated[
+        Literal["help", "list_tools", "tool_info", "examples"], Field(description="The help operation to perform.")
+    ],
+    tool_name: Annotated[str | None, Field(description="Name of the tool to get info or examples for.")] = None,
+    category: Annotated[str | None, Field(description="Category filter for help or list_tools operations.")] = None,
+) -> ToolResult:
     """
     Comprehensive help and discovery tool for PlexMCP.
 
@@ -32,9 +36,13 @@ async def plex_help(
     - tool_info: Deep inspection of specific tool syntax and operation modes.
     - examples: Curated few-shot examples for complex media workflows.
 
-    Returns:
-    FastMCP 3.1+ dialogic response with capabilities and usage guidance.
-    Enables self-documenting autonomous agents and feature discovery.
+    ## Return Format
+    {"success": bool, "operation": str, "tools": list | None, "help": str | None, "error": str | None}
+
+    ## Examples
+    await plex_help(operation="help")
+    await plex_help(operation="list_tools")
+    await plex_help(operation="tool_info", tool_name="plex_library")
     """
     try:
         # Define available tools and their categories
@@ -298,60 +306,72 @@ Use list_tools to see all available tools, or tool_info to get details about a s
                 for tool in filtered_tools.values():
                     help_text += f"  - {tool['name']}: {tool['description']}\n"
 
-            return {
-                "success": True,
-                "operation": "help",
-                "help": help_text,
-                "category": category,
-            }
+            return ToolResult(
+                content={
+                    "success": True,
+                    "operation": "help",
+                    "help": help_text,
+                    "category": category,
+                }
+            )
 
         if operation == "list_tools":
             tools_list = list(tools_info.values())
             if category:
                 tools_list = [t for t in tools_list if t["category"] == category]
 
-            return {
-                "success": True,
-                "operation": "list_tools",
-                "tools": tools_list,
-                "count": len(tools_list),
-                "category": category,
-            }
+            return ToolResult(
+                content={
+                    "success": True,
+                    "operation": "list_tools",
+                    "tools": tools_list,
+                    "count": len(tools_list),
+                    "category": category,
+                }
+            )
 
         if operation == "tool_info":
             if not tool_name:
-                return {
-                    "success": False,
-                    "error": "tool_name is required for tool_info operation",
-                    "error_code": "MISSING_PARAMETER",
-                    "suggestions": ["Provide a tool name"],
-                }
+                return ToolResult(
+                    content={
+                        "success": False,
+                        "error": "tool_name is required for tool_info operation",
+                        "error_code": "MISSING_PARAMETER",
+                        "suggestions": ["Provide a tool name"],
+                    }
+                )
 
             if tool_name not in tools_info:
-                return {
-                    "success": False,
-                    "error": f"Tool '{tool_name}' not found",
-                    "error_code": "TOOL_NOT_FOUND",
-                    "suggestions": ["Use list_tools to see available tools"],
-                }
+                return ToolResult(
+                    content={
+                        "success": False,
+                        "error": f"Tool '{tool_name}' not found",
+                        "error_code": "TOOL_NOT_FOUND",
+                        "suggestions": ["Use list_tools to see available tools"],
+                    }
+                )
 
             tool = tools_info[tool_name]
-            return {
-                "success": True,
-                "operation": "tool_info",
-                "tool": tool,
-                "usage": f"Use {tool_name} with operation parameter set to one of: {', '.join(tool['operations'])}",
-            }
+            return ToolResult(
+                content={
+                    "success": True,
+                    "operation": "tool_info",
+                    "tool": tool,
+                    "usage": f"Use {tool_name} with operation parameter set to one of: {', '.join(tool['operations'])}",
+                }
+            )
 
         if operation == "examples":
             examples = {}
             if tool_name:
                 if tool_name not in tools_info:
-                    return {
-                        "success": False,
-                        "error": f"Tool '{tool_name}' not found",
-                        "error_code": "TOOL_NOT_FOUND",
-                    }
+                    return ToolResult(
+                        content={
+                            "success": False,
+                            "error": f"Tool '{tool_name}' not found",
+                            "error_code": "TOOL_NOT_FOUND",
+                        }
+                    )
                 tools_to_show = [tools_info[tool_name]]
             else:
                 tools_to_show = list(tools_info.values())
@@ -359,28 +379,34 @@ Use list_tools to see all available tools, or tool_info to get details about a s
             for tool in tools_to_show:
                 examples[tool["name"]] = {
                     "description": tool["description"],
-                    "example_operations": tool["operations"][:3],  # Show first 3 operations as examples
+                    "example_operations": tool["operations"][:3],
                 }
 
-            return {
-                "success": True,
-                "operation": "examples",
-                "examples": examples,
-                "tool_name": tool_name,
-            }
+            return ToolResult(
+                content={
+                    "success": True,
+                    "operation": "examples",
+                    "examples": examples,
+                    "tool_name": tool_name,
+                }
+            )
 
-        return {
-            "success": False,
-            "error": f"Unknown operation: {operation}",
-            "error_code": "INVALID_OPERATION",
-            "suggestions": ["Use one of: help, list_tools, tool_info, examples"],
-        }
+        return ToolResult(
+            content={
+                "success": False,
+                "error": f"Unknown operation: {operation}",
+                "error_code": "INVALID_OPERATION",
+                "suggestions": ["Use one of: help, list_tools, tool_info, examples"],
+            }
+        )
 
     except Exception as e:
         logger.error(f"Error in plex_help operation '{operation}': {e}", exc_info=True)
-        return {
-            "success": False,
-            "error": str(e),
-            "error_code": "EXECUTION_ERROR",
-            "suggestions": ["This is a help tool and should not normally fail"],
-        }
+        return ToolResult(
+            content={
+                "success": False,
+                "error": str(e),
+                "error_code": "EXECUTION_ERROR",
+                "suggestions": ["This is a help tool and should not normally fail"],
+            }
+        )

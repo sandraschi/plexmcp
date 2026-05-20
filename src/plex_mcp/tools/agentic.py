@@ -8,21 +8,25 @@ sampling support (local Ollama via PlexSamplingHandler or client-side sampling).
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Annotated, Any
 
 from fastmcp import Context
+from fastmcp.tools import ToolResult
+from pydantic import Field
 
 logger = logging.getLogger(__name__)
 
 
-def _ok(**kwargs: Any) -> dict[str, Any]:
-    return {
-        "success": True,
-        "operation": kwargs.get("operation", "unknown"),
-        "message": kwargs.get("message", ""),
-        "result": kwargs.get("result", {}),
-        "recommendations": kwargs.get("recommendations", []),
-    }
+def _ok(**kwargs: Any) -> ToolResult:
+    return ToolResult(
+        content={
+            "success": True,
+            "operation": kwargs.get("operation", "unknown"),
+            "message": kwargs.get("message", ""),
+            "result": kwargs.get("result", {}),
+            "recommendations": kwargs.get("recommendations", []),
+        }
+    )
 
 
 def _err(
@@ -31,39 +35,46 @@ def _err(
     error_code: str,
     message: str,
     recovery_options: list[str] | None = None,
-) -> dict[str, Any]:
-    return {
-        "success": False,
-        "error": error,
-        "error_code": error_code,
-        "message": message,
-        "recovery_options": recovery_options or [],
-    }
+) -> ToolResult:
+    return ToolResult(
+        content={
+            "success": False,
+            "error": error,
+            "error_code": error_code,
+            "message": message,
+            "recovery_options": recovery_options or [],
+        }
+    )
 
 
 def register_agentic_plex_tools(app: Any) -> None:
     """Register real sampling-based tools on the FastMCP app."""
 
-    @app.tool()
+    @app.tool(version="1.0.0", annotations={"readOnlyHint": False, "destructiveHint": False})
     async def agentic_plex_workflow(
-        workflow_prompt: str,
-        available_tools: list[str],
-        max_iterations: int = 8,
-        context: Context | None = None,
-    ) -> dict[str, Any]:
+        workflow_prompt: Annotated[
+            str, Field(description="Natural-language goal (e.g. 'List movie libraries, then search for Nolan films').")
+        ],
+        available_tools: Annotated[
+            list[str],
+            Field(description="Tool names registered on this server (e.g. plex_library, plex_search, plex_media)."),
+        ],
+        max_iterations: Annotated[int, Field(description="Maximum sample_step rounds (default 8).")] = 8,
+        context: Annotated[
+            Context | None, Field(description="FastMCP Context — injected automatically when client supports sampling.")
+        ] = None,
+    ) -> ToolResult:
         """
         Multi-step Plex workflows via FastMCP sampling with tool execution (SEP-1577).
 
         The model chooses plex_* tool calls; the server runs them and feeds results back
         until the model returns a final text answer or max_iterations is reached.
 
-        Args:
-            workflow_prompt: Natural-language goal (e.g. "List movie libraries, then search for Nolan films").
-            available_tools: Tool names registered on this server (e.g. plex_library, plex_search, plex_media).
-            max_iterations: Maximum sample_step rounds (default 8).
+        ## Return Format
+        ToolResult with content: {"success": bool, "result": {"final_output": str, "iterations": int, "executed_tools": list}}
 
-        Returns:
-            success, result with final_output, iterations, executed_tools, or structured error.
+        ## Examples
+        await agentic_plex_workflow(workflow_prompt="Show me my movie libraries", available_tools=["plex_library"])
         """
         if not workflow_prompt.strip():
             return _err(
@@ -177,24 +188,26 @@ def register_agentic_plex_tools(app: Any) -> None:
             recommendations=["Increase max_iterations or simplify the workflow_prompt."],
         )
 
-    @app.tool()
+    @app.tool(version="1.0.0", annotations={"readOnlyHint": False, "destructiveHint": False})
     async def plex_natural_assistant(
-        user_query: str,
-        context: Context | None = None,
-        detail_level: str = "standard",
-    ) -> dict[str, Any]:
+        user_query: Annotated[str, Field(description="User question about Plex Media Server.")],
+        context: Annotated[
+            Context | None, Field(description="FastMCP Context — injected automatically when client supports sampling.")
+        ] = None,
+        detail_level: Annotated[str, Field(description="Response detail: brief, standard, or detailed.")] = "standard",
+    ) -> ToolResult:
         """
         Single-turn natural-language help about Plex (sampling, no tool execution).
 
         Uses the configured sampling endpoint (Ollama / client). For actions that
         change server state or need live data, use portmanteau tools or agentic_plex_workflow.
 
-        Args:
-            user_query: User question.
-            detail_level: brief | standard | detailed — adjusts system instructions.
+        ## Return Format
+        ToolResult with content: {"success": bool, "result": {"reply": str, "detail_level": str}}
 
-        Returns:
-            success and assistant reply text, or structured error.
+        ## Examples
+        await plex_natural_assistant(user_query="What is Plex Transcoding?")
+        await plex_natural_assistant(user_query="How do I optimize my library?", detail_level="detailed")
         """
         if not user_query.strip():
             return _err(

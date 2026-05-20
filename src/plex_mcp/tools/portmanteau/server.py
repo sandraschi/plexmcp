@@ -2,15 +2,16 @@
 PlexMCP Server Management Portmanteau Tool
 
 Consolidates all server management operations into a single comprehensive interface.
-FastMCP 2.13+ compliant with comprehensive docstrings and AI-friendly error messages.
 """
 
 import os
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
 from fastmcp.tools import ToolResult
+from pydantic import Field
 
 from ...app import mcp
+from ...prefabs import build_server_info, build_server_status
 from ...utils import get_logger
 
 logger = get_logger(__name__)
@@ -34,22 +35,23 @@ def _get_plex_service():
     return PlexService(base_url=base_url, token=token)
 
 
-@mcp.tool()
+@mcp.tool(version="1.0.0", annotations={"readOnlyHint": False, "destructiveHint": False})
 async def plex_server(
-    operation: Literal[
-        "status",
-        "info",
-        "health",
-        "maintenance",
-        "restart",
-        "update",
+    operation: Annotated[
+        Literal["status", "info", "health", "maintenance", "restart", "update"],
+        Field(description="The server operation to perform."),
     ],
-    maintenance_operation: str | None = None,
-    options: dict[str, Any] | None = None,
+    maintenance_operation: Annotated[
+        str | None, Field(description="Sub-operation for maintenance (optimize, clean_bundles, empty_trash).")
+    ] = None,
+    options: Annotated[
+        dict[str, Any] | None, Field(description="Additional options for maintenance operations.")
+    ] = None,
 ) -> ToolResult:
     """
     Comprehensive server management operations for Plex Media Server.
 
+    PORTMANTEAU PATTERN RATIONALE:
     Consolidates server lifecycle and maintenance operations into a single tool to prevent
     tool explosion and improve discoverability of admin-level tasks.
 
@@ -61,8 +63,13 @@ async def plex_server(
     - restart: Trigger server restart (where supported by OS/wrapper).
     - update: Check and apply server software updates (where supported).
 
-    Returns:
-    FastMCP 3.1+ dialogic response with visual Prefab rendering where applicable.
+    ## Return Format
+    {"success": bool, "data": dict|list, "operation": str}
+
+    ## Examples
+    await plex_server(operation="status")
+    await plex_server(operation="info")
+    await plex_server(operation="maintenance", maintenance_operation="clean_bundles")
     """
     try:
         plex = _get_plex_service()
@@ -70,29 +77,33 @@ async def plex_server(
         # Operation: status
         if operation == "status":
             status = await plex.get_server_status()
+            status_data = status.model_dump() if hasattr(status, "model_dump") else status
             return ToolResult(
                 content={
                     "success": True,
                     "operation": "status",
-                    "data": status.dict() if hasattr(status, "dict") else status,
+                    "data": status_data,
                 },
                 meta={"prefabs": ["plex_server_status"]},
+                structured_content=build_server_status(status_data),
             )
 
         # Operation: info
         if operation == "info":
             status = await plex.get_server_status()
             libraries = await plex.list_libraries()
+            info_data = {
+                "status": status.model_dump() if hasattr(status, "model_dump") else status,
+                "libraries": libraries,
+            }
             return ToolResult(
                 content={
                     "success": True,
                     "operation": "info",
-                    "data": {
-                        "status": status.dict() if hasattr(status, "dict") else status,
-                        "libraries": libraries,
-                    },
+                    "data": info_data,
                 },
                 meta={"prefabs": ["plex_server_info"]},
+                structured_content=build_server_info(info_data),
             )
 
         # Operation: health
@@ -101,73 +112,85 @@ async def plex_server(
             from ...api.admin import get_server_health
 
             health_data = await get_server_health()
-            return {
-                "success": True,
-                "operation": "health",
-                "data": health_data,
-            }
+            return ToolResult(
+                content={
+                    "success": True,
+                    "operation": "health",
+                    "data": health_data,
+                },
+            )
 
         # Operation: maintenance
         if operation == "maintenance":
             if not maintenance_operation:
-                return {
-                    "success": False,
-                    "error": "maintenance_operation is required for maintenance operation",
-                    "error_code": "MISSING_MAINTENANCE_OPERATION",
-                    "suggestions": [
-                        "Provide maintenance_operation parameter",
-                        "Valid values: optimize, clean_bundles, empty_trash, etc.",
-                    ],
-                }
+                return ToolResult(
+                    content={
+                        "success": False,
+                        "error": "maintenance_operation is required for maintenance operation",
+                        "error_code": "MISSING_MAINTENANCE_OPERATION",
+                        "suggestions": [
+                            "Provide maintenance_operation parameter",
+                            "Valid values: optimize, clean_bundles, empty_trash, etc.",
+                        ],
+                    },
+                )
 
             # Import admin service for maintenance
             from ...api.admin import run_server_maintenance
 
             result = await run_server_maintenance(operation=maintenance_operation, options=options or {})
-            return {
-                "success": True,
-                "operation": "maintenance",
-                "maintenance_operation": maintenance_operation,
-                "data": result.dict() if hasattr(result, "dict") else result,
-            }
+            return ToolResult(
+                content={
+                    "success": True,
+                    "operation": "maintenance",
+                    "maintenance_operation": maintenance_operation,
+                    "data": result.model_dump() if hasattr(result, "model_dump") else result,
+                },
+            )
 
         # Operation: restart
         if operation == "restart":
             # Note: Plex API may not support programmatic restart
             logger.warning("Server restart operation may not be fully supported by Plex API")
-            return {
-                "success": False,
-                "error": "Server restart is not yet fully implemented",
-                "error_code": "NOT_IMPLEMENTED",
-                "suggestions": [
-                    "Use Plex Web App or system service manager to restart the server",
-                    "This operation may not be supported by the Plex API",
-                ],
-            }
+            return ToolResult(
+                content={
+                    "success": False,
+                    "error": "Server restart is not yet fully implemented",
+                    "error_code": "NOT_IMPLEMENTED",
+                    "suggestions": [
+                        "Use Plex Web App or system service manager to restart the server",
+                        "This operation may not be supported by the Plex API",
+                    ],
+                },
+            )
 
         # Operation: update
         if operation == "update":
             # Note: Plex API may not support programmatic updates
             logger.warning("Server update operation may not be fully supported by Plex API")
-            return {
-                "success": False,
-                "error": "Server update is not yet fully implemented",
-                "error_code": "NOT_IMPLEMENTED",
-                "suggestions": [
-                    "Use Plex Web App or system package manager to update the server",
-                    "This operation may not be supported by the Plex API",
-                ],
-            }
+            return ToolResult(
+                content={
+                    "success": False,
+                    "error": "Server update is not yet fully implemented",
+                    "error_code": "NOT_IMPLEMENTED",
+                    "suggestions": [
+                        "Use Plex Web App or system package manager to update the server",
+                        "This operation may not be supported by the Plex API",
+                    ],
+                },
+            )
 
-        return {
-            "success": False,
-            "error": f"Invalid operation: '{operation}'",
-            "error_code": "INVALID_OPERATION",
-            "suggestions": [
-                "Valid operations: status, info, health, maintenance, restart, update",
-                f"You provided: '{operation}'",
-            ],
-        }
+        return ToolResult(
+            content={
+                "success": False,
+                "error": f"Invalid operation: '{operation}'",
+                "error_code": "INVALID_OPERATION",
+                "suggestions": [
+                    "Valid operations: status, info, health, maintenance, restart, update",
+                    f"You provided: '{operation}'",
+                ],
+            },
+        )
 
     except RuntimeError as e:
         error_msg = str(e)
@@ -180,21 +203,23 @@ async def plex_server(
                 "Or visit: https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/",
             ]
 
-        return {
-            "success": False,
-            "error": error_msg,
-            "error_code": "RUNTIME_ERROR",
-            "operation": operation,
-            "suggestions": suggestions,
-        }
+        return ToolResult(
+            content={
+                "success": False,
+                "error": error_msg,
+                "error_code": "RUNTIME_ERROR",
+                "operation": operation,
+                "suggestions": suggestions,
+            },
+        )
 
     except Exception as e:
         error_msg = str(e)
         is_unauthorized = "unauthorized" in error_msg.lower() or "(401)" in error_msg
 
-        logger.error(
+        logger.exception(
             f"Error in plex_server operation '{operation}': {error_msg}",
-            exc_info=not is_unauthorized,  # Minimize noise for auth errors
+            exc_info=not is_unauthorized,
         )
 
         suggestions = [
@@ -211,12 +236,14 @@ async def plex_server(
                 "Visit: https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/",
             ]
 
-        return {
-            "success": False,
-            "error": f"Plex Authentication Failed: {error_msg}"
-            if is_unauthorized
-            else f"Unexpected error during {operation}: {error_msg}",
-            "error_code": "AUTH_FAILURE" if is_unauthorized else "UNEXPECTED_ERROR",
-            "operation": operation,
-            "suggestions": suggestions,
-        }
+        return ToolResult(
+            content={
+                "success": False,
+                "error": f"Plex Authentication Failed: {error_msg}"
+                if is_unauthorized
+                else f"Unexpected error during {operation}: {error_msg}",
+                "error_code": "AUTH_FAILURE" if is_unauthorized else "UNEXPECTED_ERROR",
+                "operation": operation,
+                "suggestions": suggestions,
+            },
+        )

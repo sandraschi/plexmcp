@@ -11,7 +11,7 @@ import {
 	safeMediaBlurb,
 } from "@/utils/plex-media-ui";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 
 const VIEW_KEY = "plex-webapp-movies-view";
 type ViewMode = "card" | "list";
@@ -41,7 +41,7 @@ function getPosterUrl(item: Record<string, unknown>): string | null {
 		return path ? `/api/image/${path}` : null;
 	}
 	const rk = ratingKeyFromItem(item);
-	if (rk) return `/api/image/library/metadata/${rk}/thumb`;
+	if (rk) return `/image/library/metadata/${rk}/thumb`;
 	return null;
 }
 
@@ -88,10 +88,16 @@ function MovieItem({
 					/>
 				)}
 				<div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 min-w-0 flex-1">
-					<p className="font-semibold text-slate-200 shrink-0 min-w-[120px]">{title}</p>
-					{year != null && <span className="text-sm text-slate-500">{String(year)}</span>}
+					<p className="font-semibold text-slate-200 shrink-0 min-w-[120px]">
+						{title}
+					</p>
+					{year != null && (
+						<span className="text-sm text-slate-500">{String(year)}</span>
+					)}
 					{summary != null && (
-						<p className="text-sm text-slate-400 flex-1 min-w-0 line-clamp-1">{summary}</p>
+						<p className="text-sm text-slate-400 flex-1 min-w-0 line-clamp-1">
+							{summary}
+						</p>
 					)}
 				</div>
 				{onAiContext && rk ? (
@@ -120,7 +126,11 @@ function MovieItem({
 			className={`${cardClass} relative`}
 		>
 			{posterUrl ? (
-				<img src={posterUrl} alt="" className="w-full aspect-[2/3] object-cover bg-slate-800" />
+				<img
+					src={posterUrl}
+					alt=""
+					className="w-full aspect-[2/3] object-cover bg-slate-800"
+				/>
 			) : (
 				<div className="w-full aspect-[2/3] bg-slate-800 flex items-center justify-center text-slate-500 text-sm">
 					No image
@@ -130,8 +140,12 @@ function MovieItem({
 				<p className="font-semibold text-slate-200 truncate" title={title}>
 					{title}
 				</p>
-				{year != null && <p className="text-sm text-slate-500">{String(year)}</p>}
-				{summary != null && <p className="text-xs text-slate-400 mt-1 line-clamp-2">{summary}</p>}
+				{year != null && (
+					<p className="text-sm text-slate-500">{String(year)}</p>
+				)}
+				{summary != null && (
+					<p className="text-xs text-slate-400 mt-1 line-clamp-2">{summary}</p>
+				)}
 			</div>
 			{onAiContext && rk ? (
 				<button
@@ -167,11 +181,15 @@ function MovieModal({
 	const [playBusy, setPlayBusy] = useState(false);
 	const [playErr, setPlayErr] = useState<string | null>(null);
 
-	const display = useMemo(() => ({ ...item, ...(detail ?? {}) }), [item, detail]);
+	const display = useMemo(
+		() => ({ ...item, ...(detail ?? {}) }),
+		[item, detail],
+	);
 	const ratingKey = ratingKeyFromItem(display);
 
 	const title = String(display?.title ?? display?.name ?? "Unknown");
-	const year = display?.year ?? (display as { year?: string })?.year?.toString();
+	const year =
+		display?.year ?? (display as { year?: string })?.year?.toString();
 	const summary = safeMediaBlurb(display?.summary ?? display?.plot, 12_000);
 	const posterUrl =
 		plexImageUrl(display?.thumb as string | undefined) ??
@@ -186,12 +204,18 @@ function MovieModal({
 	const studio = display?.studio;
 	const tagline = display?.tagline;
 	const collections = (display?.collections as string[] | undefined) ?? [];
-	const actors = (display?.actors as { name?: string; role?: string }[] | undefined) ?? [];
-	const mediaInfo = (display?.media_info as Record<string, unknown>[] | undefined) ?? [];
+	const actors =
+		(display?.actors as { name?: string; role?: string }[] | undefined) ?? [];
+	const mediaInfo =
+		(display?.media_info as Record<string, unknown>[] | undefined) ?? [];
 	const viewCount = display?.view_count;
 
-	const plexWebUrl = ratingKey ? plexWebDetailsUrl(plexUrl ?? null, ratingKey) : null;
-	const durationStr = formatRuntimeMinutes(duration != null ? Number(duration) : null);
+	const plexWebUrl = ratingKey
+		? plexWebDetailsUrl(plexUrl ?? null, ratingKey)
+		: null;
+	const durationStr = formatRuntimeMinutes(
+		duration != null ? Number(duration) : null,
+	);
 
 	useEffect(() => {
 		const rk = ratingKeyFromItem(item);
@@ -257,11 +281,15 @@ function MovieModal({
 				className="rounded-xl glass-panel border border-slate-600/50 max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-xl"
 				onClick={(e) => e.stopPropagation()}
 			>
-				<div className="flex flex-1 min-h-0">
-					{/* Poster: fixed width, 2:3 aspect */}
-					<div className="w-48 sm:w-56 shrink-0 aspect-[2/3] bg-slate-900/50 overflow-hidden">
+				<div className="grid grid-cols-1 md:grid-cols-3 flex-1 min-h-0">
+					{/* Poster: spans 1 column, wider on md+ */}
+					<div className="md:col-span-1 aspect-[2/3] md:aspect-auto md:min-h-full bg-slate-900/50 overflow-hidden">
 						{posterUrl ? (
-							<img src={posterUrl} alt="" className="w-full h-full object-cover" />
+							<img
+								src={posterUrl}
+								alt=""
+								className="w-full h-full object-contain bg-slate-800"
+							/>
 						) : (
 							<div className="w-full h-full flex items-center justify-center text-slate-500 text-sm">
 								No image
@@ -269,10 +297,13 @@ function MovieModal({
 						)}
 					</div>
 
-					{/* Content: scrollable */}
-					<div className="flex-1 min-w-0 overflow-y-auto flex flex-col">
+					{/* Content: spans 2 columns */}
+					<div className="md:col-span-2 min-w-0 overflow-y-auto flex flex-col">
 						<div className="p-6">
-							<h2 id="movie-modal-title" className="text-2xl font-bold text-slate-100 pr-8">
+							<h2
+								id="movie-modal-title"
+								className="text-2xl font-bold text-slate-100 pr-8"
+							>
 								{title}
 							</h2>
 							<div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-sm text-slate-400">
@@ -283,14 +314,16 @@ function MovieModal({
 								{studio != null ? <span>{String(studio)}</span> : null}
 							</div>
 							{tagline != null ? (
-								<p className="text-amber/90 italic text-sm mt-3">{String(tagline)}</p>
+								<p className="text-amber/90 italic text-sm mt-3">
+									{String(tagline)}
+								</p>
 							) : null}
 							{genres.length > 0 && (
 								<div className="flex flex-wrap gap-2 mt-3">
 									{genres.map((g) => (
 										<span
 											key={g}
-											className="px-2 py-0.5 rounded bg-slate-700/80 text-slate-300 text-xs"
+											className="px-2 py-0.5 rounded bg-slate-700/80 text-slate-200 text-sm"
 										>
 											{g}
 										</span>
@@ -298,48 +331,74 @@ function MovieModal({
 								</div>
 							)}
 							{directors.length > 0 && (
-								<p className="text-slate-400 text-sm mt-2">
-									Director{directors.length > 1 ? "s" : ""}: {directors.join(", ")}
+								<p className="text-slate-300 text-sm mt-2">
+									Director{directors.length > 1 ? "s" : ""}:{" "}
+									{directors.join(", ")}
 								</p>
 							)}
 							{summary != null ? (
-								<p className="text-slate-300 text-sm mt-4 leading-relaxed">{summary}</p>
+								<p className="text-slate-200 text-sm mt-4 leading-relaxed">
+									{summary}
+								</p>
 							) : null}
 
 							{detailLoading && (
-								<p className="text-slate-500 text-xs mt-3">Loading full metadata…</p>
+								<p className="text-slate-400 text-sm mt-3">
+									Loading full metadata\u2026
+								</p>
 							)}
-							{detailError && <p className="text-amber/80 text-xs mt-3">{detailError}</p>}
+							{detailError && (
+								<p className="text-amber/90 text-sm mt-3">{detailError}</p>
+							)}
 
 							{writers.length > 0 && (
-								<p className="text-slate-400 text-sm mt-3">Writers: {writers.join(", ")}</p>
+								<p className="text-slate-300 text-sm mt-3">
+									Writers: {writers.join(", ")}
+								</p>
 							)}
 							{actors.length > 0 && (
-								<div className="mt-3">
-									<p className="text-slate-500 text-xs font-semibold uppercase tracking-wide mb-1">
+								<div className="mt-4">
+									<p className="text-slate-400 text-sm font-semibold uppercase tracking-wide mb-1">
 										Cast
 									</p>
-									<ul className="text-sm text-slate-400 space-y-0.5 max-h-32 overflow-y-auto">
+									<ul className="text-sm text-slate-300 space-y-1 max-h-40 overflow-y-auto">
 										{actors.slice(0, 12).map((a, i) => (
-											<li key={`${a.name ?? "a"}-${i}`}>
-												<span className="text-slate-300">{a.name}</span>
-												{a.role ? <span className="text-slate-500"> — {a.role}</span> : null}
+											<li
+												key={`${a.name ?? "a"}-${i}`}
+												className="text-slate-200"
+											>
+												{a.name}
+												{a.role ? (
+													<span className="text-slate-400">
+														{" "}
+														\u2014 {a.role}
+													</span>
+												) : null}
 											</li>
 										))}
 									</ul>
 								</div>
 							)}
 							{collections.length > 0 && (
-								<p className="text-slate-400 text-sm mt-3">Collections: {collections.join(", ")}</p>
+								<p className="text-slate-300 text-sm mt-3">
+									Collections: {collections.join(", ")}
+								</p>
 							)}
 							{viewCount != null && Number(viewCount) > 0 && (
-								<p className="text-slate-500 text-xs mt-2">Plays: {String(viewCount)}</p>
+								<p className="text-slate-400 text-sm mt-2">
+									Plays: {String(viewCount)}
+								</p>
 							)}
 							{mi0 && (
-								<p className="text-slate-500 text-xs mt-3 font-mono">
-									{[mi0.video_resolution, mi0.video_codec, mi0.audio_codec, mi0.container]
+								<p className="text-slate-400 text-sm mt-3 font-mono">
+									{[
+										mi0.video_resolution,
+										mi0.video_codec,
+										mi0.audio_codec,
+										mi0.container,
+									]
 										.filter(Boolean)
-										.join(" · ")}
+										.join(" \u00b7 ")}
 								</p>
 							)}
 						</div>
@@ -374,7 +433,9 @@ function MovieModal({
 									AI context
 								</button>
 							) : null}
-							{playErr && <span className="text-red-400 text-sm w-full">{playErr}</span>}
+							{playErr && (
+								<span className="text-red-400 text-sm w-full">{playErr}</span>
+							)}
 							<button
 								type="button"
 								onClick={onClose}
@@ -390,7 +451,17 @@ function MovieModal({
 	);
 }
 
-export function MoviesClient({
+export function MoviesClient(props: MoviesClientProps) {
+	return (
+		<Suspense
+			fallback={<div className="text-slate-400 py-12">Loading movies...</div>}
+		>
+			<MoviesClientInner {...props} />
+		</Suspense>
+	);
+}
+
+function MoviesClientInner({
 	libraries,
 	items,
 	selectedLibraryId,
@@ -402,8 +473,13 @@ export function MoviesClient({
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const [viewMode, setViewMode] = useState<ViewMode>("card");
-	const [selectedMovie, setSelectedMovie] = useState<Record<string, unknown> | null>(null);
-	const [aiContextRatingKey, setAiContextRatingKey] = useState<string | null>(null);
+	const [selectedMovie, setSelectedMovie] = useState<Record<
+		string,
+		unknown
+	> | null>(null);
+	const [aiContextRatingKey, setAiContextRatingKey] = useState<string | null>(
+		null,
+	);
 
 	const openAiContext = (row: Record<string, unknown>) => {
 		const rk = ratingKeyFromItem(row);
@@ -533,7 +609,9 @@ export function MoviesClient({
 				</div>
 			)}
 
-			{items.length === 0 && <p className="text-slate-500 py-8">No movies found.</p>}
+			{items.length === 0 && (
+				<p className="text-slate-500 py-8">No movies found.</p>
+			)}
 
 			{(currentPage > 1 || hasNext) && items.length > 0 && (
 				<div className="mt-8 flex flex-wrap items-center justify-center gap-4">

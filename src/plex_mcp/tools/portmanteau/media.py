@@ -2,15 +2,16 @@
 PlexMCP Media Management Portmanteau Tool
 
 Consolidates all media-related operations into a single comprehensive interface.
-FastMCP 2.13+ compliant with comprehensive docstrings and AI-friendly error messages.
 """
 
 import os
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
 from fastmcp.tools import ToolResult
+from pydantic import Field
 
 from ...app import mcp
+from ...prefabs import build_media_browser, build_media_detail
 from ...utils import get_logger
 
 logger = get_logger(__name__)
@@ -34,22 +35,29 @@ def _get_plex_service():
     return PlexService(base_url=base_url, token=token)
 
 
-@mcp.tool()
+@mcp.tool(version="1.0.0", annotations={"readOnlyHint": False, "destructiveHint": False})
 async def plex_media(
-    operation: Literal["browse", "search", "get_details", "get_recent", "update_metadata"],
-    library_id: str | None = None,
-    media_key: str | None = None,
-    query: str | None = None,
-    media_type: str | None = None,
-    limit: int = 100,
-    offset: int = 0,
-    genre: str | None = None,
-    year: int | None = None,
-    actor: str | None = None,
-    director: str | None = None,
-    min_rating: float | None = None,
-    unwatched: bool | None = None,
-    metadata: dict[str, Any] | None = None,
+    operation: Annotated[
+        Literal["browse", "search", "get_details", "get_recent", "update_metadata"],
+        Field(description="The media operation to perform."),
+    ],
+    library_id: Annotated[str | None, Field(description="ID of the library to browse or search within.")] = None,
+    media_key: Annotated[
+        str | None, Field(description="Key of the specific media item for detail or update operations.")
+    ] = None,
+    query: Annotated[str | None, Field(description="Search query string for text-based searches.")] = None,
+    media_type: Annotated[str | None, Field(description="Filter by media type (movie, episode, track).")] = None,
+    limit: Annotated[int, Field(description="Maximum number of results to return.", ge=1)] = 100,
+    offset: Annotated[int, Field(description="Number of results to skip for pagination.", ge=0)] = 0,
+    genre: Annotated[str | None, Field(description="Filter by genre name.")] = None,
+    year: Annotated[int | None, Field(description="Filter by release year.")] = None,
+    actor: Annotated[str | None, Field(description="Filter by actor name.")] = None,
+    director: Annotated[str | None, Field(description="Filter by director name.")] = None,
+    min_rating: Annotated[float | None, Field(description="Minimum rating filter (0.0-10.0).")] = None,
+    unwatched: Annotated[bool | None, Field(description="Filter to only unwatched items.")] = None,
+    metadata: Annotated[
+        dict[str, Any] | None, Field(description="Metadata fields to update (title, year, summary, etc.).")
+    ] = None,
 ) -> ToolResult:
     """
     Comprehensive media management operations for Plex Media Server.
@@ -65,8 +73,13 @@ async def plex_media(
     - get_recent: Get recently added media items.
     - update_metadata: Update metadata (title, year, summary) for an item.
 
-    Returns:
-    FastMCP 3.1+ dialogic response with visual Prefab rendering where applicable.
+    ## Return Format
+    {"success": bool, "data": dict|list, "operation": str, "count": int}
+
+    ## Examples
+    await plex_media(operation="browse", library_id="1")
+    await plex_media(operation="search", query="inception")
+    await plex_media(operation="get_details", media_key="12345")
     """
     try:
         plex = _get_plex_service()
@@ -74,127 +87,149 @@ async def plex_media(
         # Operation: browse
         if operation == "browse":
             if not library_id:
-                return {
-                    "success": False,
-                    "error": "library_id is required for browse operation",
-                    "error_code": "MISSING_LIBRARY_ID",
-                    "suggestions": [
-                        "Use plex_library('list') to find available library IDs",
-                        "Provide library_id parameter: plex_media('browse', library_id='1')",
-                    ],
-                    "related_tools": ["plex_library"],
-                }
+                return ToolResult(
+                    content={
+                        "success": False,
+                        "error": "library_id is required for browse operation",
+                        "error_code": "MISSING_LIBRARY_ID",
+                        "suggestions": [
+                            "Use plex_library('list') to find available library IDs",
+                            "Provide library_id parameter: plex_media('browse', library_id='1')",
+                        ],
+                        "related_tools": ["plex_library"],
+                    },
+                )
 
             # Use search_media with empty query to simulate browse
             items = await plex.search_media("", limit=limit, offset=offset, library_id=library_id)
+            raw_data = items.data if hasattr(items, "data") else items
+            data = [item.model_dump() if hasattr(item, "model_dump") else item for item in raw_data]
             return ToolResult(
                 content={
                     "success": True,
                     "operation": "browse",
-                    "data": (items.data if hasattr(items, "data") else items),
-                    "count": len(items.data if hasattr(items, "data") else items),
+                    "data": data,
+                    "count": len(data),
                     "limit": limit,
                     "offset": offset,
                 },
                 meta={"prefabs": ["plex_media_browser"]},
+                structured_content=build_media_browser(data),
             )
 
         # Operation: search
         if operation == "search":
             if not query:
-                return {
-                    "success": False,
-                    "error": "query is required for search operation",
-                    "error_code": "MISSING_QUERY",
-                }
+                return ToolResult(
+                    content={
+                        "success": False,
+                        "error": "query is required for search operation",
+                        "error_code": "MISSING_QUERY",
+                    },
+                )
 
             items = await plex.search_media(query, limit=limit, offset=offset, library_id=library_id)
+            data = [item.model_dump() if hasattr(item, "model_dump") else item for item in items]
             return ToolResult(
                 content={
                     "success": True,
                     "operation": "search",
-                    "data": [item.dict() if hasattr(item, "dict") else item for item in items],
-                    "count": len(items),
+                    "data": data,
+                    "count": len(data),
                     "limit": limit,
                     "offset": offset,
                 },
                 meta={"prefabs": ["plex_media_browser"]},
+                structured_content=build_media_browser(data),
             )
 
         # Operation: get_details
         if operation == "get_details":
             if not media_key:
-                return {
-                    "success": False,
-                    "error": "media_key is required for get_details operation",
-                    "error_code": "MISSING_MEDIA_KEY",
-                    "suggestions": [
-                        "Get media_key from browse or search results",
-                        "Example: plex_media('get_details', media_key='12345')",
-                    ],
-                    "related_tools": ["plex_media with browse or search operation"],
-                }
+                return ToolResult(
+                    content={
+                        "success": False,
+                        "error": "media_key is required for get_details operation",
+                        "error_code": "MISSING_MEDIA_KEY",
+                        "suggestions": [
+                            "Get media_key from browse or search results",
+                            "Example: plex_media('get_details', media_key='12345')",
+                        ],
+                        "related_tools": ["plex_media with browse or search operation"],
+                    },
+                )
 
             details = await plex.get_media_info(media_key)
             return ToolResult(
                 content={"success": True, "operation": "get_details", "data": details},
                 meta={"prefabs": ["plex_media_detail"]},
+                structured_content=build_media_detail(details or {}),
             )
 
         # Operation: get_recent
         if operation == "get_recent":
             items = await plex.get_recently_added(library_id=library_id, limit=limit)
+            data = [item.model_dump() if hasattr(item, "model_dump") else item for item in items]
             return ToolResult(
-                structured_content={
+                content={
                     "success": True,
                     "operation": "get_recent",
-                    "data": [item.dict() if hasattr(item, "dict") else item for item in items],
-                    "count": len(items),
+                    "data": data,
+                    "count": len(data),
                     "limit": limit,
                 },
                 meta={"prefabs": ["plex_media_browser"]},
+                structured_content=build_media_browser(data),
             )
 
         # Operation: update_metadata
         if operation == "update_metadata":
             if not media_key:
-                return {
-                    "success": False,
-                    "error": "media_key is required for update_metadata operation",
-                    "error_code": "MISSING_MEDIA_KEY",
-                    "suggestions": ["Get media_key from browse or search results"],
-                }
+                return ToolResult(
+                    content={
+                        "success": False,
+                        "error": "media_key is required for update_metadata operation",
+                        "error_code": "MISSING_MEDIA_KEY",
+                        "suggestions": ["Get media_key from browse or search results"],
+                    },
+                )
 
             if not metadata:
-                return {
-                    "success": False,
-                    "error": "metadata dictionary is required for update_metadata operation",
-                    "error_code": "MISSING_METADATA",
-                    "suggestions": [
-                        "Provide metadata dict: {'title': 'New Title', 'year': 2020}",
-                        "Available fields: title, year, summary, rating, genres, etc.",
-                    ],
-                }
+                return ToolResult(
+                    content={
+                        "success": False,
+                        "error": "metadata dictionary is required for update_metadata operation",
+                        "error_code": "MISSING_METADATA",
+                        "suggestions": [
+                            "Provide metadata dict: {'title': 'New Title', 'year': 2020}",
+                            "Available fields: title, year, summary, rating, genres, etc.",
+                        ],
+                    },
+                )
 
             # Update metadata via plex service
             updated = await plex.update_media_metadata(media_key, metadata)
-            return {
-                "success": True,
-                "operation": "update_metadata",
-                "data": updated,
-                "media_key": media_key,
-                "updated_fields": list(metadata.keys()),
-            }
+            return ToolResult(
+                content={
+                    "success": True,
+                    "operation": "update_metadata",
+                    "data": updated,
+                    "media_key": media_key,
+                    "updated_fields": list(metadata.keys()),
+                },
+            )
 
-        return {
-            "success": False,
-            "error": f"Invalid operation: '{operation}'",
-            "error_code": "INVALID_OPERATION",
-            "suggestions": [
-                "Valid operations: browse, search, get_details, get_recent, update_metadata",
-                f"You provided: '{operation}'",
-            ],
-        }
+        return ToolResult(
+            content={
+                "success": False,
+                "error": f"Invalid operation: '{operation}'",
+                "error_code": "INVALID_OPERATION",
+                "suggestions": [
+                    "Valid operations: browse, search, get_details, get_recent, update_metadata",
+                    f"You provided: '{operation}'",
+                ],
+            },
+        )
 
     except RuntimeError as e:
         error_msg = str(e)
@@ -219,19 +254,21 @@ async def plex_media(
                 "Test server access in web browser",
             ]
 
-        return {
-            "success": False,
-            "error": error_msg,
-            "error_code": "RUNTIME_ERROR",
-            "operation": operation,
-            "suggestions": suggestions,
-        }
+        return ToolResult(
+            content={
+                "success": False,
+                "error": error_msg,
+                "error_code": "RUNTIME_ERROR",
+                "operation": operation,
+                "suggestions": suggestions,
+            },
+        )
 
     except Exception as e:
         error_msg = str(e)
         is_unauthorized = "unauthorized" in error_msg.lower() or "(401)" in error_msg
 
-        logger.error(
+        logger.exception(
             f"Error in plex_media operation '{operation}': {error_msg}",
             exc_info=not is_unauthorized,
         )
@@ -249,10 +286,12 @@ async def plex_media(
                 "Visit: https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/",
             ]
 
-        return {
-            "success": False,
-            "error": f"Plex Authentication Failed: {error_msg}" if is_unauthorized else error_msg,
-            "error_code": "AUTH_FAILURE" if is_unauthorized else "UNEXPECTED_ERROR",
-            "operation": operation,
-            "suggestions": suggestions,
-        }
+        return ToolResult(
+            content={
+                "success": False,
+                "error": f"Plex Authentication Failed: {error_msg}" if is_unauthorized else error_msg,
+                "error_code": "AUTH_FAILURE" if is_unauthorized else "UNEXPECTED_ERROR",
+                "operation": operation,
+                "suggestions": suggestions,
+            },
+        )

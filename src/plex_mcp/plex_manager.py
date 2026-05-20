@@ -160,10 +160,7 @@ class PlexManager:
 
     async def search_media(self, query: str, library_id: str | None = None) -> list[dict[str, Any]]:
         """Search for media content"""
-        if library_id:
-            endpoint = f"/library/sections/{library_id}/search"
-        else:
-            endpoint = "/search"
+        endpoint = f"/library/sections/{library_id}/search" if library_id else "/search"
 
         params = {"query": query}
         response = await self._make_request(endpoint, params)
@@ -180,10 +177,7 @@ class PlexManager:
 
     async def get_recently_added(self, library_id: str | None = None, limit: int = 20) -> list[dict[str, Any]]:
         """Get recently added media"""
-        if library_id:
-            endpoint = f"/library/sections/{library_id}/recentlyAdded"
-        else:
-            endpoint = "/library/recentlyAdded"
+        endpoint = f"/library/sections/{library_id}/recentlyAdded" if library_id else "/library/recentlyAdded"
 
         params = {"X-Plex-Container-Size": str(limit)}
         response = await self._make_request(endpoint, params)

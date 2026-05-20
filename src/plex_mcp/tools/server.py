@@ -12,6 +12,15 @@ logger = get_logger(__name__)
 BACKEND_PORT = 10740  # fleet-registered port
 
 
+def _get_plex_service():
+    """Get PlexService instance."""
+    from ..services.plex_service import PlexService
+
+    base_url = os.getenv("PLEX_URL") or os.getenv("PLEX_SERVER_URL", "http://localhost:32400")
+    token = os.getenv("PLEX_TOKEN")
+    return PlexService(base_url=base_url, token=token)
+
+
 @mcp.tool()
 async def show_api_docs() -> dict:
     """
@@ -110,7 +119,7 @@ async def list_libraries() -> list[LibraryInfo]:
         ]
     except Exception as e:
         error_msg = f"Failed to list libraries: {str(e)}"
-        logger.error(error_msg)
+        logger.exception(error_msg)
         raise RuntimeError(error_msg) from e
 
 

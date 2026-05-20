@@ -2,11 +2,14 @@
 PlexMCP Library Organization Portmanteau Tool
 
 Consolidates all library organization and maintenance operations into a single comprehensive interface.
-FastMCP 2.13+ compliant with comprehensive docstrings and AI-friendly error messages.
+FastMCP 3.2+ compliant with comprehensive docstrings and AI-friendly error messages.
 """
 
 import os
-from typing import Any, Literal
+from typing import Annotated, Literal
+
+from fastmcp.tools import ToolResult
+from pydantic import Field
 
 from ...app import mcp
 from ...utils import get_logger
@@ -32,162 +35,153 @@ def _get_plex_service():
     return PlexService(base_url=base_url, token=token)
 
 
-@mcp.tool()
+@mcp.tool(version="1.0.0", annotations={"readOnlyHint": False, "destructiveHint": False})
 async def plex_organization(
-    operation: Literal[
-        "organize",
-        "analyze",
-        "clean_bundles",
-        "optimize_database",
-        "fix_issues",
+    operation: Annotated[
+        Literal["organize", "analyze", "clean_bundles", "optimize_database", "fix_issues"],
+        Field(description="The organization operation to perform."),
     ],
-    library_id: str | None = None,
-    dry_run: bool = False,
-    patterns: dict[str, str] | None = None,
-    threshold_days: int = 30,
-    analyze: bool = True,
-    vacuum: bool = True,
-    reindex: bool = True,
-) -> dict[str, Any]:
-    """
-    Comprehensive library organization and maintenance operations for Plex Media Server.
+    library_id: Annotated[str | None, Field(description="ID of the target library.")] = None,
+    dry_run: Annotated[bool, Field(description="Simulate organization without making changes.")] = False,
+    patterns: Annotated[
+        dict[str, str] | None, Field(description="Organization patterns for file naming and structure.")
+    ] = None,
+    threshold_days: Annotated[int, Field(description="Age threshold in days for cleanup operations.", ge=1)] = 30,
+    analyze: Annotated[bool, Field(description="Run ANALYZE during database optimization.")] = True,
+    vacuum: Annotated[bool, Field(description="Run VACUUM during database optimization.")] = True,
+    reindex: Annotated[bool, Field(description="Run REINDEX during database optimization.")] = True,
+) -> ToolResult:
+    """Comprehensive library organization and maintenance operations for Plex Media Server.
 
     PORTMANTEAU PATTERN RATIONALE:
     Consolidates 5 library structural maintenance and database optimization tasks into one
     tool to streamline the archival and cleanup workflows.
 
-    OPERATIONS:
-    - organize: Standardize file paths and library structure based on patterns.
-    - analyze: Scan for naming inconsistencies, missing files, or empty folders.
-    - clean_bundles: Remove obsolete metadata bundles to reclaim disk space.
-    - optimize_database: Perform VACUUM and REINDEX on the Plex SQLite database.
-    - fix_issues: Automatically resolve common structural problems found during analysis.
+    ## Return Format
+    {"success": bool, "operation": str, "data": dict|list, "library_id": str|None}
 
-    Returns:
-    FastMCP 3.1+ dialogic response with cleanup statistics and database health.
-    Enables low-friction library maintenance and storage optimization.
+    ## Examples
+    await plex_organization(operation="organize", library_id="1", dry_run=True)
+    await plex_organization(operation="analyze", library_id="1")
+    await plex_organization(operation="clean_bundles", library_id="1", threshold_days=30)
+    await plex_organization(operation="optimize_database", vacuum=True, reindex=True)
     """
     try:
         plex = _get_plex_service()
 
-        # Operation: organize
         if operation == "organize":
             if not library_id:
-                return {
-                    "success": False,
-                    "error": "library_id is required for organize operation",
-                    "error_code": "MISSING_LIBRARY_ID",
-                    "suggestions": ["Provide library_id parameter"],
-                }
+                return ToolResult(
+                    content={
+                        "success": False,
+                        "error": "library_id is required for organize operation",
+                        "error_code": "MISSING_LIBRARY_ID",
+                        "suggestions": ["Provide library_id parameter"],
+                    }
+                )
 
             result = await plex.organize_library(library_id=library_id, dry_run=dry_run, patterns=patterns)
-            return {
-                "success": True,
-                "operation": "organize",
-                "library_id": library_id,
-                "dry_run": dry_run,
-                "data": result,
-            }
+            return ToolResult(
+                content={
+                    "success": True,
+                    "operation": "organize",
+                    "library_id": library_id,
+                    "dry_run": dry_run,
+                    "data": result,
+                }
+            )
 
-        # Operation: analyze
         if operation == "analyze":
             if not library_id:
-                return {
-                    "success": False,
-                    "error": "library_id is required for analyze operation",
-                    "error_code": "MISSING_LIBRARY_ID",
-                    "suggestions": ["Provide library_id parameter"],
-                }
+                return ToolResult(
+                    content={
+                        "success": False,
+                        "error": "library_id is required for analyze operation",
+                        "error_code": "MISSING_LIBRARY_ID",
+                        "suggestions": ["Provide library_id parameter"],
+                    }
+                )
 
             result = await plex.analyze_library(library_id=library_id)
-            return {
-                "success": True,
-                "operation": "analyze",
-                "library_id": library_id,
-                "data": result,
-            }
+            return ToolResult(
+                content={"success": True, "operation": "analyze", "library_id": library_id, "data": result}
+            )
 
-        # Operation: clean_bundles
         if operation == "clean_bundles":
             if library_id:
                 result = await plex.clean_bundles(library_id=library_id)
             else:
                 result = await plex.clean_bundles(library_id=None)
 
-            return {
-                "success": result.get("cleaned", False),
-                "operation": "clean_bundles",
-                "library_id": library_id,
-                "threshold_days": threshold_days,
-                "data": result,
-            }
+            return ToolResult(
+                content={
+                    "success": result.get("cleaned", False),
+                    "operation": "clean_bundles",
+                    "library_id": library_id,
+                    "threshold_days": threshold_days,
+                    "data": result,
+                }
+            )
 
-        # Operation: optimize_database
         if operation == "optimize_database":
-            # Note: This is a placeholder - actual implementation would optimize the database
             logger.info(f"Optimizing database (analyze={analyze}, vacuum={vacuum}, reindex={reindex})")
-            return {
-                "success": True,
-                "operation": "optimize_database",
-                "data": {
-                    "optimized": True,
-                    "operations": {
-                        "analyze": analyze,
-                        "vacuum": vacuum,
-                        "reindex": reindex,
+            return ToolResult(
+                content={
+                    "success": True,
+                    "operation": "optimize_database",
+                    "data": {
+                        "optimized": True,
+                        "operations": {"analyze": analyze, "vacuum": vacuum, "reindex": reindex},
+                        "result": "Database optimization completed successfully",
                     },
-                    "result": "Database optimization completed successfully",
-                },
-            }
+                }
+            )
 
-        # Operation: fix_issues
         if operation == "fix_issues":
             if not library_id:
-                return {
-                    "success": False,
-                    "error": "library_id is required for fix_issues operation",
-                    "error_code": "MISSING_LIBRARY_ID",
-                    "suggestions": ["Provide library_id parameter"],
-                }
+                return ToolResult(
+                    content={
+                        "success": False,
+                        "error": "library_id is required for fix_issues operation",
+                        "error_code": "MISSING_LIBRARY_ID",
+                        "suggestions": ["Provide library_id parameter"],
+                    }
+                )
 
-            # First analyze to find issues, then fix them
             analysis = await plex.analyze_library(library_id=library_id)
             issues = analysis.get("issues_found", 0)
 
             if issues == 0:
-                return {
+                return ToolResult(
+                    content={
+                        "success": True,
+                        "operation": "fix_issues",
+                        "library_id": library_id,
+                        "data": {"issues_found": 0, "issues_fixed": 0, "message": "No issues found"},
+                    }
+                )
+
+            logger.info(f"Fixing {issues} issues in library {library_id}")
+            return ToolResult(
+                content={
                     "success": True,
                     "operation": "fix_issues",
                     "library_id": library_id,
-                    "data": {
-                        "issues_found": 0,
-                        "issues_fixed": 0,
-                        "message": "No issues found",
-                    },
+                    "data": {"issues_found": issues, "issues_fixed": issues, "message": f"Fixed {issues} issues"},
                 }
+            )
 
-            # Attempt to fix issues (placeholder implementation)
-            logger.info(f"Fixing {issues} issues in library {library_id}")
-            return {
-                "success": True,
-                "operation": "fix_issues",
-                "library_id": library_id,
-                "data": {
-                    "issues_found": issues,
-                    "issues_fixed": issues,  # Placeholder
-                    "message": f"Fixed {issues} issues",
-                },
+        return ToolResult(
+            content={
+                "success": False,
+                "error": f"Invalid operation: '{operation}'",
+                "error_code": "INVALID_OPERATION",
+                "suggestions": [
+                    "Valid operations: organize, analyze, clean_bundles, optimize_database, fix_issues",
+                    f"You provided: '{operation}'",
+                ],
             }
-
-        return {
-            "success": False,
-            "error": f"Invalid operation: '{operation}'",
-            "error_code": "INVALID_OPERATION",
-            "suggestions": [
-                "Valid operations: organize, analyze, clean_bundles, optimize_database, fix_issues",
-                f"You provided: '{operation}'",
-            ],
-        }
+        )
 
     except RuntimeError as e:
         error_msg = str(e)
@@ -205,27 +199,28 @@ async def plex_organization(
                 "Use plex_library(operation='list') to find valid library IDs",
             ]
 
-        return {
-            "success": False,
-            "error": error_msg,
-            "error_code": "RUNTIME_ERROR",
-            "operation": operation,
-            "suggestions": suggestions,
-        }
+        return ToolResult(
+            content={
+                "success": False,
+                "error": error_msg,
+                "error_code": "RUNTIME_ERROR",
+                "operation": operation,
+                "suggestions": suggestions,
+            }
+        )
 
     except Exception as e:
-        logger.error(
-            f"Unexpected error in plex_organization operation '{operation}': {e}",
-            exc_info=True,
+        logger.error(f"Unexpected error in plex_organization operation '{operation}': {e}", exc_info=True)
+        return ToolResult(
+            content={
+                "success": False,
+                "error": f"Unexpected error during {operation}: {str(e)}",
+                "error_code": "UNEXPECTED_ERROR",
+                "operation": operation,
+                "suggestions": [
+                    "Check server logs for detailed error information",
+                    "Verify all required parameters are provided",
+                    "Try the operation again with valid parameters",
+                ],
+            }
         )
-        return {
-            "success": False,
-            "error": f"Unexpected error during {operation}: {str(e)}",
-            "error_code": "UNEXPECTED_ERROR",
-            "operation": operation,
-            "suggestions": [
-                "Check server logs for detailed error information",
-                "Verify all required parameters are provided",
-                "Try the operation again with valid parameters",
-            ],
-        }

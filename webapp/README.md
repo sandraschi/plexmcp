@@ -11,7 +11,8 @@ Browser UI for PlexMCP: connects to the MCP server via the backend (FastAPI), wh
 
 - **Layout**: Glassmorphism panels, retractable sidebar, topbar (Help + Logs buttons, Webapps dropdown)
 - **Pages**: Overview (server status), Libraries, **Movies**, **Search** (keyword), **Semantic search** (RAG), **Chat**, Server (raw JSON), Settings
-- **Movies**: Plex poster images (via `/api/image/...` proxy), library filter, pagination, card/list view. **Click a movie** to open detail modal: poster, metadata (year, duration, rating, genres, directors, tagline, summary), **Play in Plex** button (opens Plex Web in new tab when Plex URL is set in Settings)
+- **Movies**: Plex poster images (via `/api/image/...` proxy, fixed `follow_redirects` for Plex 307 redirects), library filter, pagination, card/list view. **Click a movie** to open detail modal: poster, metadata (year, duration, rating, genres, directors, tagline, summary), **Play in Plex** button (opens Plex Web in new tab when Plex URL is set in Settings)
+- **Prefab card pipeline**: API responses include `_prefab` key with Prefab wire JSON from tool `structured_content` \u2014 ready for interactive card rendering in the frontend.
 - **Settings**: Plex API key and URL; LLM provider, base URL, API key, default model; **RAG / Indexing** section with "Reindex metadata" button (same as Semantic search sync); saved to backend data/settings.json (overrides .env when set)
 - **Modals**: Logger (log tail, level/filter), Help (tiered content)
 - **Chat**: Local LLM (Ollama/LM Studio) with **live system preprompt** (MCP server tools, webapp pages, Plex server name/version, media libraries list, integrations). Personalities, prompt refining, export (MD/JSON). Use `use_context: true` (default) in POST /api/llm/chat to inject context.

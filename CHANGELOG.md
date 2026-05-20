@@ -9,11 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **FastMCP 3.2 alignment**: All 22 tools now use `version="1.0.0"`, `annotations=READ_ONLY|MUTATING|DESTRUCTIVE`, `Annotated[Field]` parameters, `ToolResult` returns, and SOTA docstrings (`## Return Format` / `## Examples`).
+- **Prefab interactive cards**: 9 `prefab_ui` card builders in `src/plex_mcp/prefabs.py` wired as `structured_content` — library grid, library detail, media browser, media detail, server status, server info, performance dashboard, streaming sessions, streaming clients.
+- **Webapp `_prefab` pipeline**: `mcp/client.py` extracts `structured_content` from ToolResult as `_prefab` in API responses for frontend rendering.
+- **Webapp image proxy fix**: `follow_redirects=True` on httpx client (v0.28.1 defaults `False`, breaking Plex 307 redirects to `/photo/:/transcode`).
+- **Lazy FastMCP mount**: Webapp backend startup reduced from ~103s to <1s — `fastmcp` import deferred to background `asyncio.create_task`.
 - **CI**: Markdown link check (**lychee**, non-blocking) and **Playwright** e2e smoke for the Next.js app (`webapp/frontend/e2e`, `npm run test:e2e`, `just e2e`).
 - **Webapp**: `BackendStatusBanner` when the FastAPI backend is unreachable; proxy debug logs only when `NEXT_DEBUG_PROXY=1`.
 - **Documentation**: Operational improvements checklist ([`docs/plans/OPERATIONAL_IMPROVEMENTS.md`](docs/plans/OPERATIONAL_IMPROVEMENTS.md)), GitHub PR template, `just version` (reads `pyproject.toml`); symptom table in [`TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md); [`docs/DOCKER.md`](docs/DOCKER.md) + example compose; `docs/assets/` wireframe SVGs; “suggested agent flows” in [`TOOLS.md`](docs/TOOLS.md); “Video walkthrough” placeholder in [`QUICKSTART.md`](docs/QUICKSTART.md).
 - **Webapp (Biome)**: Relaxed a few **a11y/suspicious** rules in `biome.json` for pragmatic noise control; removed `eval` from media probe FPS; `SearchForm` now carries `library_id` in the query string; `server-info-view` uses `for...of` instead of nested `forEach`.
 - **Docs** (earlier in unreleased): Troubleshooting “diagnose in order” section; RAG `docs_mcp` import verification one-liners; Caddy and nginx samples in self-hosting guide.
+
+### Fixed
+
+- **Webapp image proxy**: `images.py` now follows Plex 307 redirects (`follow_redirects=True`) — httpx v0.27+ default change broke all poster/artwork images.
+- **`plex_media_service._plex_item_to_media_item`**: `thumbUrl`/`artUrl` → `thumb`/`art` (capital-U properties return full server URLs with tokens, breaking proxy path extraction).
+- **Pydantic v2**: 13+ `.dict()` calls replaced with `.model_dump()` across portmanteau tools.
 
 ## [2.5.0] - 2026-04-19
 ### Added
