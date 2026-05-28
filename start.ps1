@@ -9,7 +9,7 @@ $WindowStyle = if ($Headless) { 'Hidden' } else { 'Normal' }
 # ------------------------------
 
 $env:FASTMCP_LOG_LEVEL = 'WARNING'
-# schip-mcp-plex Start - Standards-Compliant SOTA
-Write-Host 'Starting schip-mcp-plex...' -ForegroundColor Cyan
+# plexmcp Start - Standards-Compliant SOTA
+Write-Host 'Starting plexmcp...' -ForegroundColor Cyan
 
-uv run -m schip_mcp_plex
+uv run plexmcp
