@@ -1,102 +1,69 @@
-Param([switch]$Headless)
-$SkipFrontend = $Headless
+﻿param(
+    [switch]$Headless,
+    [switch]$BackendOnly,
+    [switch]$FrontendOnly,
+    [switch]$NoBrowser
+)
 
-# --- SOTA Headless Standard ---
-if ($Headless -and ($Host.UI.RawUI.WindowTitle -notmatch 'Hidden')) {
-    Start-Process pwsh -ArgumentList '-NoProfile', '-File', $PSCommandPath, '-Headless' -WindowStyle Hidden
-    exit
-}
-$WindowStyle = if ($Headless) { 'Hidden' } else { 'Normal' }
-# ------------------------------
-
-# Webapp Start - Standardized SOTA (2026)
 $WebPort = 10741
 $BackendPort = 10740
 $ProjectRoot = Split-Path -Parent $PSScriptRoot
+$NpmRoot = Join-Path $PSScriptRoot "frontend"
 
-# 0. Ensure we run npm from the dir that has package.json (webapp or webapp/frontend)
-$NpmRoot = $PSScriptRoot
-if (-not (Test-Path (Join-Path $NpmRoot "package.json"))) {
-    $NpmRoot = Join-Path $PSScriptRoot "frontend"
+$FleetStartPath = Join-Path $ProjectRoot "scripts\FleetStartMode.ps1"
+if (-not (Test-Path -LiteralPath $FleetStartPath)) {
+    Write-Host "ERROR: Missing vendored launcher helper: $FleetStartPath" -ForegroundColor Red
+    exit 1
 }
-if (-not (Test-Path (Join-Path $NpmRoot "package.json"))) {
-    Write-Host "ERROR: package.json not found in $PSScriptRoot or $PSScriptRoot\frontend." -ForegroundColor Red
+. $FleetStartPath
+$FleetStart = Initialize-FleetStartMode @PSBoundParameters
+Enter-FleetHeadlessConsole -Headless:$Headless -BackendOnly:$BackendOnly
+Stop-FleetPortSquatters -Ports @($WebPort, $BackendPort) -Label "plex-mcp"
+
+if (-not (Assert-FleetPortsAvailable -Ports @($WebPort, $BackendPort) -Label "plex-mcp")) { exit 1 }
+
+Set-Location $ProjectRoot
+uv sync --project $ProjectRoot
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "ERROR: uv sync failed for plex-mcp." -ForegroundColor Red
     exit 1
 }
 
-# 1. Kill any process squatting on the ports
-Write-Host "Checking for port squatters on $WebPort and $BackendPort..." -ForegroundColor Yellow
-$pids = Get-NetTCPConnection -LocalPort $WebPort, $BackendPort -ErrorAction SilentlyContinue | 
-        Where-Object { $_.OwningProcess -gt 4 } | 
-        Select-Object -ExpandProperty OwningProcess -Unique
-
-foreach ($p in $pids) {
-    try {
-        $proc = Get-Process -Id $p -ErrorAction SilentlyContinue
-        if ($proc) {
-            Write-Host "Found squatter '$($proc.Name)' (PID: $p). Terminating..." -ForegroundColor Red
-            Stop-Process -Id $p -Force -ErrorAction Stop
-        }
-    } catch {
-        Write-Host "Warning: Could not terminate PID $p." -ForegroundColor Gray
-    }
-}
-
-# 2. Setup
 Set-Location $NpmRoot
-if (-not (Test-Path "node_modules")) { 
-    Write-Host "Installing dependencies..." -ForegroundColor Gray
-    npm install 
+if (-not (Test-Path "node_modules")) {
+    Write-Host "Installing frontend dependencies..." -ForegroundColor Gray
+    npm install
 }
 
-# 3. Start the Python backend
 Write-Host "Starting Python backend on port $BackendPort ..." -ForegroundColor Cyan
 $BackendDir = Join-Path $ProjectRoot "webapp\backend"
-$VenvPython = Join-Path $ProjectRoot ".venv\Scripts\python.exe"
-$backendCmd = "`$env:PYTHONPATH = '$ProjectRoot\src;$BackendDir'; Set-Location '$BackendDir'; & '$VenvPython' -m uvicorn app.main:app --host 127.0.0.1 --port $BackendPort --log-level info"
+$backendCmd = "`$env:PYTHONPATH = '$ProjectRoot\src;$BackendDir'; Set-Location '$BackendDir'; uv run --project '$ProjectRoot' python -m uvicorn app.main:app --host 127.0.0.1 --port $BackendPort --log-level info"
+Start-Process powershell -ArgumentList "-NoProfile", "-WindowStyle", "Normal", "-Command", $backendCmd
 
-# Start backend in a new window
-Start-Process powershell -ArgumentList "-NoExit", "-Command", $backendCmd -WindowStyle Normal
-
-# 4. Wait for backend readiness
-$maxRetries = 30
-$retryCount = 0
-$backendReady = $false
-Write-Host "Waiting for backend readiness..." -ForegroundColor Yellow -NoNewline
-
-while (-not $backendReady -and $retryCount -lt $maxRetries) {
+$healthUrl = "http://127.0.0.1:$BackendPort/health"
+$attempt = 0
+while ($attempt -lt 45) {
     try {
-        # Using /health instead of /api/server/status is faster and less prone to component initialization delays
-        $resp = Invoke-WebRequest -Uri "http://127.0.0.1:$BackendPort/health" -Method Get -TimeoutSec 2 -ErrorAction Stop
-        if ($resp.StatusCode -eq 200) { $backendReady = $true }
-    } catch { }
-    if (-not $backendReady) {
-        Write-Host "." -NoNewline
-        Start-Sleep -Seconds 1
-        $retryCount++
+        $null = Invoke-WebRequest -Uri $healthUrl -UseBasicParsing -TimeoutSec 3 -ErrorAction Stop
+        Write-Host "Backend ready at $healthUrl" -ForegroundColor Green
+        break
+    } catch {
+        Start-Sleep -Seconds 2
+        $attempt++
     }
 }
 
-if ($backendReady) {
-    Write-Host " [READY]" -ForegroundColor Green
-} else {
-    Write-Host " [TIMEOUT/ERROR]" -ForegroundColor Red
+if (-not $FleetStart.RunFrontend) {
+    while ($true) { Start-Sleep -Seconds 60 }
 }
 
-# 5. Start frontend in development mode (fast, hot reload)
-Set-Location $NpmRoot
+if (-not $NoBrowser) {
+    $frontendUrl = "http://127.0.0.1:$WebPort/"
+    $pollAndOpen = "for (`$i = 0; `$i -lt 120; `$i++) { try { `$null = Invoke-WebRequest -Uri '$frontendUrl' -TimeoutSec 2 -UseBasicParsing -ErrorAction Stop; Start-Process '$frontendUrl'; exit } catch { Start-Sleep -Seconds 1 } }"
+    Start-Process powershell -ArgumentList "-NoProfile", "-WindowStyle", "Hidden", "-Command", $pollAndOpen
+}
 
 Write-Host "Starting Next.js frontend on port $WebPort ..." -ForegroundColor Green
-
-# Launch background task to open browser once frontend is ready
-$frontendUrl = "http://127.0.0.1:$WebPort/"
-$pollAndOpen = "for (`$i = 0; `$i -lt 60; `$i++) { try { `$null = Invoke-WebRequest -Uri '$frontendUrl' -TimeoutSec 2 -UseBasicParsing -ErrorAction Stop; Start-Process '$frontendUrl'; exit } catch { Start-Sleep -Seconds 1 } }"
-Start-Process powershell -ArgumentList "-NoProfile", "-WindowStyle", "Hidden", "-Command", $pollAndOpen
-
-Write-Host "Browser will open automatically when frontend is ready." -ForegroundColor Gray
-if ($SkipFrontend) { return }
-npm run dev
-
-
+npm run dev -- -H 127.0.0.1
 
 
