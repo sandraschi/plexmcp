@@ -191,12 +191,18 @@ class PlexService:
 
         if library_id:
             section = self.server.library.sectionByID(int(library_id))
-            # PlexAPI search uses X-Plex-Container-Start/Size under the hood for some methods,
-            # but for section.search it's maxresults.
-            # To support offset, we use container_start/size headers if supported or manual slice
-            results = section.search(query, maxresults=limit, container_start=offset, **kwargs)
+            # Fetch limit+offset items then slice manually; container_start was removed in
+            # newer plexapi versions and raises an unexpected keyword argument error.
+            _fetch = limit + offset if offset else limit
+            results = section.search(query, maxresults=_fetch, **kwargs)
+            if offset:
+                results = results[offset : offset + limit]
         else:
-            results = self.server.search(query, limit=limit, container_start=offset, **kwargs)
+            # PlexServer.search() accepts limit but not container_start in newer plexapi.
+            _fetch = limit + offset if offset else limit
+            results = self.server.search(query, limit=_fetch, **kwargs)
+            if offset:
+                results = results[offset : offset + limit]
 
         return [
             {

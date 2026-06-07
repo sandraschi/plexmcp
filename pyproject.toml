@@ -3,7 +3,7 @@ requires = ["hatchling", "uv-dynamic-versioning>=0.7.0"]
 build-backend = "hatchling.build"
 
 [project]
-name = "schip-mcp-plex"
+name = "plexmcp"
 version = "2.4.0"
 description = "SOTA April 2026 industrialized FastMCP 3.2.0 server for Plex Media Server management with conversational AI, sampling, and agentic workflows"
 readme = "README.md"

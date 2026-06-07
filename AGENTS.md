@@ -164,3 +164,5 @@ def tool_payload(result):
     # Returns content dict (conversational), NOT structured_content (Prefab)
     # Priority: content dict > content list[TextContent] > structured_content
 ```
+
+Install docs: follow mcp-central-docs/standards/AGENT_INSTALL_REFERENCE.md
