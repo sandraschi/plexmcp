@@ -9,7 +9,8 @@ Everything below links from the [project README](../README.md). Pick a path by *
 | Guide | Purpose |
 |-------|---------|
 | [**QUICKSTART.md**](QUICKSTART.md) | **~60 seconds** — MCP stdio, then optional web UI and RAG pointer |
-| [**INSTALL.md**](INSTALL.md) | Install **uv**, clone the repo, set `PLEX_TOKEN` / `PLEX_URL`, run the MCP server, Claude Desktop |
+| [**INSTALL.md**](INSTALL.md) | **Tauri desktop** (primary), uv, clone, `PLEX_TOKEN` / `PLEX_URL`, Claude Desktop |
+| [**TAURI.md**](TAURI.md) | Maintainer: build installer, ports, fleet production pitfalls |
 | [**PLEX.md**](PLEX.md) | **Plain-language Plex** — what the server is, how tokens work, remote vs LAN |
 | [**WEBAPP.md**](WEBAPP.md) | Start the **browser UI** (ports **10740** / **10741**), where features live |
 | [**TROUBLESHOOTING.md**](TROUBLESHOOTING.md) | Auth errors, connection refused, RAG, *arr |
@@ -68,6 +69,8 @@ Everything below links from the [project README](../README.md). Pick a path by *
 - [**plans/OPERATIONAL_IMPROVEMENTS.md**](plans/OPERATIONAL_IMPROVEMENTS.md) — **concrete doc/DX/ops todo list** (phased checklist)  
 - [**CHANGELOG.md**](../CHANGELOG.md) — release history  
 - [**webapp/README.md**](../webapp/README.md) — UI feature list and API index  
+
+**Canonical map:** [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md) — full list plus stale/archival paths (`notepadpp/`, old Windsurf reports, …).
 
 Legacy and deep technical folders (`mcp-technical/`, `github/`, `glama-platform/`, …) still exist under `docs/` for maintainers; the table above is the **curated** user path.
 

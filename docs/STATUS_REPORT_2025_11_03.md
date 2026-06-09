@@ -1,5 +1,7 @@
 # PlexMCP Project Status Report
 
+> **Archive.** Point-in-time status (Nov 2025). For current releases see [CHANGELOG.md](../CHANGELOG.md) and [docs/README.md](README.md).
+
 **Report Date:** November 22, 2025  
 **Version:** 2.1.0  
 **Status:** Portmanteau Architecture Complete - Production Ready  

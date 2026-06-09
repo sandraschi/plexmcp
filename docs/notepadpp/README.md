@@ -1,5 +1,7 @@
 # 📝 Notepad++ Documentation Hub
 
+> **Archive / fleet import.** This folder documents the **Notepad++ editor**, not PlexMCP APIs. For PlexMCP, use [docs/README.md](../README.md). Listed in [DOCUMENTATION_INDEX.md](../DOCUMENTATION_INDEX.md) so it is not mistaken for project docs.
+
 **Everything you need to know about Notepad++ - from history to advanced usage**
 
 ---

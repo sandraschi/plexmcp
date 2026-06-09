@@ -1,5 +1,7 @@
 # PlexMCP Windsurf Assessment - Critical Issues Report
 
+> **Archive.** August 2025 snapshot; stack is now **FastMCP 3.2**, Tauri desktop, and green CI lint. Current hub: [docs/README.md](README.md).
+
 **Date**: August 9, 2025  
 **Analyst**: Claude  
 **Severity**: 🚨 **CRITICAL ARCHITECTURAL FAILURES**  

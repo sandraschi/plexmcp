@@ -1,5 +1,7 @@
 # PlexMCP Post-Windsurf Assessment & Advanced Feature Roadmap
 
+> **Archive.** September 2025 roadmap snapshot. Current product map: [docs/README.md](README.md), [plans/ROADMAP.md](plans/ROADMAP.md).
+
 **Date**: September 6, 2025  
 **Assessment**: Post-Windsurf Architecture Review  
 **Status**: Foundation Complete, Implementation Required  

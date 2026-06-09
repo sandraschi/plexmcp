@@ -43,6 +43,8 @@ just webapp
 | [**docs/README.md**](docs/README.md) | **Hub** — every guide in one place |
 | [**docs/QUICKSTART.md**](docs/QUICKSTART.md) | **~60s** — MCP only, web UI, RAG pointer |
 | [**docs/INSTALL.md**](docs/INSTALL.md) | Tauri desktop (primary), uv, clone, MCPB, Claude Desktop |
+| [**docs/TAURI.md**](docs/TAURI.md) | Maintainer: build installer, production pitfalls |
+| [**docs/DOCUMENTATION_INDEX.md**](docs/DOCUMENTATION_INDEX.md) | Full doc map + archival paths |
 | [**docs/PLEX.md**](docs/PLEX.md) | What Plex is, tokens, remote access (plain language) |
 | [**docs/ARCHITECTURE.md**](docs/ARCHITECTURE.md) | How the MCP server, backend, and UI fit together |
 | [**docs/SELF_HOSTING.md**](docs/SELF_HOSTING.md) | Home lab: HTTPS, reverse proxy, secrets, hardening |

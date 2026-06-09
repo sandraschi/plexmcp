@@ -1,32 +1,26 @@
-# PlexMCP: Advanced Media Management Server (FastMCP 3.1)
+# PlexMCP
 
-PlexMCP is a state-of-the-art MCP server for managing Plex Media Server. It implements the Portmanteau Pattern to consolidate complex media operations into 19 high-performance tools.
+> FastMCP 3.2 MCP server for Plex Media Server: portmanteau tools, LanceDB RAG, optional webapp (**10740** / **10741**), Tauri desktop installer.
 
-## Key Features
-- **Library & Media**: Full CRUD for libraries, advanced item discovery, and metadata management.
-- **Streaming & Performance**: Remote playback control across clients, session monitoring, and real-time transcoding optimization.
-- **Natural Language Assistant**: Sampling-handler for server-side LLMs (FastMCP 3.1) and agentic workflow orchestration.
-- **Skill persona**: Embeds multiple expert personas (Plex Expert, Anime Curator, Hifi-AV) via skills.
-- **SOTA v13.1 compliant**: Compact docstrings, standardized manifest v0.2, and 3-4-100 asset bundling.
+**Full corpus:** see repo [docs/TOOLS.md](docs/TOOLS.md), [docs/CONFIGURATION.md](docs/CONFIGURATION.md), [llms-full.txt](llms-full.txt) if present.
 
-## Tools Summary
-- `plex_library`: Library lifecycle and maintenance.
-- `plex_media`: Navigation, search, and item-level metadata.
-- `plex_streaming`: Remote session/playback control and volume.
-- `plex_performance`: Transcoding settings, bandwidth, and server info.
-- `plex_search`: Keyword/Boolean and advanced multi-parameter search.
-- `plex_rag`: Indexed semantic search with LanceDB vector storage.
-- `plex_help`: Internal capability discovery and troubleshooting.
+## Quick start
 
-## Deployment
-- **Portmanteau**: All tools follow the rationale-first documentation style.
-- **Build**: Use `just build` to generate `.mcpb` packages.
-- **Transport**: Supports stdio (primary), HTTP, and SSE.
+1. **Desktop (recommended):** [Releases](https://github.com/sandraschi/plex-mcp/releases) → `Plex MCP_*_x64-setup.exe`
+2. **stdio MCP:** `uv run python -m plex_mcp` with `PLEX_TOKEN` and `PLEX_URL`
+3. **Webapp / Tauri:** backend **10740**, frontend **10741** — [docs/WEBAPP.md](docs/WEBAPP.md)
 
-## Technical Details
-- **Base URL**: `http://localhost:32400`
-- **Auth**: `PLEX_TOKEN` env var required.
-- **Frontend**: Vite/React on port 10741.
-- **Backend**: FastAPI on port 10740.
+## Docs (curated)
 
-Copyright (c) 2026 Sandra Schipal. All rights reserved.
+| Doc | Purpose |
+|-----|---------|
+| [README.md](README.md) | Overview, doc map |
+| [docs/README.md](docs/README.md) | Documentation hub |
+| [docs/DOCUMENTATION_INDEX.md](docs/DOCUMENTATION_INDEX.md) | Full index + stale paths |
+| [docs/INSTALL.md](docs/INSTALL.md) | Install paths |
+| [docs/TAURI.md](docs/TAURI.md) | Tauri build (maintainers) |
+| [docs/TOOLS.md](docs/TOOLS.md) | Portmanteau tools |
+| [docs/RAG.md](docs/RAG.md) | Semantic search |
+| [CHANGELOG.md](CHANGELOG.md) | Releases |
+
+Fleet: [mcp-central-docs TAURI_PRODUCTION_PITFALLS](https://github.com/sandraschi/mcp-central-docs/blob/master/standards/TAURI_PRODUCTION_PITFALLS.md)

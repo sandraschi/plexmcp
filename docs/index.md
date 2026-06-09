@@ -2,6 +2,8 @@
 
 **Current hub:** [docs/README.md](README.md) — installation, configuration, tools, RAG, webapp, PRD, troubleshooting.
 
+**Full map:** [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md) — includes archival / fleet-import paths.
+
 **Project overview:** [README.md](../README.md) (repository root).
 
 ## Legacy sections

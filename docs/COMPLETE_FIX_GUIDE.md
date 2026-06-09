@@ -1,5 +1,7 @@
 # PlexMCP Complete Fix Guide - Emergency Reconstruction
 
+> **Archive.** September 2025 emergency rewrite plan — historical only. Install and troubleshoot via [INSTALL.md](INSTALL.md), [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
+
 **Date**: September 6, 2025  
 **Priority**: 🚨 **CRITICAL - COMPLETE REWRITE REQUIRED**  
 **Target**: Production-ready FastMCP 2.10 server  
