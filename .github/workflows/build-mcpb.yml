@@ -1,29 +1,15 @@
 name: Build MCPB Package
 
 on:
-  # Build on version tags (e.g., v1.0.0, v2.0.0)
   push:
     tags:
       - 'v*'
-
-  # Manual build trigger
   workflow_dispatch:
     inputs:
       version:
         description: 'Package version (optional, defaults to run number)'
         required: false
         type: string
-
-  # Build on main branch pushes (for testing)
-  push:
-    branches:
-      - main
-    paths:
-      - 'src/**'
-      - 'manifest.json'
-      - 'mcpb.json'
-      - 'requirements.txt'
-      - 'pyproject.toml'
 
 jobs:
   build:
