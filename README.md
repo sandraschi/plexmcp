@@ -25,17 +25,16 @@
 
 ## Quick Start
 
+Download **`Plex MCP_*_x64-setup.exe`** from [Releases](https://github.com/sandraschi/plex-mcp/releases/latest) → double-click → launch **Plex MCP**. [Install guide](docs/INSTALL.md).
+
+Developers from source:
+
 ```powershell
 git clone https://github.com/sandraschi/plex-mcp
 cd plex-mcp
-just
+just install
+just webapp
 ```
-
-This opens an interactive dashboard showing all available commands. Run `just bootstrap` to install dependencies, then `just serve` or `just dev` to start.
-
-### Manual Setup
-
-If you don't have `just` installed:
 
 ## Documentation map
 
@@ -43,7 +42,7 @@ If you don't have `just` installed:
 |------------|------------------------|
 | [**docs/README.md**](docs/README.md) | **Hub** — every guide in one place |
 | [**docs/QUICKSTART.md**](docs/QUICKSTART.md) | **~60s** — MCP only, web UI, RAG pointer |
-| [**docs/INSTALL.md**](docs/INSTALL.md) | uv, clone, run, Claude Desktop |
+| [**docs/INSTALL.md**](docs/INSTALL.md) | Tauri desktop (primary), uv, clone, MCPB, Claude Desktop |
 | [**docs/PLEX.md**](docs/PLEX.md) | What Plex is, tokens, remote access (plain language) |
 | [**docs/ARCHITECTURE.md**](docs/ARCHITECTURE.md) | How the MCP server, backend, and UI fit together |
 | [**docs/SELF_HOSTING.md**](docs/SELF_HOSTING.md) | Home lab: HTTPS, reverse proxy, secrets, hardening |

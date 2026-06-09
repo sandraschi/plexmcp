@@ -1,27 +1,43 @@
+"use client";
+
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { listLibraries } from "@/utils/api";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 
 function librarySectionId(lib: { id?: string; key?: string }): string {
 	return String(lib.id ?? lib.key ?? "");
 }
 
-export default async function LibrariesPage({
-	searchParams,
-}: {
-	searchParams: Promise<{ library_id?: string }>;
-}) {
-	const { library_id: activeLibraryId } = await searchParams;
-	let data: {
+function LibrariesPageInner() {
+	const searchParams = useSearchParams();
+	const activeLibraryId = searchParams?.get("library_id") ?? undefined;
+
+	const [data, setData] = useState<{
 		success?: boolean;
 		data?: { key?: string; title?: string; type?: string }[];
 		error?: string;
-	} | null = null;
-	try {
-		data = await listLibraries();
-	} catch {
-		data = null;
-	}
+	} | null>(null);
+	const [loading, setLoading] = useState(true);
+
+	useEffect(() => {
+		let cancelled = false;
+		setLoading(true);
+		listLibraries()
+			.then((res) => {
+				if (!cancelled) setData(res);
+			})
+			.catch(() => {
+				if (!cancelled) setData(null);
+			})
+			.finally(() => {
+				if (!cancelled) setLoading(false);
+			});
+		return () => {
+			cancelled = true;
+		};
+	}, []);
 
 	const libraries = (data?.data ?? []) as {
 		key?: string;
@@ -32,7 +48,9 @@ export default async function LibrariesPage({
 	return (
 		<div className="container mx-auto p-6">
 			<h1 className="text-3xl font-bold mb-6 text-slate-100">Libraries</h1>
-			{data === null ? (
+			{loading ? (
+				<p className="text-slate-400">Loading libraries…</p>
+			) : data === null ? (
 				<ErrorBanner
 					title="Could not load libraries"
 					message="Backend unavailable or PLEX_TOKEN not configured."
@@ -86,5 +104,19 @@ export default async function LibrariesPage({
 				</div>
 			)}
 		</div>
+	);
+}
+
+export default function LibrariesPage() {
+	return (
+		<Suspense
+			fallback={
+				<div className="container mx-auto p-6">
+					<p className="text-slate-400">Loading…</p>
+				</div>
+			}
+		>
+			<LibrariesPageInner />
+		</Suspense>
 	);
 }

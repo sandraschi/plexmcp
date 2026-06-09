@@ -1,3 +1,5 @@
+"use client";
+
 import { ArrStackCard } from "@/components/overview/arr-stack-card";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import {
@@ -7,28 +9,41 @@ import {
 } from "@/utils/api";
 import { Library, Search, Server } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 const BACKEND_HINT =
 	"Set PLEX_TOKEN in webapp/backend/.env. Run: cd webapp; powershell -ExecutionPolicy Bypass -File .\\start.ps1";
 
-export default async function Home() {
-	let status: {
+export default function Home() {
+	const [status, setStatus] = useState<{
 		success?: boolean;
 		message?: string;
 		[key: string]: unknown;
-	} | null = null;
-	try {
-		status = await getServerStatus();
-	} catch {
-		status = null;
-	}
+	} | null>(null);
+	const [arrStatus, setArrStatus] = useState<ArrStackResponse | null>(null);
+	const [loading, setLoading] = useState(true);
 
-	let arrStatus: ArrStackResponse | null = null;
-	try {
-		arrStatus = await getArrStackStatus();
-	} catch {
-		arrStatus = null;
-	}
+	useEffect(() => {
+		let cancelled = false;
+		(async () => {
+			try {
+				const s = await getServerStatus();
+				if (!cancelled) setStatus(s);
+			} catch {
+				if (!cancelled) setStatus(null);
+			}
+			try {
+				const a = await getArrStackStatus();
+				if (!cancelled) setArrStatus(a);
+			} catch {
+				if (!cancelled) setArrStatus(null);
+			}
+			if (!cancelled) setLoading(false);
+		})();
+		return () => {
+			cancelled = true;
+		};
+	}, []);
 
 	const cards = [
 		{ href: "/libraries", label: "Libraries", icon: Library },
@@ -40,7 +55,9 @@ export default async function Home() {
 		<main className="min-h-screen">
 			<div className="container mx-auto p-6">
 				<h1 className="text-3xl font-bold mb-2 text-slate-100">Overview</h1>
-				{status === null ? (
+				{loading ? (
+					<p className="text-slate-400 mb-6">Connecting…</p>
+				) : status === null ? (
 					<ErrorBanner
 						title="Backend unavailable"
 						message="Could not connect to PlexMCP backend. Ensure backend is running and PLEX_TOKEN is set."

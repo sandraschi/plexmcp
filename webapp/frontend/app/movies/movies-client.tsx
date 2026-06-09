@@ -37,11 +37,10 @@ interface MoviesClientProps {
 function getPosterUrl(item: Record<string, unknown>): string | null {
 	const thumb = item?.thumb ?? item?.art;
 	if (typeof thumb === "string" && thumb) {
-		const path = thumb.replace(/^\//, "");
-		return path ? `/api/image/${path}` : null;
+		return plexImageUrl(thumb);
 	}
 	const rk = ratingKeyFromItem(item);
-	if (rk) return `/image/library/metadata/${rk}/thumb`;
+	if (rk) return plexImageUrl(`/library/metadata/${rk}/thumb`);
 	return null;
 }
 
@@ -74,6 +73,7 @@ function MovieItem({
 		return (
 			<div
 				key={key}
+				// biome-ignore lint/a11y/useSemanticElements: card shell wraps poster and metadata
 				role="button"
 				tabIndex={0}
 				onClick={onClick}
@@ -119,6 +119,7 @@ function MovieItem({
 	return (
 		<div
 			key={key}
+			// biome-ignore lint/a11y/useSemanticElements: poster card uses grid layout not suited to <button>
 			role="button"
 			tabIndex={0}
 			onClick={onClick}
@@ -273,6 +274,9 @@ function MovieModal({
 		<div
 			className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70"
 			onClick={onClose}
+			onKeyDown={(e) => e.key === "Escape" && onClose()}
+			// biome-ignore lint/a11y/useSemanticElements: modal overlay pattern
+			// biome-ignore lint/a11y/useKeyWithClickEvents: backdrop dismiss
 			role="dialog"
 			aria-modal="true"
 			aria-labelledby="movie-modal-title"
@@ -280,6 +284,7 @@ function MovieModal({
 			<div
 				className="rounded-xl glass-panel border border-slate-600/50 max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-xl"
 				onClick={(e) => e.stopPropagation()}
+				onKeyDown={(e) => e.stopPropagation()}
 			>
 				<div className="grid grid-cols-1 md:grid-cols-3 flex-1 min-h-0">
 					{/* Poster: spans 1 column, wider on md+ */}
@@ -528,8 +533,14 @@ function MoviesClientInner({
 			<div className="mb-6 flex flex-wrap items-center gap-4">
 				{libraries.length > 0 && (
 					<div className="flex items-center gap-2">
-						<label className="text-sm text-slate-400">Library:</label>
+						<label
+							htmlFor="movie-library-select"
+							className="text-sm text-slate-400"
+						>
+							Library:
+						</label>
 						<select
+							id="movie-library-select"
 							value={selectedLibraryId ?? ""}
 							onChange={(e) => handleLibraryChange(e.target.value)}
 							className="px-3 py-2 rounded-lg glass-panel border border-slate-600/50 text-slate-200 text-sm min-w-[180px]"

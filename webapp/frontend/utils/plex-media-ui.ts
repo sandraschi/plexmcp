@@ -1,8 +1,11 @@
+import { API_BASE } from "./api";
+
 /** Plex thumb/art path (e.g. /library/metadata/1/thumb/1) → image proxy URL. */
 export function plexImageUrl(path: string | null | undefined): string | null {
 	if (!path || typeof path !== "string") return null;
 	const p = path.startsWith("/") ? path.slice(1) : path;
-	return p ? `/image/${p}` : null;
+	if (!p) return null;
+	return API_BASE ? `${API_BASE}/image/${p}` : `/image/${p}`;
 }
 
 export function ratingKeyFromItem(

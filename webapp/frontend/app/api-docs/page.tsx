@@ -1,5 +1,6 @@
 "use client";
 
+import { getBaseUrl } from "@/utils/api";
 import { BookOpen, Code2, ExternalLink, RefreshCw } from "lucide-react";
 import { useRef, useState } from "react";
 
@@ -77,11 +78,9 @@ export default function ApiDocsPage() {
 		}
 	};
 
-	const src = view === "swagger" ? "/docs" : "/redoc";
-	const directSrc =
-		view === "swagger"
-			? "http://localhost:10740/docs"
-			: "http://localhost:10740/redoc";
+	const docsBase = getBaseUrl() || "http://127.0.0.1:10740";
+	const src = view === "swagger" ? `${docsBase}/docs` : `${docsBase}/redoc`;
+	const directSrc = src;
 
 	return (
 		<div className="flex flex-col h-full bg-zinc-950">
@@ -92,6 +91,7 @@ export default function ApiDocsPage() {
 
 				<div className="flex items-center bg-zinc-900 border border-zinc-700 rounded-lg p-0.5 ml-2">
 					<button
+						type="button"
 						onClick={() => {
 							setView("swagger");
 							setLoading(true);
@@ -105,6 +105,7 @@ export default function ApiDocsPage() {
 						<Code2 size={12} /> Swagger UI
 					</button>
 					<button
+						type="button"
 						onClick={() => {
 							setView("redoc");
 							setLoading(true);
@@ -121,6 +122,7 @@ export default function ApiDocsPage() {
 
 				<div className="flex items-center gap-2 ml-auto">
 					<button
+						type="button"
 						onClick={() => {
 							setLoading(true);
 							if (iframeRef.current) iframeRef.current.src = src;

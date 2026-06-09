@@ -1,9 +1,12 @@
+"use client";
+
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { getSettings } from "@/utils/api";
+import { useEffect, useState } from "react";
 import { SettingsClient } from "./settings-client";
 
-export default async function SettingsPage() {
-	let settings: {
+export default function SettingsPage() {
+	const [settings, setSettings] = useState<{
 		plex_token_set?: boolean;
 		plex_token?: string | null;
 		plex_url?: string | null;
@@ -14,21 +17,36 @@ export default async function SettingsPage() {
 		tmdb_api_key_set?: boolean;
 		tmdb_api_key?: string | null;
 		api_version?: string;
-	} | null = null;
+	} | null>(null);
+	const [loading, setLoading] = useState(true);
 
-	try {
-		settings = await getSettings();
-	} catch {
-		settings = null;
-	}
+	useEffect(() => {
+		let cancelled = false;
+		getSettings()
+			.then((res) => {
+				if (!cancelled) setSettings(res);
+			})
+			.catch(() => {
+				if (!cancelled) setSettings(null);
+			})
+			.finally(() => {
+				if (!cancelled) setLoading(false);
+			});
+		return () => {
+			cancelled = true;
+		};
+	}, []);
 
 	return (
 		<div className="container mx-auto p-6 max-w-2xl">
 			<h1 className="text-3xl font-bold mb-2 text-slate-100">Settings</h1>
 			<p className="text-slate-500 mb-6">
-				Connection status and client preferences. Backend config is in webapp/backend/.env
+				Connection status and client preferences. Backend config is in
+				webapp/backend/.env
 			</p>
-			{settings === null ? (
+			{loading ? (
+				<p className="text-slate-400">Loading settings…</p>
+			) : settings === null ? (
 				<ErrorBanner
 					title="Could not load settings"
 					message="Backend unavailable."

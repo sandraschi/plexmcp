@@ -1,64 +1,75 @@
-# Installation
+# Installing plex-mcp
 
 Fast path: [**QUICKSTART.md**](QUICKSTART.md). New to Plex or tokens: [**PLEX.md**](PLEX.md). Full map: [**README.md**](README.md) (hub).
 
-## Prerequisites
+## Option A — Desktop app (recommended)
 
-- Python **3.12+**
-- **uv** with `uv.exe` available on your **PATH** (see [Install uv](#install-uv-windows) below)
-- A running **Plex Media Server** and an [X-Plex-Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/)
+**Download, double-click, done.** No Git, no Python, no `just`, no build step.
 
-## Install uv (Windows)
+1. Go to [Releases](https://github.com/sandraschi/plex-mcp/releases/latest)
+2. Download **`Plex MCP_*_x64-setup.exe`**
+3. Double-click the installer → finish the wizard
+4. Set your [Plex token](PLEX.md) if prompted (or in Windows env / app config)
+5. Launch **Plex MCP** from the Start menu
 
-Install the standalone uv toolchain (official script; no pipe):
+That's it. Backend **10740** starts with the app.
+
+**Requirements:** Windows 10/11, a running Plex Media Server, and an X-Plex-Token. [WebView2](https://developer.microsoft.com/microsoft-edge/webview2/) if prompted.
+
+---
+
+## Other install paths
+
+### Prerequisites (Options B–E only)
+
+| Tool | Purpose |
+|------|---------|
+| Git, uv | Clone and run from source |
+| Node.js | Webapp dev |
+| just | Optional dev shortcuts |
+| Plex + [X-Plex-Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/) | API access |
+
+Python **3.12+** for source installs.
+
+---
+
+## Option B — MCPB drag and drop
+
+When published on [Releases](https://github.com/sandraschi/plex-mcp/releases/latest):
+
+1. Download `plex-mcp*.mcpb`
+2. Claude Desktop → Settings → MCP Servers → Install from file
+
+Or build locally: `just build` (see [webapp/README.md](../webapp/README.md)).
+
+---
+
+## Option C — Fastest from source (webapp)
 
 ```powershell
-$uvInstall = Join-Path $env:TEMP "uv-install.ps1"
-Invoke-WebRequest -Uri "https://astral.sh/uv/install.ps1" -OutFile $uvInstall
-powershell -ExecutionPolicy Bypass -File $uvInstall
-Remove-Item $uvInstall
+git clone https://github.com/sandraschi/plex-mcp
+cd plex-mcp
+copy .env.example .env
+# Edit .env — set PLEX_TOKEN, PLEX_URL
+.\start.ps1
 ```
 
-Alternatively, follow [uv installation](https://docs.astral.sh/uv/getting-started/installation/) (including the one-line installer if you prefer).
+Or: `just webapp` — backend **10740**, frontend **10741**.
 
-Close and reopen the terminal (or sign out and back in) so **PATH** updates apply.
+---
 
-Confirm `uv.exe` is on PATH:
-
-```powershell
-where.exe uv
-```
-
-You should see a path such as `...\uv.exe` (often under your user profile). If `where.exe` finds nothing, add the directory that contains `uv.exe` to **PATH** in Environment Variables, or see [uv installation](https://docs.astral.sh/uv/getting-started/installation/) for manual options.
-
-After that, `uv sync`, `uv run`, and `uv pip` work the same whether you type `uv` or `uv.exe`.
-
-## From the repo (development)
+## Option D — MCP stdio only
 
 ```powershell
-git clone https://github.com/sandraschi/plex-mcp.git
+git clone https://github.com/sandraschi/plex-mcp
 cd plex-mcp
 uv sync
-```
-
-Set environment variables (or use a `.env` file in the project root):
-
-| Variable | Purpose |
-|----------|---------|
-| `PLEX_TOKEN` | Required — Plex authentication |
-| `PLEX_URL` or `PLEX_SERVER_URL` | Plex base URL (default `http://127.0.0.1:32400`) |
-
-Run the MCP server (stdio, for Claude Desktop / Cursor):
-
-```powershell
+$env:PLEX_TOKEN = "your-token"
+$env:PLEX_URL = "http://127.0.0.1:32400"
 uv run plex-mcp-advanced
 ```
 
-Equivalent: `python -m plex_mcp` if your environment has the package on `PYTHONPATH`.
-
-## Claude Desktop
-
-Add a server entry that runs the command above with `PLEX_TOKEN` and `PLEX_URL` in `env`. Example (uses `uv.exe` if that is what resolves on PATH):
+Claude Desktop:
 
 ```json
 {
@@ -66,7 +77,7 @@ Add a server entry that runs the command above with `PLEX_TOKEN` and `PLEX_URL` 
     "plex-mcp": {
       "command": "uv",
       "args": ["run", "plex-mcp-advanced"],
-      "cwd": "D:/Dev/repos/plex-mcp",
+      "cwd": "D:/path/to/plex-mcp",
       "env": {
         "PLEX_TOKEN": "your-token",
         "PLEX_URL": "http://127.0.0.1:32400"
@@ -76,31 +87,56 @@ Add a server entry that runs the command above with `PLEX_TOKEN` and `PLEX_URL` 
 }
 ```
 
-Adjust `cwd` and paths for your machine. If the client requires a full path to the executable, use the path reported by `where.exe uv` (the `uv.exe` file).
+---
 
-## PyPI
-
-**Only after** the project is registered on PyPI and a release is published (check [CHANGELOG.md](../CHANGELOG.md) or PyPI for `plex-mcp-advanced`):
+## Option E — Developer mode
 
 ```powershell
-uv pip install plex-mcp-advanced
+winget install Casey.Just
+git clone https://github.com/sandraschi/plex-mcp
+cd plex-mcp
+just install
+just webapp
 ```
 
-or:
+Other recipes: `just start`, `just test`, `just lint`. List all: `just --list`.
+
+**Build the Windows installer** (maintainers only): `just build-native` → [TAURI.md](./TAURI.md).
+
+---
+
+## Install uv (Windows)
+
+If `uv` is not on PATH:
 
 ```powershell
-pip install plex-mcp-advanced
+$uvInstall = Join-Path $env:TEMP "uv-install.ps1"
+Invoke-WebRequest -Uri "https://astral.sh/uv/install.ps1" -OutFile $uvInstall
+powershell -ExecutionPolicy Bypass -File $uvInstall
+Remove-Item $uvInstall
 ```
 
-Until then, install **from the repo** ([From the repo](#from-the-repo-development)) or from a **local wheel / sdist** built with `uv build`, or `pip install` / `uv pip install` from a `git+https://...` URL if you publish tags.
+Confirm: `where.exe uv`
 
-## Webapp (browser UI)
+---
 
-See [webapp/README.md](../webapp/README.md) and [webapp/SETUP.md](../webapp/SETUP.md). From repo root:
+## Verify installation
 
-```powershell
-cd webapp
-powershell -ExecutionPolicy Bypass -File .\start.ps1
-```
+1. Desktop app running — health shows backend on **10740**
+2. `GET http://127.0.0.1:10740/health` → OK
+3. MCP prompt: *List libraries on my Plex server.*
 
-Backend **10740**, frontend **10741** (fleet range). MCP is also mounted at `/mcp` on the backend.
+---
+
+## Troubleshooting
+
+| Issue | Fix |
+|-------|-----|
+| Desktop app won't start | Install [WebView2](https://developer.microsoft.com/microsoft-edge/webview2/) |
+| Plex auth errors | Set `PLEX_TOKEN` — [PLEX.md](PLEX.md) |
+| Port 10740/10741 in use | Stop other fleet service on that port |
+| `just` not found | Use Option A (no just) or Option C without just |
+
+---
+
+*Feature overview: [README.md](../README.md)*

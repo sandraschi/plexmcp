@@ -1,0 +1,39 @@
+{
+	"productName": "Plex MCP",
+	"version": "2.4.1",
+	"identifier": "ai.fleet.plex-mcp",
+	"build": {
+		"frontendDist": "../webapp/frontend/out",
+		"devUrl": "http://localhost:10741",
+		"beforeDevCommand": "npm --prefix ../webapp/frontend run dev"
+	},
+	"app": {
+		"windows": [
+			{
+				"title": "Plex MCP",
+				"width": 1280,
+				"height": 800,
+				"minWidth": 900,
+				"minHeight": 600
+			}
+		],
+		"security": { "csp": null }
+	},
+	"bundle": {
+		"active": true,
+		"targets": "all",
+		"icon": [
+			"icons/32x32.png",
+			"icons/128x128.png",
+			"icons/128x128@2x.png",
+			"icons/icon.icns",
+			"icons/icon.ico"
+		],
+		"resources": ["resources/plex-mcp-backend.exe"]
+	},
+	"plugins": {
+		"shell": { "open": true },
+		"fs": { "requireLiteralLeadingDot": false },
+		"process": { "all": true }
+	}
+}

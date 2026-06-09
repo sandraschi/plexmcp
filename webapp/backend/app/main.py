@@ -112,7 +112,7 @@ app = FastAPI(
 # fastmcp takes ~90s to import and the webapp doesn't use /mcp (tools are
 # called directly via mcp_client.py). We mount in background so the API
 # starts instantly and /mcp becomes available ~90s later.
-import asyncio as _asyncio
+import asyncio as _asyncio  # noqa: E402
 
 _mcp_loaded = False
 
@@ -133,9 +133,11 @@ async def _lazy_mount_mcp():
         logger.error("Could not mount FastMCP HTTP app: %s", e, exc_info=True)
 
 
+_tauri_desktop = os.environ.get("PLEX_TAURI", "").lower() in ("1", "true", "yes")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins_list,
+    allow_origin_regex=r"https?://tauri\.localhost(:\d+)?" if _tauri_desktop else None,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

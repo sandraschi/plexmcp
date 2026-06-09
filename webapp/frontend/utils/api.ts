@@ -1,6 +1,9 @@
+/** Empty in dev (Next rewrites); direct backend URL in production / Tauri. */
+export const API_BASE =
+	process.env.NODE_ENV === "development" ? "" : "http://127.0.0.1:10740";
+
 export function getBaseUrl(): string {
-	if (typeof window !== "undefined") return "";
-	return process.env.NEXT_PUBLIC_APP_URL ?? "http://127.0.0.1:10741";
+	return API_BASE;
 }
 
 export async function getServerStatus() {

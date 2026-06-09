@@ -1,5 +1,6 @@
 """Configuration for PlexMCP webapp backend."""
 
+import os
 from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -15,6 +16,7 @@ class Settings(BaseSettings):
         env_file=_env_path if _env_path.exists() else None,
         env_file_encoding="utf-8",
         case_sensitive=True,
+        extra="ignore",
     )
 
     API_TITLE: str = "PlexMCP Webapp API"
@@ -25,11 +27,22 @@ class Settings(BaseSettings):
     PORT: int = 10740
     RELOAD: bool = True
 
-    CORS_ORIGINS: str = "http://localhost:10741,http://127.0.0.1:10741"
+    CORS_ORIGINS: str = (
+        "http://localhost:10741,http://127.0.0.1:10741,http://tauri.localhost,https://tauri.localhost,tauri://localhost"
+    )
 
     @property
     def cors_origins_list(self) -> list[str]:
-        return [x.strip() for x in self.CORS_ORIGINS.split(",") if x.strip()]
+        origins = [x.strip() for x in self.CORS_ORIGINS.split(",") if x.strip()]
+        if os.environ.get("PLEX_TAURI", "").lower() in ("1", "true", "yes"):
+            for extra in (
+                "http://tauri.localhost",
+                "https://tauri.localhost",
+                "tauri://localhost",
+            ):
+                if extra not in origins:
+                    origins.append(extra)
+        return origins
 
     PLEX_URL: str = "http://localhost:32400"
     PLEX_TOKEN: str = ""

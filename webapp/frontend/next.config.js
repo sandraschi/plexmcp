@@ -1,8 +1,13 @@
 /** @type {import('next').NextConfig} */
+const isTauri = process.env.TAURI_BUILD === "1";
+
 const nextConfig = {
 	reactStrictMode: true,
-	output: "standalone",
+	trailingSlash: isTauri,
+	images: { unoptimized: isTauri },
+	...(isTauri ? { output: "export" } : { output: "standalone" }),
 	async rewrites() {
+		if (isTauri) return [];
 		return [
 			{
 				source: "/api/:path*",

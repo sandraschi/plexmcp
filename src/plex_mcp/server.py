@@ -47,11 +47,17 @@ if not _is_stdio_mode:
     from starlette.applications import Starlette  # noqa: E402
     from starlette.middleware import Middleware  # noqa: E402
     from starlette.middleware.cors import CORSMiddleware  # noqa: E402
-    from starlette.responses import JSONResponse  # noqa: E402
+    from starlette.responses import JSONResponse, Response  # noqa: E402
     from starlette.routing import Mount, Route  # noqa: E402
+
+    from .fleet_tool_metrics import prometheus_metrics_body_and_type  # noqa: E402
 
     async def health(request):
         return JSONResponse({"status": "ok"})
+
+    async def metrics(request):
+        body, media_type = prometheus_metrics_body_and_type()
+        return Response(content=body, media_type=media_type)
 
     _mcp_app = mcp.http_app(
         middleware=[
@@ -65,6 +71,7 @@ if not _is_stdio_mode:
     app = Starlette(
         routes=[
             Route("/health", health),
+            Route("/metrics", metrics),
             Mount("/", app=_mcp_app),
         ]
     )

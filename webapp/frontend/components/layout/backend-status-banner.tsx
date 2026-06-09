@@ -1,5 +1,6 @@
 "use client";
 
+import { API_BASE } from "@/utils/api";
 import { useCallback, useEffect, useState } from "react";
 
 const POLL_MS = 20000;
@@ -12,7 +13,7 @@ export function BackendStatusBanner() {
 
 	const check = useCallback(async () => {
 		try {
-			const res = await fetch("/api/health", {
+			const res = await fetch(`${API_BASE}/health`, {
 				cache: "no-store",
 				method: "GET",
 			});

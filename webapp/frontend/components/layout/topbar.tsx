@@ -1,5 +1,6 @@
 "use client";
 
+import { API_BASE } from "@/utils/api";
 import {
 	ChevronDown,
 	Container,
@@ -122,7 +123,7 @@ export function Topbar() {
 		}
 		setLaunchModal({ label: app.label, url, status: "starting" });
 		try {
-			const r = await fetch("/api/webapp-launch", {
+			const r = await fetch(`${API_BASE}/api/webapp-launch`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ port: app.port }),
@@ -260,10 +261,9 @@ export function Topbar() {
 			{showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
 			{showLogger && <LoggerModal onClose={() => setShowLogger(false)} />}
 			{launchModal && (
-				<div
-					className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50"
-					role="dialog"
-					aria-modal="true"
+				<dialog
+					open
+					className="fixed inset-0 z-[100] m-0 flex h-full w-full max-h-none max-w-none items-center justify-center border-0 bg-black/50 p-0"
 				>
 					<div className="rounded-lg glass-panel border border-slate-600/50 shadow-xl px-6 py-4 max-w-sm text-center">
 						{launchModal.status === "starting" && (
@@ -298,7 +298,7 @@ export function Topbar() {
 							</>
 						)}
 					</div>
-				</div>
+				</dialog>
 			)}
 		</>
 	);

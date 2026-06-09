@@ -1,54 +1,101 @@
+"use client";
+
 import { getSemanticSearch, getSettings, search } from "@/utils/api";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 import SearchClient from "./search-client";
 
-export default async function SearchPage({
-	searchParams,
-}: {
-	searchParams: Promise<{ query?: string; library_id?: string; mode?: string }>;
-}) {
-	const params = await searchParams;
-	let results: any = null;
-	const mode = params.mode || "context";
-	let plexUrl: string | null = null;
-	try {
-		const settings = await getSettings();
-		const url = settings?.plex_url;
-		plexUrl = typeof url === "string" && url.trim() ? url.trim() : null;
-	} catch {
-		plexUrl = null;
-	}
+function SearchPageInner() {
+	const searchParams = useSearchParams();
+	const query = searchParams?.get("query") ?? undefined;
+	const libraryId = searchParams?.get("library_id") ?? undefined;
+	const mode = searchParams?.get("mode") || "context";
 
-	if (params.query) {
-		try {
-			if (mode === "dialogue") {
-				const semantic = await getSemanticSearch({
-					query: params.query,
-					limit: 50,
-					index: "subtitles",
-				});
-				results = semantic.results;
-			} else {
-				results = await search({
-					query: params.query,
-					library_id: params.library_id,
-					limit: 50,
-				});
+	const [results, setResults] = useState<unknown[]>([]);
+	const [plexUrl, setPlexUrl] = useState<string | null>(null);
+	const [loading, setLoading] = useState(Boolean(query));
+
+	useEffect(() => {
+		let cancelled = false;
+		(async () => {
+			try {
+				const settings = await getSettings();
+				const url = settings?.plex_url;
+				if (!cancelled) {
+					setPlexUrl(typeof url === "string" && url.trim() ? url.trim() : null);
+				}
+			} catch {
+				if (!cancelled) setPlexUrl(null);
 			}
-		} catch (e) {
-			console.error("Search error:", e);
-			results = [];
-		}
-	}
 
-	const movies = Array.isArray(results) ? results : results?.results || results?.data || [];
+			if (!query) {
+				if (!cancelled) {
+					setResults([]);
+					setLoading(false);
+				}
+				return;
+			}
+
+			setLoading(true);
+			try {
+				if (mode === "dialogue") {
+					const semantic = await getSemanticSearch({
+						query,
+						limit: 50,
+						index: "subtitles",
+					});
+					if (!cancelled) setResults(semantic.results ?? []);
+				} else {
+					const res = await search({
+						query,
+						library_id: libraryId,
+						limit: 50,
+					});
+					const movies = Array.isArray(res)
+						? res
+						: res?.results || res?.data || [];
+					if (!cancelled) setResults(movies);
+				}
+			} catch {
+				if (!cancelled) setResults([]);
+			} finally {
+				if (!cancelled) setLoading(false);
+			}
+		})();
+		return () => {
+			cancelled = true;
+		};
+	}, [query, libraryId, mode]);
+
+	if (loading && query) {
+		return (
+			<div className="container mx-auto p-6">
+				<p className="text-slate-400">Searching…</p>
+			</div>
+		);
+	}
 
 	return (
 		<SearchClient
-			results={movies}
-			query={params.query}
-			libraryId={params.library_id}
+			results={results}
+			query={query}
+			libraryId={libraryId}
 			mode={mode}
 			plexUrl={plexUrl}
 		/>
+	);
+}
+
+export default function SearchPage() {
+	return (
+		<Suspense
+			fallback={
+				<div className="container mx-auto p-6">
+					<p className="text-slate-400">Loading…</p>
+				</div>
+			}
+		>
+			<SearchPageInner />
+		</Suspense>
 	);
 }

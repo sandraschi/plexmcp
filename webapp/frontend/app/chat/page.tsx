@@ -1,5 +1,6 @@
 "use client";
 
+import { API_BASE } from "@/utils/api";
 import { useEffect, useRef, useState } from "react";
 
 interface Message {
@@ -58,12 +59,13 @@ export default function ChatPage() {
 	const bottomRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
-		fetch("/api/llm/models")
+		fetch(`${API_BASE}/api/llm/models`)
 			.then((r) => r.json())
 			.then((d: { models?: string[] }) => setModels(d.models ?? []))
 			.catch(() => {});
 	}, []);
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: scroll when message list changes
 	useEffect(() => {
 		bottomRef.current?.scrollIntoView({ behavior: "smooth" });
 	}, [messages]);
@@ -72,7 +74,7 @@ export default function ChatPage() {
 		if (!input.trim() || refining) return;
 		setRefining(true);
 		try {
-			const res = await fetch("/api/llm/refine", {
+			const res = await fetch(`${API_BASE}/api/llm/refine`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ text: input.trim(), model }),
@@ -126,7 +128,7 @@ export default function ChatPage() {
 			? [{ role: "system" as const, content: preprompt }, ...messages, userMsg]
 			: [...messages, userMsg];
 		try {
-			const res = await fetch("/api/llm/chat", {
+			const res = await fetch(`${API_BASE}/api/llm/chat`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
@@ -189,10 +191,14 @@ export default function ChatPage() {
 			<h1 className="text-3xl font-bold mb-4 text-slate-100">Chat</h1>
 			<div className="flex flex-wrap gap-4 mb-4 items-end">
 				<div>
-					<label className="block text-sm text-slate-400 mb-1">
+					<label
+						htmlFor="chat-personality"
+						className="block text-sm text-slate-400 mb-1"
+					>
 						Personality
 					</label>
 					<select
+						id="chat-personality"
 						value={personality}
 						onChange={(e) => setPersonality(e.target.value)}
 						className="px-4 py-2 rounded-lg glass-panel border border-slate-600/50 text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber"
@@ -205,8 +211,14 @@ export default function ChatPage() {
 					</select>
 				</div>
 				<div>
-					<label className="block text-sm text-slate-400 mb-1">Model</label>
+					<label
+						htmlFor="chat-model"
+						className="block text-sm text-slate-400 mb-1"
+					>
+						Model
+					</label>
 					<select
+						id="chat-model"
 						value={model}
 						onChange={(e) => setModel(e.target.value)}
 						className="px-4 py-2 rounded-lg glass-panel border border-slate-600/50 text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber min-w-[140px]"
@@ -250,7 +262,7 @@ export default function ChatPage() {
 				)}
 				{messages.map((msg, i) => (
 					<div
-						key={i}
+						key={`${msg.role}-${i}-${msg.content?.slice(0, 24) ?? ""}`}
 						className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
 					>
 						<div
