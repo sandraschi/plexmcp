@@ -51,9 +51,7 @@ function SearchPageInner() {
 						library_id: libraryId,
 						limit: 50,
 					});
-					const movies = Array.isArray(res)
-						? res
-						: res?.results || res?.data || [];
+					const movies = Array.isArray(res) ? res : res?.results || res?.data || [];
 					if (!cancelled) setResults(movies);
 				}
 			} catch {

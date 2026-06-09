@@ -1,6 +1,5 @@
 /** Empty in dev (Next rewrites); direct backend URL in production / Tauri. */
-export const API_BASE =
-	process.env.NODE_ENV === "development" ? "" : "http://127.0.0.1:10740";
+export const API_BASE = process.env.NODE_ENV === "development" ? "" : "http://127.0.0.1:10740";
 
 export function getBaseUrl(): string {
 	return API_BASE;
@@ -110,9 +109,7 @@ export async function getMovies(params?: {
 export async function getMediaDetail(
 	ratingKey: string,
 ): Promise<{ success: boolean; data: Record<string, unknown> }> {
-	const res = await fetch(
-		`${getBaseUrl()}/api/media/${encodeURIComponent(ratingKey)}`,
-	);
+	const res = await fetch(`${getBaseUrl()}/api/media/${encodeURIComponent(ratingKey)}`);
 	if (!res.ok) {
 		const raw = await res.text();
 		const looksLikeHtml = /<!DOCTYPE|<\s*html[\s>]/i.test(raw);
@@ -208,9 +205,7 @@ export async function getLlmModels(params?: {
 	if (params?.provider) sp.set("provider", params.provider);
 	if (params?.base_url) sp.set("base_url", params.base_url);
 	const qs = sp.toString();
-	const res = await fetch(
-		`${getBaseUrl()}/api/llm/models${qs ? `?${qs}` : ""}`,
-	);
+	const res = await fetch(`${getBaseUrl()}/api/llm/models${qs ? `?${qs}` : ""}`);
 	if (!res.ok) throw new Error(await res.text());
 	return res.json();
 }
@@ -270,16 +265,13 @@ export async function getRagSyncStatus(): Promise<RagSyncProgress> {
 }
 
 /** Starts background reindex; poll {@link getRagSyncStatus} until phase is complete or error. */
-export async function startRagSync(
-	type: "metadata" | "subtitles" = "metadata",
-): Promise<{
+export async function startRagSync(type: "metadata" | "subtitles" = "metadata"): Promise<{
 	success: boolean;
 	started?: boolean;
 	already_running?: boolean;
 	error?: string | null;
 }> {
-	const endpoint =
-		type === "metadata" ? "/api/rag/sync" : "/api/rag/sync/subtitles";
+	const endpoint = type === "metadata" ? "/api/rag/sync" : "/api/rag/sync/subtitles";
 	const res = await fetch(`${getBaseUrl()}${endpoint}`, { method: "POST" });
 	const data = (await res.json().catch(() => ({}))) as {
 		already_running?: boolean;
@@ -295,9 +287,7 @@ export async function startRagSync(
 	}
 	if (!res.ok) {
 		throw new Error(
-			typeof data.error === "string"
-				? data.error
-				: (await res.text()) || `HTTP ${res.status}`,
+			typeof data.error === "string" ? data.error : (await res.text()) || `HTTP ${res.status}`,
 		);
 	}
 	return data as { success: boolean; started?: boolean; error?: string | null };

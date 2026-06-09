@@ -12,25 +12,17 @@ const DEFAULT_LIMIT = 24;
 function MoviesPageInner() {
 	const searchParams = useSearchParams();
 	const libraryId = searchParams?.get("library_id") ?? undefined;
-	const page = Math.max(
-		1,
-		Number.parseInt(searchParams?.get("page") ?? "1", 10) || 1,
-	);
+	const page = Math.max(1, Number.parseInt(searchParams?.get("page") ?? "1", 10) || 1);
 	const limit = Math.min(
 		200,
 		Math.max(
 			1,
-			Number.parseInt(
-				searchParams?.get("limit") ?? String(DEFAULT_LIMIT),
-				10,
-			) || DEFAULT_LIMIT,
+			Number.parseInt(searchParams?.get("limit") ?? String(DEFAULT_LIMIT), 10) || DEFAULT_LIMIT,
 		),
 	);
 	const offset = (page - 1) * limit;
 
-	const [libraries, setLibraries] = useState<
-		{ key?: string; title?: string; type?: string }[]
-	>([]);
+	const [libraries, setLibraries] = useState<{ key?: string; title?: string; type?: string }[]>([]);
 	const [moviesData, setMoviesData] = useState<{
 		success?: boolean;
 		data?: unknown[];
@@ -91,9 +83,7 @@ function MoviesPageInner() {
 		};
 	}, [libraryId, limit, offset]);
 
-	const movieLibraries = libraries.filter(
-		(l) => (l.type ?? "").toLowerCase() === "movie",
-	);
+	const movieLibraries = libraries.filter((l) => (l.type ?? "").toLowerCase() === "movie");
 	const items = moviesData?.data ?? moviesData?.results ?? ([] as unknown[]);
 	const hasNext = items.length === limit;
 

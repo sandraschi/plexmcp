@@ -51,7 +51,7 @@ def create_test_video():
             str(video_path),
         ]
 
-        result = subprocess.run(cmd, capture_output=True, text=True)
+        result = subprocess.run(cmd, capture_output=True, text=True)  # noqa: S603
         if result.returncode == 0:
             print(f"Created test video: {video_path} ({video_path.stat().st_size} bytes)")
             return video_path

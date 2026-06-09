@@ -17,7 +17,7 @@ import { MediaProbeView } from "./media-probe-view";
 import { RepairControls } from "./repair-controls";
 import { StreamingLog } from "./streaming-log";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:10740";
+import { API_BASE } from "@/utils/api";
 
 export function RepairDashboard() {
 	const [libraries, setLibraries] = useState<any[]>([]);

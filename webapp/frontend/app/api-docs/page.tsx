@@ -111,9 +111,7 @@ export default function ApiDocsPage() {
 							setLoading(true);
 						}}
 						className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-							view === "redoc"
-								? "bg-amber-500 text-zinc-950"
-								: "text-zinc-400 hover:text-zinc-200"
+							view === "redoc" ? "bg-amber-500 text-zinc-950" : "text-zinc-400 hover:text-zinc-200"
 						}`}
 					>
 						<BookOpen size={12} /> ReDoc
@@ -145,9 +143,7 @@ export default function ApiDocsPage() {
 			{/* Quick-ref strip */}
 			<div className="flex items-center gap-2 px-5 py-2 border-b border-zinc-800 shrink-0 overflow-x-auto">
 				<span className="text-xs text-zinc-600 shrink-0">Backend:</span>
-				<code className="text-xs text-amber-400 font-mono shrink-0">
-					http://localhost:10740
-				</code>
+				<code className="text-xs text-amber-400 font-mono shrink-0">http://localhost:10740</code>
 				<span className="text-zinc-700 mx-1">·</span>
 				{[
 					["GET", "/api/libraries", "blue"],
@@ -174,9 +170,7 @@ export default function ApiDocsPage() {
 					</a>
 				))}
 				<span className="text-zinc-700 mx-1">·</span>
-				<span className="text-xs text-zinc-600 shrink-0 italic">
-					+more — see Swagger
-				</span>
+				<span className="text-xs text-zinc-600 shrink-0 italic">+more — see Swagger</span>
 			</div>
 
 			{/* Iframe */}

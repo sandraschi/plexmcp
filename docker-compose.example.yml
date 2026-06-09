@@ -15,6 +15,9 @@ services:
   plexmcp-api:
     image: python:3.12-bookworm
     working_dir: /repo
+    labels:
+      monitoring.unified: "true"
+      monitoring.job: "plex-mcp"
     ports:
       - "10740:10740"
     environment:

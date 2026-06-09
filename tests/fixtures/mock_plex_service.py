@@ -55,7 +55,10 @@ def build_mock_plex_service() -> MagicMock:
     svc.get_libraries = AsyncMock(return_value=lib_row)
     svc.list_libraries = AsyncMock(return_value=lib_row)
     svc.get_library = AsyncMock(
-        side_effect=lambda library_id: next((l for l in lib_row if l["id"] == library_id), None)
+        side_effect=lambda library_id: next(
+            (lib for lib in lib_row if lib["id"] == library_id),
+            None,
+        )
     )
     svc.get_server_status = AsyncMock(return_value=status)
 

@@ -86,6 +86,7 @@ docs-private/
 # Node / Next.js
 node_modules/
 .next/
+webapp/frontend/out/
 webapp/frontend/.next/
 webapp/backend/.next/
 **/tsconfig.tsbuildinfo

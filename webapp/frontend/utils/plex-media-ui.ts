@@ -8,9 +8,7 @@ export function plexImageUrl(path: string | null | undefined): string | null {
 	return API_BASE ? `${API_BASE}/image/${p}` : `/image/${p}`;
 }
 
-export function ratingKeyFromItem(
-	item: Record<string, unknown> | null | undefined,
-): string | null {
+export function ratingKeyFromItem(item: Record<string, unknown> | null | undefined): string | null {
 	if (!item) return null;
 	const rk = item.ratingKey ?? item.rating_key ?? item.id;
 	if (rk == null || rk === "") return null;
@@ -31,9 +29,7 @@ export function plexWebDetailsUrl(
 /**
  * Plex duration may be milliseconds (raw API) or minutes (formatted from get_details).
  */
-export function formatRuntimeMinutes(
-	duration: number | null | undefined,
-): string | null {
+export function formatRuntimeMinutes(duration: number | null | undefined): string | null {
 	if (duration == null || !Number.isFinite(Number(duration))) return null;
 	const d = Number(duration);
 	const minutes = d > 100_000 ? d / 60_000 : d;
@@ -59,10 +55,7 @@ const NON_PLOT_MARKERS: RegExp[] = [
  * Returns a short plain-text snippet for cards/modals, or null if missing or unusable.
  * Only accepts real strings — objects/arrays are ignored (avoids huge JSON in the UI).
  */
-export function safeMediaBlurb(
-	value: unknown,
-	maxChars: number,
-): string | null {
+export function safeMediaBlurb(value: unknown, maxChars: number): string | null {
 	if (value == null) return null;
 	if (typeof value !== "string") return null;
 	const t = value.trim().replace(/\s+/g, " ");

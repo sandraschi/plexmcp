@@ -98,9 +98,7 @@ export function SettingsClient({ settings }: SettingsClientProps) {
 		setLlmProvider(p);
 		setLlmBaseUrl(u);
 		if (typeof window !== "undefined") {
-			setDefaultMoviesLibrary(
-				localStorage.getItem(DEFAULT_MOVIES_LIBRARY_KEY) ?? "",
-			);
+			setDefaultMoviesLibrary(localStorage.getItem(DEFAULT_MOVIES_LIBRARY_KEY) ?? "");
 			setDefaultLlmModel(localStorage.getItem(DEFAULT_LLM_MODEL_KEY) ?? "");
 		}
 		void loadModels(p, u);
@@ -108,10 +106,7 @@ export function SettingsClient({ settings }: SettingsClientProps) {
 
 	// Re-elicit when provider or base_url changes (500ms debounce)
 	useEffect(() => {
-		const timer = setTimeout(
-			() => void loadModels(llmProvider, llmBaseUrl),
-			500,
-		);
+		const timer = setTimeout(() => void loadModels(llmProvider, llmBaseUrl), 500);
 		return () => clearTimeout(timer);
 	}, [llmProvider, llmBaseUrl, loadModels]);
 
@@ -197,13 +192,9 @@ export function SettingsClient({ settings }: SettingsClientProps) {
 			await updateSettings(body);
 			if (typeof window !== "undefined") {
 				if (defaultMoviesLibrary)
-					localStorage.setItem(
-						DEFAULT_MOVIES_LIBRARY_KEY,
-						defaultMoviesLibrary,
-					);
+					localStorage.setItem(DEFAULT_MOVIES_LIBRARY_KEY, defaultMoviesLibrary);
 				else localStorage.removeItem(DEFAULT_MOVIES_LIBRARY_KEY);
-				if (defaultLlmModel)
-					localStorage.setItem(DEFAULT_LLM_MODEL_KEY, defaultLlmModel);
+				if (defaultLlmModel) localStorage.setItem(DEFAULT_LLM_MODEL_KEY, defaultLlmModel);
 				else localStorage.removeItem(DEFAULT_LLM_MODEL_KEY);
 			}
 			setMessage({ type: "ok", text: "Settings saved." });
@@ -229,25 +220,19 @@ export function SettingsClient({ settings }: SettingsClientProps) {
 				<h2 className="text-lg font-semibold text-amber mb-4">Plex</h2>
 				<div className="space-y-4">
 					<div>
-						<label className="block text-sm text-slate-400 mb-1">
-							API key (X-Plex-Token)
-						</label>
+						<label className="block text-sm text-slate-400 mb-1">API key (X-Plex-Token)</label>
 						<input
 							type="password"
 							value={plexToken}
 							onChange={(e) => setPlexToken(e.target.value)}
 							placeholder={
-								settings.plex_token_set
-									? "Leave blank to keep current"
-									: "Your Plex token"
+								settings.plex_token_set ? "Leave blank to keep current" : "Your Plex token"
 							}
 							className="w-full px-4 py-2 rounded-lg glass-panel border border-slate-600/50 text-slate-200 placeholder-slate-500 text-sm"
 						/>
 					</div>
 					<div>
-						<label className="block text-sm text-slate-400 mb-1">
-							Plex URL
-						</label>
+						<label className="block text-sm text-slate-400 mb-1">Plex URL</label>
 						<input
 							type="url"
 							value={plexUrl}
@@ -260,12 +245,9 @@ export function SettingsClient({ settings }: SettingsClientProps) {
 			</section>
 
 			<section className="rounded-xl glass-panel border border-slate-600/50 p-6">
-				<h2 className="text-lg font-semibold text-amber mb-2">
-					TMDB (AI context)
-				</h2>
+				<h2 className="text-lg font-semibold text-amber mb-2">TMDB (AI context)</h2>
 				<p className="text-xs text-slate-500 mb-4">
-					Optional v3 API key for movie/TV match, poster, and overview in the AI
-					context panel.{" "}
+					Optional v3 API key for movie/TV match, poster, and overview in the AI context panel.{" "}
 					<a
 						href="https://www.themoviedb.org/settings/api"
 						target="_blank"
@@ -276,9 +258,7 @@ export function SettingsClient({ settings }: SettingsClientProps) {
 					</a>
 				</p>
 				<div>
-					<label className="block text-sm text-slate-400 mb-1">
-						TMDB API key
-					</label>
+					<label className="block text-sm text-slate-400 mb-1">TMDB API key</label>
 					<input
 						type="password"
 						value={tmdbApiKey}
@@ -297,9 +277,7 @@ export function SettingsClient({ settings }: SettingsClientProps) {
 				<h2 className="text-lg font-semibold text-amber mb-4">LLM</h2>
 				<div className="space-y-4">
 					<div>
-						<label className="block text-sm text-slate-400 mb-1">
-							Provider
-						</label>
+						<label className="block text-sm text-slate-400 mb-1">Provider</label>
 						<select
 							value={llmProvider}
 							onChange={(e) => setLlmProvider(e.target.value)}
@@ -311,9 +289,7 @@ export function SettingsClient({ settings }: SettingsClientProps) {
 						</select>
 					</div>
 					<div>
-						<label className="block text-sm text-slate-400 mb-1">
-							Base URL
-						</label>
+						<label className="block text-sm text-slate-400 mb-1">Base URL</label>
 						<input
 							type="url"
 							value={llmBaseUrl}
@@ -323,17 +299,13 @@ export function SettingsClient({ settings }: SettingsClientProps) {
 						/>
 					</div>
 					<div>
-						<label className="block text-sm text-slate-400 mb-1">
-							API key (optional)
-						</label>
+						<label className="block text-sm text-slate-400 mb-1">API key (optional)</label>
 						<input
 							type="password"
 							value={llmApiKey}
 							onChange={(e) => setLlmApiKey(e.target.value)}
 							placeholder={
-								settings.llm_api_key_set
-									? "Leave blank to keep current"
-									: "For OpenAI-compatible"
+								settings.llm_api_key_set ? "Leave blank to keep current" : "For OpenAI-compatible"
 							}
 							className="w-full px-4 py-2 rounded-lg glass-panel border border-slate-600/50 text-slate-200 placeholder-slate-500 text-sm"
 						/>
@@ -354,9 +326,7 @@ export function SettingsClient({ settings }: SettingsClientProps) {
 								</option>
 							))}
 						</select>
-						{modelError && (
-							<p className="text-red-400 text-xs mt-1">{modelError}</p>
-						)}
+						{modelError && <p className="text-red-400 text-xs mt-1">{modelError}</p>}
 						<p className="text-xs text-slate-500 mt-1">
 							Fetched from LLM endpoint
 							{models.length > 0 ? ` (${models.length} available)` : ""}.{" "}
@@ -373,17 +343,13 @@ export function SettingsClient({ settings }: SettingsClientProps) {
 			</section>
 
 			<section className="rounded-xl glass-panel border border-slate-600/50 p-6">
-				<h2 className="text-lg font-semibold text-amber mb-2">
-					*arr stack (optional)
-				</h2>
+				<h2 className="text-lg font-semibold text-amber mb-2">*arr stack (optional)</h2>
 				<p className="text-sm text-slate-500 mb-4">
-					Base URL and API key for each app (in Radarr/Sonarr/Lidarr: Settings →
-					General → Security). These usually run in Docker as part of a media
-					stack; use the URL that works from this machine (e.g.{" "}
-					<code className="text-amber text-xs">http://127.0.0.1:7878</code> if
-					published on the host, or your Traefik hostname). Read-only status for
-					the Overview page and MCP{" "}
-					<code className="text-amber text-xs">arr_stack</code>.
+					Base URL and API key for each app (in Radarr/Sonarr/Lidarr: Settings → General →
+					Security). These usually run in Docker as part of a media stack; use the URL that works
+					from this machine (e.g. <code className="text-amber text-xs">http://127.0.0.1:7878</code>{" "}
+					if published on the host, or your Traefik hostname). Read-only status for the Overview
+					page and MCP <code className="text-amber text-xs">arr_stack</code>.
 				</p>
 				<div className="space-y-6">
 					<div className="space-y-2">
@@ -400,9 +366,7 @@ export function SettingsClient({ settings }: SettingsClientProps) {
 							value={radarrApiKey}
 							onChange={(e) => setRadarrApiKey(e.target.value)}
 							placeholder={
-								settings.radarr_api_key_set
-									? "Leave blank to keep current API key"
-									: "API key"
+								settings.radarr_api_key_set ? "Leave blank to keep current API key" : "API key"
 							}
 							className="w-full px-4 py-2 rounded-lg glass-panel border border-slate-600/50 text-slate-200 placeholder-slate-500 text-sm"
 						/>
@@ -421,9 +385,7 @@ export function SettingsClient({ settings }: SettingsClientProps) {
 							value={sonarrApiKey}
 							onChange={(e) => setSonarrApiKey(e.target.value)}
 							placeholder={
-								settings.sonarr_api_key_set
-									? "Leave blank to keep current API key"
-									: "API key"
+								settings.sonarr_api_key_set ? "Leave blank to keep current API key" : "API key"
 							}
 							className="w-full px-4 py-2 rounded-lg glass-panel border border-slate-600/50 text-slate-200 placeholder-slate-500 text-sm"
 						/>
@@ -442,9 +404,7 @@ export function SettingsClient({ settings }: SettingsClientProps) {
 							value={lidarrApiKey}
 							onChange={(e) => setLidarrApiKey(e.target.value)}
 							placeholder={
-								settings.lidarr_api_key_set
-									? "Leave blank to keep current API key"
-									: "API key"
+								settings.lidarr_api_key_set ? "Leave blank to keep current API key" : "API key"
 							}
 							className="w-full px-4 py-2 rounded-lg glass-panel border border-slate-600/50 text-slate-200 placeholder-slate-500 text-sm"
 						/>
@@ -453,13 +413,10 @@ export function SettingsClient({ settings }: SettingsClientProps) {
 			</section>
 
 			<section className="rounded-xl glass-panel border border-slate-600/50 p-6">
-				<h2 className="text-lg font-semibold text-amber mb-4">
-					RAG / Indexing
-				</h2>
+				<h2 className="text-lg font-semibold text-amber mb-4">RAG / Indexing</h2>
 				<p className="text-sm text-slate-400 mb-3">
-					Sync Plex metadata into the semantic search index. Use after adding
-					libraries or when search is stale. First run may download the
-					embedding model.
+					Sync Plex metadata into the semantic search index. Use after adding libraries or when
+					search is stale. First run may download the embedding model.
 				</p>
 				<button
 					type="button"
@@ -480,9 +437,7 @@ export function SettingsClient({ settings }: SettingsClientProps) {
 			</section>
 
 			<section className="rounded-xl glass-panel border border-slate-600/50 p-6">
-				<h2 className="text-lg font-semibold text-amber mb-4">
-					Client preferences
-				</h2>
+				<h2 className="text-lg font-semibold text-amber mb-4">Client preferences</h2>
 				<div className="space-y-2">
 					<label className="block text-sm text-slate-400">
 						Default movies library (saved in browser)
@@ -498,13 +453,7 @@ export function SettingsClient({ settings }: SettingsClientProps) {
 			</section>
 
 			{message && (
-				<p
-					className={
-						message.type === "ok"
-							? "text-green-400 text-sm"
-							: "text-amber text-sm"
-					}
-				>
+				<p className={message.type === "ok" ? "text-green-400 text-sm" : "text-amber text-sm"}>
 					{message.text}
 				</p>
 			)}

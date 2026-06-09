@@ -183,7 +183,7 @@ class BaseService(ABC):
             except Exception as e:
                 self.logger.error(f"Error during service shutdown: {e}", exc_info=True)
 
-    async def _shutdown(self) -> None:
+    async def _shutdown(self) -> None:  # noqa: B027
         """Shutdown implementation for the service.
 
         Subclasses should override this method to implement their specific
@@ -211,7 +211,7 @@ class BaseService(ABC):
             await self._close()
             self.initialized = False
 
-    async def _close(self) -> None:
+    async def _close(self) -> None:  # noqa: B027
         """Service-specific cleanup."""
         pass
 

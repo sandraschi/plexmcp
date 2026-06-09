@@ -41,8 +41,7 @@ export default function SettingsPage() {
 		<div className="container mx-auto p-6 max-w-2xl">
 			<h1 className="text-3xl font-bold mb-2 text-slate-100">Settings</h1>
 			<p className="text-slate-500 mb-6">
-				Connection status and client preferences. Backend config is in
-				webapp/backend/.env
+				Connection status and client preferences. Backend config is in webapp/backend/.env
 			</p>
 			{loading ? (
 				<p className="text-slate-400">Loading settings…</p>

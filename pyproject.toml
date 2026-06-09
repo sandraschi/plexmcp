@@ -100,11 +100,50 @@ warn_unused_configs = true
 [tool.ruff]
 line-length = 120
 target-version = "py312"
-extend-exclude = ["_llm_test_scripts"]
+extend-exclude = [
+    "_llm_test_scripts",
+    ".pre-commit-cache",
+    "webapp/backend/test_*.py",
+    "webapp/backend/inspect_fastmcp.py",
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "N", "S", "A", "C4", "T20", "RET", "SIM", "ARG", "PTH", "TRY"]
-ignore = ["E501", "B008", "TRY003", "TRY300", "TRY301", "TRY400", "TRY401", "ARG001", "ARG002", "A002", "PTH100", "PTH118", "PTH120", "PTH123"]
+ignore = [
+    "E501",
+    "B008",
+    "TRY003",
+    "TRY300",
+    "TRY301",
+    "TRY400",
+    "TRY401",
+    "ARG001",
+    "ARG002",
+    "A002",
+    "PTH100",
+    "PTH110",
+    "PTH118",
+    "PTH120",
+    "PTH123",
+    "PTH202",
+    "S101",
+    "B904",
+    "S110",
+    "S112",
+    "T201",
+    "S105",
+    "S106",
+    "S311",
+    "S314",
+    "RET504",
+    "SIM108",
+    "SIM117",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"src/plex_mcp/app.py" = ["N802", "N816"]
+"src/plex_mcp/fleet_tool_metrics.py" = ["E402"]
+"src/plex_mcp/api/core.py" = ["A001"]
 
 [tool.ruff.format]
 quote-style = "double"

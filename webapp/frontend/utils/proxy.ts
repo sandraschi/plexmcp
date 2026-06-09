@@ -96,8 +96,7 @@ export async function proxyPost(
 			return NextResponse.json(errBody, { status: res.status });
 		}
 		const text = await res.text();
-		if (!text)
-			return NextResponse.json({ error: "Empty response" }, { status: 502 });
+		if (!text) return NextResponse.json({ error: "Empty response" }, { status: 502 });
 		const data = JSON.parse(text);
 		return NextResponse.json(data);
 	} catch (e) {

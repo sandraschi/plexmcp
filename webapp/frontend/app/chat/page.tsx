@@ -65,7 +65,6 @@ export default function ChatPage() {
 			.catch(() => {});
 	}, []);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: scroll when message list changes
 	useEffect(() => {
 		bottomRef.current?.scrollIntoView({ behavior: "smooth" });
 	}, [messages]);
@@ -95,9 +94,7 @@ export default function ChatPage() {
 						[
 							messages
 								.map((m) =>
-									m.role === "user"
-										? `**You:** ${m.content}`
-										: `**Assistant:** ${m.content}`,
+									m.role === "user" ? `**You:** ${m.content}` : `**Assistant:** ${m.content}`,
 								)
 								.join("\n\n"),
 						],
@@ -122,8 +119,7 @@ export default function ChatPage() {
 		setInput("");
 		setLoading(true);
 
-		const preprompt =
-			PERSONALITIES.find((p) => p.id === personality)?.preprompt ?? "";
+		const preprompt = PERSONALITIES.find((p) => p.id === personality)?.preprompt ?? "";
 		const messagesToSend = preprompt
 			? [{ role: "system" as const, content: preprompt }, ...messages, userMsg]
 			: [...messages, userMsg];
@@ -155,23 +151,12 @@ export default function ChatPage() {
 				return;
 			}
 			if (data.error) {
-				setMessages((m) => [
-					...m,
-					{ role: "assistant", content: `Error: ${data.error}` },
-				]);
+				setMessages((m) => [...m, { role: "assistant", content: `Error: ${data.error}` }]);
 			} else {
 				const msg = data.message as { content?: string } | undefined;
-				const choices = data.choices as
-					| Array<{ message?: { content?: string } }>
-					| undefined;
-				const content =
-					msg?.content ??
-					choices?.[0]?.message?.content ??
-					JSON.stringify(data);
-				setMessages((m) => [
-					...m,
-					{ role: "assistant", content: String(content) },
-				]);
+				const choices = data.choices as Array<{ message?: { content?: string } }> | undefined;
+				const content = msg?.content ?? choices?.[0]?.message?.content ?? JSON.stringify(data);
+				setMessages((m) => [...m, { role: "assistant", content: String(content) }]);
 			}
 		} catch (e) {
 			setMessages((m) => [
@@ -191,10 +176,7 @@ export default function ChatPage() {
 			<h1 className="text-3xl font-bold mb-4 text-slate-100">Chat</h1>
 			<div className="flex flex-wrap gap-4 mb-4 items-end">
 				<div>
-					<label
-						htmlFor="chat-personality"
-						className="block text-sm text-slate-400 mb-1"
-					>
+					<label htmlFor="chat-personality" className="block text-sm text-slate-400 mb-1">
 						Personality
 					</label>
 					<select
@@ -211,10 +193,7 @@ export default function ChatPage() {
 					</select>
 				</div>
 				<div>
-					<label
-						htmlFor="chat-model"
-						className="block text-sm text-slate-400 mb-1"
-					>
+					<label htmlFor="chat-model" className="block text-sm text-slate-400 mb-1">
 						Model
 					</label>
 					<select
@@ -256,8 +235,8 @@ export default function ChatPage() {
 			<div className="flex-1 overflow-auto rounded-xl glass-panel border border-slate-600/50 p-4 space-y-4 min-h-0">
 				{messages.length === 0 && (
 					<p className="text-slate-500 text-center py-8">
-						Ask about your Plex library or anything. Uses Ollama/LM Studio. Set
-						LLM_BASE_URL in backend/.env.
+						Ask about your Plex library or anything. Uses Ollama/LM Studio. Set LLM_BASE_URL in
+						backend/.env.
 					</p>
 				)}
 				{messages.map((msg, i) => (
@@ -278,17 +257,12 @@ export default function ChatPage() {
 				))}
 				{loading && (
 					<div className="flex justify-start">
-						<div className="bg-slate-700/80 rounded-lg px-4 py-2 text-slate-400">
-							...
-						</div>
+						<div className="bg-slate-700/80 rounded-lg px-4 py-2 text-slate-400">...</div>
 					</div>
 				)}
 				<div ref={bottomRef} />
 			</div>
-			<form
-				onSubmit={handleSubmit}
-				className="mt-4 flex flex-col sm:flex-row gap-2"
-			>
+			<form onSubmit={handleSubmit} className="mt-4 flex flex-col sm:flex-row gap-2">
 				<div className="flex-1 flex gap-2">
 					<input
 						type="text"

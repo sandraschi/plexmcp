@@ -17,10 +17,9 @@ async def test_rag_sync_and_search_real(real_plex_service, tmp_path):
     db_path = str(tmp_path / "lancedb_test")
 
     # Ensure RAG dependencies are actually present for integration test
-    try:
-        import lancedb
-        import sentence_transformers
-    except ImportError:
+    import importlib.util
+
+    if importlib.util.find_spec("lancedb") is None or importlib.util.find_spec("sentence_transformers") is None:
         pytest.skip("RAG dependencies (lancedb, sentence_transformers) not installed.")
 
     # 1. Initialize Ingestor with real service

@@ -33,9 +33,8 @@ export default function ServerPage() {
 				Plex Media Server summary from the MCP{" "}
 				<code className="text-amber text-xs">plex_server</code> tool (
 				<code className="text-amber text-xs">info</code>). Use{" "}
-				<strong className="text-slate-400">Overview</strong> for readable fields
-				or <strong className="text-slate-400">Raw JSON</strong> for the full
-				response.
+				<strong className="text-slate-400">Overview</strong> for readable fields or{" "}
+				<strong className="text-slate-400">Raw JSON</strong> for the full response.
 			</p>
 			{loading ? (
 				<p className="text-slate-400">Loading server info…</p>

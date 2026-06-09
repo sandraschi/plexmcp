@@ -143,6 +143,10 @@ if bridge_urls:
             except Exception:
                 pass
 
+from .fleet_tool_metrics import register_mcp_tool_metrics  # noqa: E402
+
+register_mcp_tool_metrics(mcp)
+
 
 @mcp.resource("resource://plex/capabilities")
 def plex_capabilities_resource() -> str:

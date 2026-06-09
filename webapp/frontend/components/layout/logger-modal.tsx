@@ -93,18 +93,12 @@ export function LoggerModal({ onClose }: LoggerModalProps) {
 						>
 							Refresh
 						</button>
-						<button
-							type="button"
-							onClick={onClose}
-							className="text-slate-400 hover:text-white"
-						>
+						<button type="button" onClick={onClose} className="text-slate-400 hover:text-white">
 							Close
 						</button>
 					</div>
 				</div>
-				{file && (
-					<p className="px-4 py-1 text-xs text-slate-500 truncate">{file}</p>
-				)}
+				{file && <p className="px-4 py-1 text-xs text-slate-500 truncate">{file}</p>}
 				<pre className="p-4 overflow-auto text-sm text-slate-300 whitespace-pre-wrap font-mono flex-1 min-h-0">
 					{error || lines.join("") || "No log file found."}
 				</pre>

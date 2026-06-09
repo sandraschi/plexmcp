@@ -10,6 +10,7 @@ repos:
     rev: v1.9.4
     hooks:
       - id: biome-check
+        files: ^webapp/frontend/
         # Default entry already includes --write; do not use non-schema keys like additional_params
 
   # Semgrep is not run from pre-commit here: the official `repo: returntocorp/semgrep` hook

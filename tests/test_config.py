@@ -4,6 +4,7 @@ import os
 from unittest.mock import patch
 
 import pytest
+from pydantic import ValidationError
 
 from plex_mcp.config import PlexConfig, setup_logging
 
@@ -44,7 +45,7 @@ class TestPlexConfig:
 
     def test_plex_token_required(self):
         """Test that plex_token is required."""
-        with pytest.raises(Exception):  # Pydantic raises ValidationError
+        with pytest.raises(ValidationError):
             PlexConfig(server_url="http://localhost:32400")
 
     def test_empty_plex_token(self):

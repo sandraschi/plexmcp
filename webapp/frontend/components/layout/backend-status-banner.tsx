@@ -38,12 +38,11 @@ export function BackendStatusBanner() {
 			aria-live="polite"
 			className="block w-full border-b border-amber-800/60 bg-amber-950/90 px-4 py-2 text-center text-sm text-amber-100"
 		>
-			<strong className="font-semibold">Backend offline.</strong> Start the
-			FastAPI server on port <strong>10740</strong> (e.g.{" "}
+			<strong className="font-semibold">Backend offline.</strong> Start the FastAPI server on port{" "}
+			<strong>10740</strong> (e.g.{" "}
 			<code className="rounded bg-slate-900/80 px-1">webapp/start.ps1</code> or{" "}
 			<code className="rounded bg-slate-900/80 px-1">uvicorn</code>
-			). Search, settings, and API-driven features will fail until the API is
-			up.
+			). Search, settings, and API-driven features will fail until the API is up.
 		</output>
 	);
 }

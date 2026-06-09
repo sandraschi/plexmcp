@@ -14,9 +14,7 @@ export const metadata: Metadata = {
 	description: "Modern web interface for Plex Media Server management",
 };
 
-export default function RootLayout({
-	children,
-}: { children: React.ReactNode }) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
 	return (
 		<html lang="en" className={inter.variable} suppressHydrationWarning>
 			<body className="font-sans antialiased bg-slate-900 text-slate-100 min-h-screen">
