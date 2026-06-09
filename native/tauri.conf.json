@@ -10,6 +10,7 @@
 	"app": {
 		"windows": [
 			{
+				"label": "main",
 				"title": "Plex MCP",
 				"width": 1280,
 				"height": 800,
@@ -17,11 +18,13 @@
 				"minHeight": 600
 			}
 		],
-		"security": { "csp": null }
+		"security": {
+			"csp": "default-src 'self'; connect-src 'self' http://127.0.0.1:10740 ipc: http://ipc.localhost; img-src 'self' data: http://127.0.0.1:10740; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'"
+		}
 	},
 	"bundle": {
 		"active": true,
-		"targets": "all",
+		"targets": ["nsis"],
 		"icon": [
 			"icons/32x32.png",
 			"icons/128x128.png",
@@ -29,7 +32,13 @@
 			"icons/icon.icns",
 			"icons/icon.ico"
 		],
-		"resources": ["resources/plex-mcp-backend.exe"]
+		"resources": ["resources/plex-mcp-backend.exe"],
+		"windows": {
+			"webviewInstallMode": { "type": "skip" },
+			"nsis": {
+				"installerHooks": "./windows/hooks.nsh"
+			}
+		}
 	},
 	"plugins": {
 		"shell": { "open": true },

@@ -2,6 +2,7 @@
 
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { getMovies, getSettings, listLibraries } from "@/utils/api";
+import { PLEX_AUTH_HINT, PLEX_TOKEN_HINT } from "@/utils/config-hints";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
@@ -109,14 +110,18 @@ function MoviesPageInner() {
 			) : moviesData === null ? (
 				<ErrorBanner
 					title="Could not load movies"
-					message="Backend unavailable or PLEX_TOKEN not configured."
-					hint="Set PLEX_TOKEN in webapp/backend/.env"
+					message="Backend unavailable or Plex not configured."
+					hint={PLEX_TOKEN_HINT}
+					actionHref="/settings"
+					actionLabel="Open Settings → Plex"
 				/>
 			) : moviesData.success === false ? (
 				<ErrorBanner
 					title="Error"
 					message={String(moviesData.error ?? "Unknown error")}
-					hint="Check PLEX_TOKEN and PLEX_URL in backend/.env"
+					hint={PLEX_AUTH_HINT}
+					actionHref="/settings"
+					actionLabel="Check Settings → Plex"
 				/>
 			) : (
 				<MoviesClient

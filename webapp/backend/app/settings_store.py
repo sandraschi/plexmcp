@@ -2,6 +2,7 @@
 
 import json
 import os
+import sys
 from pathlib import Path
 
 _KEYS = (
@@ -32,14 +33,97 @@ _ENV_MAP = {
     "lidarr_url": "LIDARR_URL",
     "lidarr_api_key": "LIDARR_API_KEY",
 }
+# Uppercase .env keys → settings.json keys
+_DOTENV_TO_SETTINGS = {
+    "PLEX_TOKEN": "plex_token",
+    "PLEX_URL": "plex_url",
+    "LLM_PROVIDER": "llm_provider",
+    "LLM_BASE_URL": "llm_base_url",
+    "LLM_API_KEY": "llm_api_key",
+    "TMDB_API_KEY": "tmdb_api_key",
+    "RADARR_URL": "radarr_url",
+    "RADARR_API_KEY": "radarr_api_key",
+    "SONARR_URL": "sonarr_url",
+    "SONARR_API_KEY": "sonarr_api_key",
+    "LIDARR_URL": "lidarr_url",
+    "LIDARR_API_KEY": "lidarr_api_key",
+}
+
+
+def _app_data_dir() -> Path:
+    return Path(os.environ.get("LOCALAPPDATA", ".")) / "ai.fleet.plex-mcp"
 
 
 def _path() -> Path:
-    return Path(__file__).resolve().parent.parent / "data" / "settings.json"
+    if getattr(sys, "frozen", False) or os.environ.get("PLEX_TAURI") == "1":
+        base = _app_data_dir()
+    else:
+        base = Path(__file__).resolve().parent.parent / "data"
+    return base / "settings.json"
+
+
+def _dotenv_candidates() -> list[Path]:
+    """Known credential files — dev .env first, then app-data drop-in."""
+    backend_dir = Path(__file__).resolve().parent.parent
+    repo_root = backend_dir.parent.parent
+    return [
+        _app_data_dir() / ".env",
+        backend_dir / ".env",
+        repo_root / ".env",
+    ]
+
+
+def _parse_dotenv(path: Path) -> dict[str, str]:
+    out: dict[str, str] = {}
+    try:
+        for line in path.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, _, value = line.partition("=")
+            key = key.strip()
+            value = value.strip().strip('"').strip("'")
+            if key and value:
+                out[key] = value
+    except OSError:
+        return {}
+    return out
+
+
+def _import_dotenv_into_settings() -> None:
+    """If Plex token not in settings.json, bootstrap from an existing .env file."""
+    p = _path()
+    data: dict[str, str] = {}
+    if p.exists():
+        try:
+            with p.open(encoding="utf-8") as f:
+                loaded = json.load(f)
+            if isinstance(loaded, dict):
+                data = {k: str(v) for k, v in loaded.items() if v is not None}
+        except (json.JSONDecodeError, OSError):
+            pass
+    if data.get("plex_token", "").strip():
+        return
+
+    for env_path in _dotenv_candidates():
+        if not env_path.is_file():
+            continue
+        parsed = _parse_dotenv(env_path)
+        merged: dict[str, str] = dict(data)
+        for env_key, settings_key in _DOTENV_TO_SETTINGS.items():
+            val = parsed.get(env_key, "").strip()
+            if val and not merged.get(settings_key, "").strip():
+                merged[settings_key] = val
+        if merged.get("plex_token", "").strip():
+            p.parent.mkdir(parents=True, exist_ok=True)
+            with p.open("w", encoding="utf-8") as f:
+                json.dump(merged, f, indent=2)
+            return
 
 
 def load_and_apply() -> None:
-    """Load data/settings.json and set os.environ. Call at startup after .env."""
+    """Load settings.json (importing .env first if needed) and set os.environ."""
+    _import_dotenv_into_settings()
     p = _path()
     if not p.exists():
         return
@@ -70,7 +154,7 @@ def get_current() -> dict[str, str | bool | None]:
 
 
 def save_overrides(body: dict) -> None:
-    """Write allowed keys to data/settings.json and update os.environ. Merges with existing file."""
+    """Write allowed keys to settings.json and update os.environ. Merges with existing file."""
     p = _path()
     p.parent.mkdir(parents=True, exist_ok=True)
     data: dict[str, str] = {}

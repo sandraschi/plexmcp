@@ -38,7 +38,9 @@ fn log_line(app: &AppHandle, message: &str) {
 fn resolve_bundled_backend(app: &AppHandle) -> Result<PathBuf, String> {
     let mut tried = Vec::new();
 
-    if let Ok(path) = app.path().resolve(BACKEND_NAME, BaseDirectory::Resource) {
+    // Prefer explicit resources/ subfolder (NSIS install layout).
+    if let Ok(dir) = app.path().executable_dir() {
+        let path = dir.join("resources").join(BACKEND_NAME);
         tried.push(path.display().to_string());
         if path.exists() {
             return Ok(path);
@@ -55,10 +57,9 @@ fn resolve_bundled_backend(app: &AppHandle) -> Result<PathBuf, String> {
         }
     }
 
-    if let Ok(dir) = app.path().executable_dir() {
-        let path = dir.join("resources").join(BACKEND_NAME);
+    if let Ok(path) = app.path().resolve(BACKEND_NAME, BaseDirectory::Resource) {
         tried.push(path.display().to_string());
-        if path.exists() {
+        if path.exists() && path.parent().is_some_and(|p| p.ends_with("resources")) {
             return Ok(path);
         }
     }

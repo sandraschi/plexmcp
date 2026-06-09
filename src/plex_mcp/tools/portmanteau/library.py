@@ -154,6 +154,8 @@ async def plex_library(
             return ToolResult(
                 content={
                     "success": result.get("scan_successful", False),
+                    "message": result.get("message", "Scan triggered"),
+                    "next_steps": result.get("next_steps", []),
                     "operation": "scan",
                     "library_id": library_id,
                     "force": force,
@@ -435,6 +437,8 @@ async def plex_library(
             return ToolResult(
                 content={
                     "success": result.get("cleaned", False),
+                    "message": result.get("message", "Clean bundles completed"),
+                    "next_steps": result.get("next_steps", []),
                     "operation": "clean_bundles",
                     "library_id": library_id,
                     "data": result,

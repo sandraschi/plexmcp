@@ -43,6 +43,9 @@ try {
     Copy-Item $src $bundled -Force
     Copy-Item $src $devCopy -Force
 
+    # Stale flat copy beside the Tauri exe shadows resources/ and breaks spawn.
+    Remove-Item -Force "$Root\native\target\release\plex-mcp-backend.exe" -ErrorAction SilentlyContinue
+
     $sizeMB = [math]::Round((Get-Item $bundled).Length / 1MB, 1)
     Write-Host "=== Backend embedded ===" -ForegroundColor Green
     Write-Host "  bundle resource: $bundled ($sizeMB MB)" -ForegroundColor Cyan

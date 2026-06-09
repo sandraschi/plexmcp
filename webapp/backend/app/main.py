@@ -33,16 +33,18 @@ from .api import (
 from .config import settings
 
 # 1. Immediate Path & Logging setup
+_frozen = getattr(sys, "frozen", False)
 _current_file = Path(__file__).resolve()
-project_root = _current_file.parent.parent.parent.parent
-src_path = project_root / "src"
-
-if src_path.exists():
-    src_str = str(src_path)
-    if src_str not in sys.path:
-        sys.path.insert(0, src_str)
-
-_log_dir = project_root / "logs"
+if _frozen:
+    _log_dir = Path(os.environ.get("LOCALAPPDATA", ".")) / "ai.fleet.plex-mcp" / "logs"
+else:
+    project_root = _current_file.parent.parent.parent.parent
+    src_path = project_root / "src"
+    if src_path.exists():
+        src_str = str(src_path)
+        if src_str not in sys.path:
+            sys.path.insert(0, src_str)
+    _log_dir = project_root / "logs"
 _log_dir.mkdir(parents=True, exist_ok=True)
 _log_file = _log_dir / "webapp.log"
 

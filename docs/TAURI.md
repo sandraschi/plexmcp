@@ -16,7 +16,7 @@ native/target/release/bundle/nsis/Plex MCP_2.4.1_x64-setup.exe
 
 ## Production pitfalls (fleet)
 
-Installer-only failures (`Failed to fetch`, missing posters, backend spawn) — see **mcp-central-docs** `standards/TAURI_PRODUCTION_PITFALLS.md`.
+Installer-only failures (`Failed to fetch`, missing posters, backend spawn, **install hang**, silent backend) — see **mcp-central-docs** [`standards/TAURI_PRODUCTION_PITFALLS.md`](https://github.com/sandraschi/mcp-central-docs/blob/master/standards/TAURI_PRODUCTION_PITFALLS.md). Run the **Fleet rollout protocol (§B–M)** before every NSIS release.
 
 Maintainer shortcut: `scripts/update-tauri-starts-link.ps1` → `D:\Dev\Tauri starts\plex-mcp-setup.lnk`
 

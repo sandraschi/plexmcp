@@ -1,9 +1,9 @@
-﻿param(
+param(
     [switch]$Headless,
     [switch]$BackendOnly,
     [switch]$FrontendOnly,
-    [switch]$NoBrowser
-)
+    [switch]$NoBrowser,
+    [switch]$ReuseIfRunning)
 
 $WebPort = 10741
 $BackendPort = 10740
@@ -18,9 +18,21 @@ if (-not (Test-Path -LiteralPath $FleetStartPath)) {
 . $FleetStartPath
 $FleetStart = Initialize-FleetStartMode @PSBoundParameters
 Enter-FleetHeadlessConsole -Headless:$Headless -BackendOnly:$BackendOnly
-Stop-FleetPortSquatters -Ports @($WebPort, $BackendPort) -Label "plex-mcp"
 
-if (-not (Assert-FleetPortsAvailable -Ports @($WebPort, $BackendPort) -Label "plex-mcp")) { exit 1 }
+$portResolve = @{
+    Ports      = @($WebPort, $BackendPort)
+    Label      = "plex-mcp"
+    AllowReuse = $ReuseIfRunning
+}
+if ($ReuseIfRunning) {
+    $portResolve.HealthChecks = @{
+        $WebPort = "http://127.0.0.1:$WebPort/"
+        $BackendPort = "http://127.0.0.1:$BackendPort/health"
+    }
+}
+$portState = Resolve-FleetPortConflict @portResolve
+if ($portState.Action -eq 'Blocked') { exit 1 }
+if ($portState.Reuse) { return }
 
 Set-Location $ProjectRoot
 uv sync --project $ProjectRoot

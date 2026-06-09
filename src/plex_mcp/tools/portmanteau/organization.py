@@ -116,6 +116,8 @@ async def plex_organization(
             return ToolResult(
                 content={
                     "success": result.get("cleaned", False),
+                    "message": result.get("message", "Clean bundles completed"),
+                    "next_steps": result.get("next_steps", []),
                     "operation": "clean_bundles",
                     "library_id": library_id,
                     "threshold_days": threshold_days,

@@ -190,6 +190,8 @@ async def plex_metadata(
             return ToolResult(
                 content={
                     "success": result.get("success", False),
+                    "message": result.get("message", "Metadata updated"),
+                    "next_steps": result.get("next_steps", []),
                     "operation": "update",
                     "item_id": item_id,
                     "data": result.get("data"),

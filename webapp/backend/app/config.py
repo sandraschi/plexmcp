@@ -5,15 +5,26 @@ from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# .env next to webapp/backend/ so it's found regardless of cwd
-_env_path = Path(__file__).resolve().parent.parent / ".env"
+
+def _env_files() -> tuple[str, ...] | None:
+    paths: list[Path] = []
+    app_env = Path(os.environ.get("LOCALAPPDATA", "")) / "ai.fleet.plex-mcp" / ".env"
+    if app_env.is_file():
+        paths.append(app_env)
+    backend_env = Path(__file__).resolve().parent.parent / ".env"
+    if backend_env.is_file():
+        paths.append(backend_env)
+    repo_env = backend_env.parent.parent / ".env"
+    if repo_env.is_file():
+        paths.append(repo_env)
+    return tuple(str(p) for p in paths) if paths else None
 
 
 class Settings(BaseSettings):
     """Application settings."""
 
     model_config = SettingsConfigDict(
-        env_file=_env_path if _env_path.exists() else None,
+        env_file=_env_files(),
         env_file_encoding="utf-8",
         case_sensitive=True,
         extra="ignore",

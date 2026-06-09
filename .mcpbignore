@@ -1,4 +1,10 @@
 # MCPB Pack Exclusion List
+native/
+webapp/
+htmlcov/
+.pre-commit-cache/
+src/data/
+data/
 tests/
 .git/
 __pycache__/

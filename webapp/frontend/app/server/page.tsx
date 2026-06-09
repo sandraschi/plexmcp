@@ -3,6 +3,7 @@
 import { ServerInfoView } from "@/components/server/server-info-view";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { getServerInfo } from "@/utils/api";
+import { PLEX_TOKEN_HINT } from "@/utils/config-hints";
 import { useEffect, useState } from "react";
 
 export default function ServerPage() {
@@ -41,8 +42,10 @@ export default function ServerPage() {
 			) : data === null ? (
 				<ErrorBanner
 					title="Could not load server info"
-					message="Backend unavailable or PLEX_TOKEN not configured."
-					hint="Set PLEX_TOKEN in webapp/backend/.env"
+					message="Backend unavailable or Plex not configured."
+					hint={PLEX_TOKEN_HINT}
+					actionHref="/settings"
+					actionLabel="Open Settings → Plex"
 				/>
 			) : (
 				<ServerInfoView payload={data} />

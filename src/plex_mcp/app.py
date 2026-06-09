@@ -39,6 +39,9 @@ class DevNullStdout:
         # Do nothing - prevent any stdout writes
         pass
 
+    def isatty(self):
+        return False
+
     def get_buffered_output(self):
         """Get all buffered output for debugging if needed."""
         return "".join(self.buffer)
@@ -50,10 +53,12 @@ class DevNullStdout:
 
 # CRITICAL: Detect stdio mode BEFORE importing logger
 # This must be done before ANY logging imports
-_is_stdio_mode = not sys.stdout.isatty()
+_is_stdio_mode = hasattr(sys.stdout, "isatty") and not sys.stdout.isatty()
 # Pytest and tooling use non-TTY stdout; replacing logging globally breaks FastMCP / pytest / ruff.
-if os.getenv("PLEXMCP_ALLOW_LOGGING", "").lower() in ("1", "true", "yes") or any(
-    "pytest" in (arg or "") for arg in sys.argv
+if (
+    os.getenv("PLEXMCP_ALLOW_LOGGING", "").lower() in ("1", "true", "yes")
+    or os.environ.get("PLEX_TAURI") == "1"
+    or any("pytest" in (arg or "") for arg in sys.argv)
 ):
     _is_stdio_mode = False
 

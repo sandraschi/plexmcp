@@ -17,6 +17,15 @@ export async function getServerInfo() {
 	return res.json();
 }
 
+export async function checkBackendHealth(): Promise<boolean> {
+	try {
+		const res = await fetch(`${getBaseUrl()}/health`, { cache: "no-store" });
+		return res.ok;
+	} catch {
+		return false;
+	}
+}
+
 export async function listLibraries() {
 	const res = await fetch(`${getBaseUrl()}/api/libraries/`);
 	if (!res.ok) throw new Error(await res.text());

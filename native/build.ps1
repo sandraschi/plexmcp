@@ -40,6 +40,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "npm install in native/ failed" }
     npx @tauri-apps/cli build
     if ($LASTEXITCODE -ne 0) { throw "tauri build failed" }
+    Remove-Item -Force "$PSScriptRoot\target\release\plex-mcp-backend.exe" -ErrorAction SilentlyContinue
 } finally {
     Pop-Location
 }

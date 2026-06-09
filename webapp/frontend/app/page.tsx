@@ -7,8 +7,7 @@ import { Library, Search, Server } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-const BACKEND_HINT =
-	"Set PLEX_TOKEN in webapp/backend/.env. Run: cd webapp; powershell -ExecutionPolicy Bypass -File .\\start.ps1";
+import { BACKEND_DOWN_HINT, PLEX_TOKEN_HINT } from "@/utils/config-hints";
 
 export default function Home() {
 	const [status, setStatus] = useState<{
@@ -56,15 +55,19 @@ export default function Home() {
 				) : status === null ? (
 					<ErrorBanner
 						title="Backend unavailable"
-						message="Could not connect to PlexMCP backend. Ensure backend is running and PLEX_TOKEN is set."
-						hint={BACKEND_HINT}
+						message="Could not connect to the Plex MCP backend on port 10740."
+						hint={BACKEND_DOWN_HINT}
 					/>
 				) : status.success ? (
 					<p className="text-slate-500 mb-6">{String(status.message ?? "Connected to Plex")}</p>
 				) : (
-					<p className="text-amber/80 mb-6">
-						{String(status.message ?? status.error ?? "Check PLEX_TOKEN")}
-					</p>
+					<ErrorBanner
+						title="Plex not connected"
+						message={String(status.message ?? status.error ?? "Could not reach Plex server.")}
+						hint={PLEX_TOKEN_HINT}
+						actionHref="/settings"
+						actionLabel="Open Settings → Plex"
+					/>
 				)}
 				<div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
 					{cards.map(({ href, label, icon: Icon }) => (
