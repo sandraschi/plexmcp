@@ -7,8 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.1] - 2026-06-08
+
 ### Added
 
+- **Tauri desktop 2.4.1**: Production shell on port 10740 — CORS, `API_BASE`, hardened backend spawn, fleet tool metrics.
 - **FastMCP 3.2 alignment**: All 22 tools now use `version="1.0.0"`, `annotations=READ_ONLY|MUTATING|DESTRUCTIVE`, `Annotated[Field]` parameters, `ToolResult` returns, and SOTA docstrings (`## Return Format` / `## Examples`).
 - **Prefab interactive cards**: 9 `prefab_ui` card builders in `src/plex_mcp/prefabs.py` wired as `structured_content` — library grid, library detail, media browser, media detail, server status, server info, performance dashboard, streaming sessions, streaming clients.
 - **Webapp `_prefab` pipeline**: `mcp/client.py` extracts `structured_content` from ToolResult as `_prefab` in API responses for frontend rendering.
@@ -25,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Webapp image proxy**: `images.py` now follows Plex 307 redirects (`follow_redirects=True`) — httpx v0.27+ default change broke all poster/artwork images.
 - **`plex_media_service._plex_item_to_media_item`**: `thumbUrl`/`artUrl` → `thumb`/`art` (capital-U properties return full server URLs with tokens, breaking proxy path extraction).
 - **Pydantic v2**: 13+ `.dict()` calls replaced with `.model_dump()` across portmanteau tools.
+- **Lint/tooling**: Ruff + Biome green; root `biome.json`, frontend build artifacts in `.gitignore`.
+- **Documentation**: `DOCUMENTATION_INDEX.md` hub, archive banners on stale fleet-import docs, `TAURI.md` production notes.
 
 ## [2.5.0] - 2026-04-19
 ### Added
@@ -40,7 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - **Tool Docstrings**: Updated `plex_rag` with detailed operation patterns for subtitle management.
 
-## [2.4.1] - 2026-04-17
+## [2.4.1] - 2026-04-17 (superseded by 2026-06-08 release above)
 ### Added
 - **High-Value Media Enrichment**: New `plex_media_enrichment` tool for fetching deep contextual summaries from Wikipedia and external metadata links.
 - **RAG Augmentation**: The `plex_rag` tool now supports an `enrich=True` flag during `sync_metadata` to augment the vector index with Wikipedia narrative context.

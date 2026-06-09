@@ -97,3 +97,8 @@ webapp/frontend/blob-report/
 # Rust (if present at repo root)
 target/
 _dashboard/
+
+# Local junk / backups
+run_server.py
+pyproject.toml.bak
+*.bak
