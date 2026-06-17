@@ -31,6 +31,21 @@ uv run python -c "import docs_mcp.backend.rag_core; print('rag_core OK')"
 
 If you see `ModuleNotFoundError: docs_mcp`, the path is wrong or the clone is missing. RAG and semantic search **require** this import to succeed in the process that runs `plex_mcp` (including the webapp backend).
 
+When mcp-central-docs is not on `PYTHONPATH`, PlexMCP falls back to in-repo **LanceDB + fastembed** (`BAAI/bge-small-en-v1.5`).
+
+## GPU embedding (fleet standard)
+
+On a CUDA machine (e.g. Goliath), one-time install then GPU sync:
+
+```powershell
+just rag-gpu-install   # ~1.5 GB NVIDIA pip CUDA 12 runtimes + onnxruntime-gpu
+just rag-gpu-sync      # metadata sync on GPU (batch 256)
+```
+
+Revert with `just rag-cpu-install`. Do **not** use `uv run` while GPU mode is active — it reinstalls CPU `onnxruntime`. Use venv python via the just recipes.
+
+When **mcp-central-docs** is on `PYTHONPATH`, GPU mode applies there too (`just rag-gpu` in that repo). See `mcp-central-docs/standards/patterns/FLEET_RAG_GPU.md`.
+
 ## First-time index
 
 Run once before querying:

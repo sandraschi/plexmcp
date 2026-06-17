@@ -61,24 +61,34 @@ try:
 except ImportError:
     pass
 
-# 2) Fallback: in-repo LanceDB + sentence-transformers (pip install plex-mcp-advanced[rag])
+# 2) Fallback: in-repo LanceDB + fastembed (pip install fastembed lancedb)
 if not HAS_RAG:
     try:
         import lancedb
-        from sentence_transformers import SentenceTransformer
+
+        from plex_mcp.rag.fastembed_gpu import (
+            EMBED_DIM,
+            EMBED_MODEL,
+            create_text_embedding,
+            repo_root_from_here,
+        )
 
         _embed_model_instance = None
+        _embed_batch_size = 64
 
         def get_embed_model():
-            """Lazy loader for SentenceTransformer to speed up startup."""
-            global _embed_model_instance
+            """Lazy loader for FastEmbed (GPU when RAG_GPU=1 or .venv/rag-gpu-mode)."""
+            global _embed_model_instance, _embed_batch_size
             if _embed_model_instance is None:
-                logger.info("Lazy loading SentenceTransformer (all-MiniLM-L6-v2)...")
-                _embed_model_instance = SentenceTransformer("all-MiniLM-L6-v2")
+                cache = str(repo_root_from_here() / "data" / "embed_cache")
+                _embed_model_instance, device, _embed_batch_size = create_text_embedding(
+                    EMBED_MODEL, cache, repo_root=repo_root_from_here()
+                )
+                logger.info("FastEmbed device: %s (batch %s)", device, _embed_batch_size)
             return _embed_model_instance
 
         class LocalVectorStore:
-            """In-repo RAG using LanceDB + sentence-transformers. No mcp-central-docs needed."""
+            """In-repo RAG using LanceDB + fastembed. No mcp-central-docs needed."""
 
             def __init__(self, db_path: str, table_name: str = "plex_media", **kwargs):
                 self.db_path = db_path
@@ -86,7 +96,7 @@ if not HAS_RAG:
                 self.db = lancedb.connect(db_path)
                 self._table = None
 
-            def _ensure_table(self, dim: int = 384):
+            def _ensure_table(self, dim: int = EMBED_DIM):
                 if self._table is not None:
                     return
                 try:
@@ -115,9 +125,16 @@ if not HAS_RAG:
                 if not documents:
                     return
                 texts = [d.get("content", "") or "" for d in documents]
-                vectors = get_embed_model().encode(texts).tolist()
+                model = get_embed_model()
+                batch = _embed_batch_size
+                all_vectors: list[list[float]] = []
+                for start in range(0, len(texts), batch):
+                    chunk = texts[start : start + batch]
+                    for emb in model.embed(chunk):
+                        vec = emb.tolist() if hasattr(emb, "tolist") else list(emb)
+                        all_vectors.append(vec)
                 rows = []
-                for d, vec in zip(documents, vectors, strict=False):
+                for d, vec in zip(documents, all_vectors, strict=False):
                     rows.append(
                         {
                             "id": str(d.get("id", "")),
@@ -138,7 +155,8 @@ if not HAS_RAG:
                     self._table = self.db.open_table(self.table_name)
                 except Exception:
                     return []
-                qvec = get_embed_model().encode([query]).tolist()[0]
+                qemb = list(get_embed_model().embed([query]))[0]
+                qvec = qemb.tolist() if hasattr(qemb, "tolist") else list(qemb)
                 results = self._table.search(qvec).limit(limit).to_list()
                 out = []
                 for r in results:

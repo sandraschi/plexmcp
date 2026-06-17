@@ -1,4 +1,5 @@
-﻿set windows-shell := ["pwsh.exe", "-NoLogo", "-Command"]
+set windows-shell := ["pwsh.exe", "-NoLogo", "-Command"]
+import 'scripts/just/fleet.just'
 
 # PlexMCP Project Management (Justfile)
 
@@ -104,3 +105,24 @@ build-native-debug:
     $env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"
     npx @tauri-apps/cli build --debug
 
+# Run CUA smoke test against installed NSIS app
+cua-nsis-test:
+    C:\Windows\py.exe scripts/cua-smoke.py
+
+# ── RAG (LanceDB metadata sync) ──────────────────────────────────────────────
+
+# Sync Plex metadata into LanceDB (CPU)
+rag-sync:
+    @pwsh.exe -NoProfile -ExecutionPolicy Bypass -File scripts/just/rag-sync.ps1
+
+# Sync Plex metadata into LanceDB on GPU (after rag-gpu-install)
+rag-gpu-sync:
+    @pwsh.exe -NoProfile -ExecutionPolicy Bypass -File scripts/just/rag-gpu-sync.ps1
+
+# One-time: install fastembed-gpu + onnxruntime-gpu + NVIDIA CUDA 12 runtimes (~1.5 GB)
+rag-gpu-install:
+    @pwsh.exe -NoProfile -ExecutionPolicy Bypass -File scripts/just/rag-gpu-install.ps1
+
+# Revert to CPU onnxruntime stack
+rag-cpu-install:
+    @pwsh.exe -NoProfile -ExecutionPolicy Bypass -File scripts/just/rag-cpu-install.ps1

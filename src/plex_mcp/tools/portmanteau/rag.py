@@ -59,7 +59,7 @@ async def plex_rag(
             reset_rag_sync_progress()
             err = (
                 "RAG Core dependencies not found. "
-                "Install in-repo RAG: pip install plex-mcp-advanced[rag] "
+                "Install: pip install fastembed lancedb "
                 "(or add mcp-central-docs src to PYTHONPATH)."
             )
             report_rag_sync_error(err)

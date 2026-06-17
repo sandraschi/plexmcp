@@ -1,3 +1,28 @@
+
+## [Unreleased] — 2026-06-17
+
+### Added
+- **GPU RAG (fleet standard):** `just rag-gpu-install`, `just rag-gpu-sync`, `just rag-cpu-install` — fastembed-gpu fallback path (replaces sentence-transformers for local LanceDB). Scripts: `plex_rag_sync.py`, `run-rag-gpu-sync.ps1`, `plex_mcp/rag/fastembed_gpu.py`.
+- **fastembed** dependency for in-repo RAG fallback.
+
+### Changed
+- Local RAG fallback uses `BAAI/bge-small-en-v1.5` via fastembed (aligned with fleet standard).
+
+---
+
+## [Unreleased] — 2026-06-14
+
+### Added
+- Tauri CORS: 	auri://localhost, http://tauri.localhost, https://tauri.localhost in CORS origins
+- Tauri CORS: _TAURI env var toggle with llow_origin_regex for secure WebView access
+- build.ps1: auto-copy NSIS installer to dist/ on build
+- CUA-NSIS: config-driven smoke test (`scripts/cua-smoke.py`, `scripts/cua-nsis-config.json`)
+- CUA-NSIS: `just build-native` + `just cua-nsis-test` recipes
+- CUA-NSIS: 11-phase smoke (install, launch, WebView OCR, feature route, diagnostics, uninstall)
+- CUA-NSIS: local certification — all 11 phases pass locally (2026-06-14)
+
+### Changed
+- CORS: llow_origins=["*"] → explicit origins list for Tauri webview compatibility
 # Changelog
 
 All notable changes to this project will be documented in this file.
@@ -270,3 +295,4 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduc
 ## Version History
 - **2.0.0**: Production-ready with MCPB packaging and GLAMA Gold Status
 - **1.0.0**: Initial release with basic Plex Media Server integration
+
