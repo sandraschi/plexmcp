@@ -12,7 +12,7 @@ Provides high-level access to Plex media server functionality including:
 
 import asyncio
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from plexapi import utils
@@ -41,7 +41,7 @@ from .base import BaseService, ServiceError, service_method  # noqa: E402
 CONFIG.logger = None  # We'll use our own logging
 
 
-class StreamQuality(str, Enum):
+class StreamQuality(StrEnum):
     """Stream quality presets."""
 
     ORIGINAL = "original"
@@ -52,7 +52,7 @@ class StreamQuality(str, Enum):
     QUALITY_240P = "240p"
 
 
-class StreamProtocol(str, Enum):
+class StreamProtocol(StrEnum):
     """Streaming protocols."""
 
     HTTP = "http"
@@ -61,7 +61,7 @@ class StreamProtocol(str, Enum):
     WEBSOCKET = "websocket"
 
 
-class StreamDecision(str, Enum):
+class StreamDecision(StrEnum):
     """Transcode decision options."""
 
     TRANSCODE = "transcode"
@@ -1188,7 +1188,7 @@ class PlexMediaService(BaseService):
             if libtype:
                 if isinstance(libtype, str):
                     search_params["libtype"] = libtype
-                elif isinstance(libtype, (list, tuple)):
+                elif isinstance(libtype, list | tuple):
                     search_params["libtype"] = ",".join(libtype)
 
             # Add sort parameter if specified
@@ -1952,7 +1952,7 @@ class PlexMediaService(BaseService):
             media_item.studio = getattr(item, "studio", None)
             media_item.chapter_source = getattr(item, "chapterSource", None)
 
-        elif isinstance(item, (Show, Season, Episode)):
+        elif isinstance(item, Show | Season | Episode):
             media_item.media_type = (
                 MediaType.SHOW
                 if isinstance(item, Show)
@@ -1961,12 +1961,12 @@ class PlexMediaService(BaseService):
                 else MediaType.EPISODE
             )
 
-            if isinstance(item, (Show, Season)):
+            if isinstance(item, Show | Season):
                 media_item.child_count = getattr(item, "childCount", None)
                 media_item.leaf_count = getattr(item, "leafCount", None)
                 media_item.viewed_leaf_count = getattr(item, "viewedLeafCount", None)
 
-            if isinstance(item, (Season, Episode)):
+            if isinstance(item, Season | Episode):
                 media_item.show_title = getattr(item, "show", {}).title if hasattr(item, "show") else None
                 media_item.season_number = getattr(item, "seasonNumber", None)
 

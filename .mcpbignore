@@ -21,3 +21,6 @@ logs/
 .pytest_cache/
 .coverage
 Cargo.lock
+glama.json
+llms.txt
+llms-full.txt

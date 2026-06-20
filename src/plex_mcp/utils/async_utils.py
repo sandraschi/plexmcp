@@ -365,7 +365,9 @@ def async_timeout(
     return decorator
 
 
-async def run_until_complete_with_timeout(coro: Coroutine[Any, Any, T], timeout: float, default: T = None) -> T | None:
+async def run_until_complete_with_timeout[T](
+    coro: Coroutine[Any, Any, T], timeout: float, default: T = None
+) -> T | None:
     """Run a coroutine with a timeout and return a default value on timeout.
 
     Args:
