@@ -3,6 +3,7 @@
 mod backend;
 
 use backend::{BackendProcess, spawn_backend};
+use std::time::Duration;
 use tauri::{Emitter, Manager};
 
 #[tauri::command]
@@ -26,6 +27,27 @@ fn main() {
                 eprintln!("Backend error: {e}");
                 let _ = handle.emit("backend-status", format!("error: {e}"));
             }
+            let handle2 = app.handle().clone();
+            std::thread::spawn(move || {
+                for _ in 0..90 {
+                    if std::net::TcpStream::connect_timeout(
+                        &"127.0.0.1:10740".parse().unwrap(),
+                        Duration::from_millis(500),
+                    )
+                    .is_ok()
+                    {
+                        let _ = handle2.emit("backend-status", "ready");
+                        if let Some(window) = handle2.get_webview_window("main") {
+                            let _ = window.navigate(
+                                tauri::Url::parse("http://127.0.0.1:10740/app/").unwrap(),
+                            );
+                        }
+                        return;
+                    }
+                    std::thread::sleep(Duration::from_secs(1));
+                }
+                let _ = handle2.emit("backend-status", "error: backend timeout");
+            });
             #[cfg(debug_assertions)]
             if let Some(window) = app.get_webview_window("main") {
                 window.open_devtools();

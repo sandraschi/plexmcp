@@ -1,48 +1,58 @@
 {
-	"productName": "Plex MCP",
-	"version": "2.4.1",
-	"identifier": "ai.fleet.plex-mcp",
-	"build": {
-		"frontendDist": "../webapp/frontend/out",
-		"devUrl": "http://localhost:10741",
-		"beforeDevCommand": "npm --prefix ../webapp/frontend run dev"
-	},
-	"app": {
-		"windows": [
-			{
-				"label": "main",
-				"title": "Plex MCP",
-				"width": 1280,
-				"height": 800,
-				"minWidth": 900,
-				"minHeight": 600
-			}
-		],
-		"security": {
-			"csp": "default-src 'self'; connect-src 'self' http://127.0.0.1:10740 ipc: http://ipc.localhost; img-src 'self' data: http://127.0.0.1:10740; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'"
-		}
-	},
-	"bundle": {
-		"active": true,
-		"targets": ["nsis"],
-		"icon": [
-			"icons/32x32.png",
-			"icons/128x128.png",
-			"icons/128x128@2x.png",
-			"icons/icon.icns",
-			"icons/icon.ico"
-		],
-		"resources": ["resources/plex-mcp-backend.exe"],
-		"windows": {
-			"webviewInstallMode": { "type": "skip" },
-			"nsis": {
-				"installerHooks": "./windows/hooks.nsh"
-			}
-		}
-	},
-	"plugins": {
-		"shell": { "open": true },
-		"fs": { "requireLiteralLeadingDot": false },
-		"process": { "all": true }
-	}
+  "productName": "Plex MCP",
+  "version": "2.4.1",
+  "identifier": "ai.fleet.plex-mcp",
+  "build": {
+    "frontendDist": "../webapp/frontend/out",
+    "devUrl": "http://localhost:10741",
+    "beforeDevCommand": "npm --prefix ../webapp/frontend run dev"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "Plex MCP",
+        "width": 1280,
+        "height": 800,
+        "minWidth": 900,
+        "minHeight": 600
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": [
+      "nsis"
+    ],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "resources": [
+      "resources/plex-mcp-backend.exe"
+    ],
+    "windows": {
+      "webviewInstallMode": {
+        "type": "skip"
+      },
+      "nsis": {}
+    }
+  },
+  "plugins": {
+    "shell": {
+      "open": true
+    },
+    "fs": {
+      "requireLiteralLeadingDot": false
+    },
+    "process": {
+      "all": true
+    }
+  }
 }
