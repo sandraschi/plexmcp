@@ -1,6 +1,7 @@
 """AI workflows: run multi-step flows (e.g. search Plex then summarize with LLM)."""
 
 import logging
+import os
 
 import httpx
 from fastapi import APIRouter, Body
