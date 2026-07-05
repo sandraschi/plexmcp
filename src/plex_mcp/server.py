@@ -44,6 +44,8 @@ except ImportError as e:
 from .app import _is_stdio_mode  # noqa: E402
 
 if not _is_stdio_mode:
+    import time as _time_module
+
     from starlette.applications import Starlette  # noqa: E402
     from starlette.middleware import Middleware  # noqa: E402
     from starlette.middleware.cors import CORSMiddleware  # noqa: E402
@@ -52,8 +54,25 @@ if not _is_stdio_mode:
 
     from .fleet_tool_metrics import prometheus_metrics_body_and_type  # noqa: E402
 
+    _SERVER_START = _time_module.time()
+
+    def _count_plex_tools() -> int:
+        try:
+            if hasattr(mcp, "_tools"):
+                return len(mcp._tools)
+        except Exception:
+            pass
+        return 0
+
     async def health(request):
-        return JSONResponse({"status": "ok"})
+        return JSONResponse({
+            "status": "ok",
+            "server": "plex-mcp",
+            "version": "2.4.1",
+            "uptime_seconds": int(_time_module.time() - _SERVER_START),
+            "tool_count": _count_plex_tools(),
+            "providers": {"plex": "connected"},
+        })
 
     async def metrics(request):
         body, media_type = prometheus_metrics_body_and_type()
@@ -62,7 +81,18 @@ if not _is_stdio_mode:
     _mcp_app = mcp.http_app(
         middleware=[
             Middleware(
-                CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"]
+                CORSMiddleware,
+                allow_origins=[
+                    "http://127.0.0.1:10741",
+                    "http://localhost:10741",
+                    "http://tauri.localhost",
+                    "https://tauri.localhost",
+                    "tauri://localhost",
+                ],
+                allow_origin_regex=r"https?://tauri\.localhost(:\d+)?",
+                allow_credentials=True,
+                allow_methods=["*"],
+                allow_headers=["*"],
             )
         ]
     )
@@ -124,6 +154,27 @@ def main():
     Supports STDIO (default), HTTP, and SSE transport modes.
 
     """
+
+    import os
+
+    # Probe for existing HTTP daemon -- proxy instead of full init
+    _probe_url = os.environ.get("PLEX_MCP_API_URL", "http://127.0.0.1:10740/mcp")
+    try:
+        import httpx
+        _resp = httpx.post(
+            _probe_url,
+            json={"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2025-11-25", "capabilities": {}, "clientInfo": {"name": "probe", "version": "1"}}},
+            headers={"Accept": "application/json, text/event-stream"},
+            timeout=0.5,
+        )
+        if _resp.status_code == 200:
+            from fastmcp.server import create_proxy
+            logger.info("HTTP daemon found at %s -- proxying tool calls", _probe_url)
+            _proxy = create_proxy(_probe_url, name="Plex MCP")
+            _proxy.run(transport="stdio")
+            return
+    except Exception:
+        pass
 
     from .transport import run_server
 

@@ -14,11 +14,9 @@ def _default_sampling_base_url() -> str:
     llm = (os.getenv("LLM_BASE_URL") or "").strip().rstrip("/")
     if not llm:
         return "http://127.0.0.1:11434/v1"
-    if llm.endswith("/v1"):
+    if "/v1" in llm:
         return llm
-    if ":11434" in llm or "ollama" in llm.lower():
-        return llm + "/v1"
-    return llm if "/v1" in llm else llm + "/v1"
+    return llm + "/v1"
 
 
 @dataclass

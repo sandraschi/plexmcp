@@ -100,8 +100,23 @@ async def plex_media(
                     },
                 )
 
-            # Use search_media with empty query to simulate browse
-            items = await plex.search_media("", limit=limit, offset=offset, library_id=library_id)
+            # Use search_media with empty query to simulate browse, passing all filters
+            filter_kwargs: dict[str, Any] = {}
+            if genre:
+                filter_kwargs["genre"] = genre
+            if year:
+                filter_kwargs["year"] = year
+            if actor:
+                filter_kwargs["actor"] = actor
+            if director:
+                filter_kwargs["director"] = director
+            if min_rating is not None:
+                filter_kwargs["min_rating"] = min_rating
+            if unwatched is not None:
+                filter_kwargs["unwatched"] = unwatched
+            if media_type:
+                filter_kwargs["media_type"] = media_type
+            items = await plex.search_media("", limit=limit, offset=offset, library_id=library_id, **filter_kwargs)
             raw_data = items.data if hasattr(items, "data") else items
             data = [item.model_dump() if hasattr(item, "model_dump") else item for item in raw_data]
             return ToolResult(
@@ -128,7 +143,22 @@ async def plex_media(
                     },
                 )
 
-            items = await plex.search_media(query, limit=limit, offset=offset, library_id=library_id)
+            filter_kwargs: dict[str, Any] = {}
+            if genre:
+                filter_kwargs["genre"] = genre
+            if year:
+                filter_kwargs["year"] = year
+            if actor:
+                filter_kwargs["actor"] = actor
+            if director:
+                filter_kwargs["director"] = director
+            if min_rating is not None:
+                filter_kwargs["min_rating"] = min_rating
+            if unwatched is not None:
+                filter_kwargs["unwatched"] = unwatched
+            if media_type:
+                filter_kwargs["media_type"] = media_type
+            items = await plex.search_media(query, limit=limit, offset=offset, library_id=library_id, **filter_kwargs)
             data = [item.model_dump() if hasattr(item, "model_dump") else item for item in items]
             return ToolResult(
                 content={

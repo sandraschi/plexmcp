@@ -54,7 +54,7 @@ async def list_models(
             key = os.environ.get("LLM_API_KEY") or settings.LLM_API_KEY
             if key:
                 headers["Authorization"] = f"Bearer {key}"
-            r = await client.get(f"{url.rstrip('/')}/models", headers=headers or None)
+            r = await client.get(f"{url.rstrip('/')}/v1/models", headers=headers or None)
             if r.status_code != 200:
                 return {"models": [], "error": r.text}
             data = r.json()
@@ -71,7 +71,7 @@ async def list_models(
 @router.post("/chat")
 async def chat(
     messages: list[dict[str, str]] = Body(...),
-    model: str = Body("llama3.2"),
+    model: str = Body(os.environ.get("LLM_MODEL", "gemma4:12b")),
     stream: bool = Body(False),
     provider: str | None = Body(None),
     base_url: str | None = Body(None),
@@ -111,7 +111,7 @@ async def chat(
             if r.status_code != 200:
                 return {"error": r.text, "status": r.status_code}
             return r.json()
-    req_url = f"{url}/chat/completions"
+    req_url = f"{url}/v1/chat/completions"
     headers = {"Content-Type": "application/json"}
     key = os.environ.get("LLM_API_KEY") or settings.LLM_API_KEY
     if key:
@@ -141,7 +141,7 @@ async def refine_prompt(
 ):
     """Use LLM to refine/improve a user message (e.g. before sending to chat)."""
     text = body.get("text", "") or ""
-    model = body.get("model", "llama3.2")
+    model = body.get("model") or os.environ.get("LLM_MODEL", "gemma4:12b")
     provider = body.get("provider")
     base_url = body.get("base_url")
     """Use LLM to refine/improve a user message (e.g. before sending to chat)."""
@@ -161,7 +161,7 @@ async def refine_prompt(
             data = r.json()
             content = (data.get("message") or {}).get("content", "").strip() or text
             return {"refined": content}
-    req_url = f"{url}/chat/completions"
+    req_url = f"{url}/v1/chat/completions"
     headers = {"Content-Type": "application/json"}
     key = os.environ.get("LLM_API_KEY") or settings.LLM_API_KEY
     if key:

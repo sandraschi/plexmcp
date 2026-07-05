@@ -5,13 +5,17 @@ const nextConfig = {
 	reactStrictMode: true,
 	trailingSlash: isTauri,
 	images: { unoptimized: isTauri },
-	...(isTauri ? { output: "export" } : { output: "standalone" }),
+	...(isTauri ? { output: "export", basePath: "/app" } : { output: "standalone" }),
 	async rewrites() {
 		if (isTauri) return [];
 		return [
 			{
 				source: "/api/:path*",
 				destination: "http://127.0.0.1:10740/api/:path*",
+			},
+			{
+				source: "/health",
+				destination: "http://127.0.0.1:10740/health",
 			},
 			{
 				source: "/image/:path*",

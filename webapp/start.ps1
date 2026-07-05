@@ -49,7 +49,7 @@ if (-not (Test-Path "node_modules")) {
 
 Write-Host "Starting Python backend on port $BackendPort ..." -ForegroundColor Cyan
 $BackendDir = Join-Path $ProjectRoot "webapp\backend"
-$backendCmd = "`$env:PYTHONPATH = '$ProjectRoot\src;$BackendDir'; Set-Location '$BackendDir'; uv run --project '$ProjectRoot' python -m uvicorn app.main:app --host 127.0.0.1 --port $BackendPort --log-level info"
+$backendCmd = "`$env:PLEX_TAURI = '1'; `$env:PYTHONPATH = '$ProjectRoot\src;$BackendDir'; Set-Location '$BackendDir'; uv run --project '$ProjectRoot' python -m uvicorn app.main:app --host 127.0.0.1 --port $BackendPort --log-level info"
 Start-Process powershell -ArgumentList "-NoProfile", "-WindowStyle", "Normal", "-Command", $backendCmd
 
 $healthUrl = "http://127.0.0.1:$BackendPort/health"

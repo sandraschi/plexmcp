@@ -4,6 +4,7 @@ from PyInstaller.utils.hooks import collect_all, collect_submodules, copy_metada
 datas = [
     ("src/plex_mcp", "plex_mcp"),
     ("webapp/backend/app", "app"),
+    ("webapp/frontend/out", "webapp/frontend/out"),
 ]
 for pkg in (
     "fastmcp",
@@ -19,7 +20,9 @@ for pkg in (
     datas += copy_metadata(pkg)
 
 binaries = []
-hiddenimports = []
+hiddenimports = [
+    "_strptime",
+]
 for pkg in ("cachetools", "beartype", "pytz", "jsonschema"):
     try:
         pkg_datas, pkg_binaries, pkg_hidden = collect_all(pkg)
@@ -35,7 +38,7 @@ hiddenimports += collect_submodules("key_value")
 hiddenimports += collect_submodules("cachetools")
 hiddenimports += [
     # stdlib C extensions (lazy-imported; Movies browse hits datetime.strptime)
-    "_strptime",
+
     "_datetime",
     "sqlite3",
     "_sqlite3",
@@ -83,6 +86,7 @@ a = Analysis(
     datas=datas,
     hiddenimports=hiddenimports,
     hookspath=[],
+    
     hooksconfig={},
     runtime_hooks=[],
     excludes=[
@@ -91,9 +95,15 @@ a = Analysis(
         "torchaudio",
         "tensorboard",
     ],
-    noarchive=False,
+    noarchive=True,
     optimize=0,
 )
+# Strip .dist-info but preserve metadata for packages that need it at runtime
+_keep_dist = ['fastmcp-', 'mcp-', 'prefab_ui-', 'opentelemetry-', 'email_validator-']
+_saved = [e for e in a.datas if isinstance(e, tuple) and any(k in str(e[0]) for k in _keep_dist) and '.dist-info' in str(e[0])]
+for _list in [a.datas, a.binaries, a.zipfiles, a.scripts]:
+    _list[:] = [e for e in _list if not (isinstance(e, tuple) and '.dist-info' in str(e[0]))]
+a.datas.extend(_saved)
 pyz = PYZ(a.pure)
 
 exe = EXE(
@@ -102,6 +112,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
+    
     name="plex-mcp-backend",
     debug=False,
     bootloader_ignore_signals=False,
@@ -116,3 +127,8 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
 )
+
+
+
+
+

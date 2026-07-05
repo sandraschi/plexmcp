@@ -32,7 +32,7 @@ async def run_workflow(
     if workflow_id == "search_and_summarize":
         query = params.get("query", "")
         library_id = params.get("library_id")
-        model = params.get("model", "llama3.2")
+        model = params.get("model") or os.environ.get("LLM_MODEL", "gemma4:12b")
         if not query:
             return {"success": False, "error": "params.query required"}
         try:

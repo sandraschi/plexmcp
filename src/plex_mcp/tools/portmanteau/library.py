@@ -50,6 +50,7 @@ async def plex_library(
             "add_location",
             "remove_location",
             "clean_bundles",
+            "list_items",
         ],
         Field(description="The library operation to perform."),
     ],
@@ -66,6 +67,12 @@ async def plex_library(
     language: Annotated[str | None, Field(description="Language code for the library metadata.")] = None,
     thumb: Annotated[str | None, Field(description="URL or path for the library thumbnail.")] = None,
     force: Annotated[bool, Field(description="Force operations like scan even if already up to date.")] = False,
+    limit: Annotated[int, Field(description="Max items to return for list_items.", ge=1)] = 50,
+    offset: Annotated[int, Field(description="Pagination offset for list_items.", ge=0)] = 0,
+    sort: Annotated[str | None, Field(description="Sort field for list_items (title, rating, year, added).")] = None,
+    media_type: Annotated[
+        str | None, Field(description="Filter by media type for list_items (movie, show, episode, track, photo).")
+    ] = None,
 ) -> ToolResult:
     """
     Comprehensive library management operations for Plex Media Server.
@@ -81,6 +88,7 @@ async def plex_library(
     - scan/refresh: Update media index and metadata.
     - optimize/empty_trash/clean_bundles: Maintain library database health.
     - add_location/remove_location: Manage physical media paths.
+    - list_items: List paginated library contents with sort and type filters.
 
     ## Return Format
     {"success": bool, "data": dict|list, "operation": str, "count": int}
@@ -89,6 +97,7 @@ async def plex_library(
     await plex_library(operation="list")
     await plex_library(operation="get", library_id="1")
     await plex_library(operation="scan", library_id="1", force=True)
+    await plex_library(operation="list_items", library_id="1", sort="title", media_type="movie")
     """
     try:
         plex = _get_plex_service()
@@ -445,13 +454,52 @@ async def plex_library(
                 },
             )
 
+        # Operation: list_items
+        if operation == "list_items":
+            if not library_id:
+                return ToolResult(
+                    content={
+                        "success": False,
+                        "error": "library_id is required for list_items operation",
+                        "error_code": "MISSING_LIBRARY_ID",
+                        "suggestions": ["Provide library_id to list items"],
+                    },
+                )
+
+            from ...services.plex_media_service import PlexMediaService
+
+            media_service = PlexMediaService(plex)
+            items = await media_service.search_media(
+                "",
+                limit=limit or 50,
+                offset=offset,
+                library_id=library_id,
+                sort=sort,
+                media_type=media_type,
+            )
+            data = [item.model_dump() if hasattr(item, "model_dump") else item for item in items]
+            return ToolResult(
+                content={
+                    "success": True,
+                    "operation": "list_items",
+                    "library_id": library_id,
+                    "data": data,
+                    "count": len(data),
+                    "limit": limit,
+                    "offset": offset,
+                    "sort": sort,
+                    "media_type": media_type,
+                    "has_more": len(data) >= limit,
+                },
+            )
+
         return ToolResult(
             content={
                 "success": False,
                 "error": f"Invalid operation: '{operation}'",
                 "error_code": "INVALID_OPERATION",
                 "suggestions": [
-                    "Valid operations: list, get, create, update, delete, scan, refresh, optimize, empty_trash, add_location, remove_location, clean_bundles",
+                    "Valid operations: list, get, create, update, delete, scan, refresh, optimize, empty_trash, add_location, remove_location, clean_bundles, list_items",
                     f"You provided: '{operation}'",
                 ],
             },

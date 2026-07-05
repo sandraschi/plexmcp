@@ -1,12 +1,18 @@
 "use client";
 
 import { API_BASE } from "@/utils/api";
-import { useEffect, useRef, useState } from "react";
+import { Trash2 } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface Message {
 	role: "user" | "assistant";
 	content: string;
+	ts?: string;
 }
+
+const STORAGE_KEY = "plex-mcp-chat-history";
+const PERSONALITY_KEY = "plex-mcp-chat-personality";
+const MAX_MESSAGES = 100;
 
 const PERSONALITIES = [
 	{ id: "default", label: "Default", preprompt: "" },
@@ -48,26 +54,130 @@ const PERSONALITIES = [
 	},
 ];
 
+const EXAMPLE_PROMPTS = [
+	"What's recently added to my Plex library?",
+	"Show me unwatched movies sorted by rating",
+	"Which libraries have the most content?",
+	"What anime series are in my library?",
+	"Recommend something to watch tonight",
+	"Check my server health and status",
+];
+
+function loadMessages(): Message[] {
+	try {
+		const raw = localStorage.getItem(STORAGE_KEY);
+		if (raw) return JSON.parse(raw);
+	} catch {}
+	return [];
+}
+
+function saveMessages(msgs: Message[]) {
+	try {
+		const trimmed = msgs.slice(-MAX_MESSAGES);
+		localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
+	} catch {}
+}
+
+function loadPersonality(): string {
+	try {
+		return localStorage.getItem(PERSONALITY_KEY) || "default";
+	} catch {}
+	return "default";
+}
+
 export default function ChatPage() {
-	const [messages, setMessages] = useState<Message[]>([]);
+	const [messages, setMessages] = useState<Message[]>(loadMessages);
 	const [input, setInput] = useState("");
 	const [loading, setLoading] = useState(false);
 	const [refining, setRefining] = useState(false);
-	const [model, setModel] = useState("llama3.2");
+	const [model, setModel] = useState("gemma4:12b");
 	const [models, setModels] = useState<string[]>([]);
-	const [personality, setPersonality] = useState("default");
+	const [personality, setPersonality] = useState(loadPersonality);
+	const [providerStatus, setProviderStatus] = useState<"connected" | "offline" | "detecting">(
+		"detecting",
+	);
 	const bottomRef = useRef<HTMLDivElement>(null);
 
-	useEffect(() => {
-		fetch(`${API_BASE}/api/llm/models`)
-			.then((r) => r.json())
-			.then((d: { models?: string[] }) => setModels(d.models ?? []))
-			.catch(() => {});
+	const scrollToBottom = useCallback(() => {
+		bottomRef.current?.scrollIntoView({ behavior: "smooth" });
 	}, []);
 
 	useEffect(() => {
-		bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+		scrollToBottom();
+	}, [messages, scrollToBottom]);
+
+	// Persist messages
+	useEffect(() => {
+		saveMessages(messages);
 	}, [messages]);
+
+	// Persist personality
+	useEffect(() => {
+		try {
+			localStorage.setItem(PERSONALITY_KEY, personality);
+		} catch {}
+	}, [personality]);
+
+	// Provider detection + model discovery
+	useEffect(() => {
+		let cancelled = false;
+		(async () => {
+			try {
+				const r = await fetch(`${API_BASE}/health`);
+				if (cancelled) return;
+				setProviderStatus(r.ok ? "connected" : "offline");
+			} catch {
+				if (!cancelled) setProviderStatus("offline");
+			}
+		})();
+
+		fetch(`${API_BASE}/api/llm/models`)
+			.then((r) => r.json())
+			.then((d: { models?: string[] }) => {
+				if (cancelled) return;
+				const list = d.models ?? [];
+				setModels(list);
+				const saved = localStorage.getItem("plex-webapp-default-llm-model");
+				if (saved && list.includes(saved)) setModel(saved);
+			})
+			.catch(() => {});
+
+		return () => {
+			cancelled = true;
+		};
+	}, []);
+
+	const handleClear = () => {
+		setMessages([]);
+		try {
+			localStorage.removeItem(STORAGE_KEY);
+		} catch {}
+	};
+
+	const handleExport = (format: "md" | "json") => {
+		const blob =
+			format === "md"
+				? new Blob(
+						[
+							messages
+								.map(
+									(m) =>
+										`[${m.ts || "unknown"}] ${m.role === "user" ? "You" : "Assistant"}: ${m.content}`,
+								)
+								.join("\n\n"),
+						],
+						{ type: "text/markdown" },
+					)
+				: new Blob([JSON.stringify({ messages }, null, 2)], {
+						type: "application/json",
+					});
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement("a");
+		a.href = url;
+		a.download = `plex-chat-${new Date().toISOString().slice(0, 10)}.${format}`;
+		a.click();
+		URL.revokeObjectURL(url);
+	};
 
 	const handleRefine = async () => {
 		if (!input.trim() || refining) return;
@@ -87,34 +197,14 @@ export default function ChatPage() {
 		}
 	};
 
-	const handleExport = (format: "md" | "json") => {
-		const blob =
-			format === "md"
-				? new Blob(
-						[
-							messages
-								.map((m) =>
-									m.role === "user" ? `**You:** ${m.content}` : `**Assistant:** ${m.content}`,
-								)
-								.join("\n\n"),
-						],
-						{ type: "text/markdown" },
-					)
-				: new Blob([JSON.stringify({ messages }, null, 2)], {
-						type: "application/json",
-					});
-		const url = URL.createObjectURL(blob);
-		const a = document.createElement("a");
-		a.href = url;
-		a.download = `plex-chat-${Date.now()}.${format}`;
-		a.click();
-		URL.revokeObjectURL(url);
-	};
-
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		if (!input.trim() || loading) return;
-		const userMsg: Message = { role: "user", content: input.trim() };
+		const userMsg: Message = {
+			role: "user",
+			content: input.trim(),
+			ts: new Date().toISOString(),
+		};
 		setMessages((m) => [...m, userMsg]);
 		setInput("");
 		setLoading(true);
@@ -156,7 +246,10 @@ export default function ChatPage() {
 				const msg = data.message as { content?: string } | undefined;
 				const choices = data.choices as Array<{ message?: { content?: string } }> | undefined;
 				const content = msg?.content ?? choices?.[0]?.message?.content ?? JSON.stringify(data);
-				setMessages((m) => [...m, { role: "assistant", content: String(content) }]);
+				setMessages((m) => [
+					...m,
+					{ role: "assistant", content: String(content), ts: new Date().toISOString() },
+				]);
 			}
 		} catch (e) {
 			setMessages((m) => [
@@ -172,9 +265,12 @@ export default function ChatPage() {
 	};
 
 	return (
-		<div className="container mx-auto p-6 flex flex-col h-[calc(100vh-8rem)]">
-			<h1 className="text-3xl font-bold mb-4 text-slate-100">Chat</h1>
-			<div className="flex flex-wrap gap-4 mb-4 items-end">
+		<div
+			className="container mx-auto p-6 flex flex-col h-[calc(100vh-8rem)]"
+			data-testid="chat-page"
+		>
+			{/* Controls bar */}
+			<div className="flex flex-wrap gap-4 mb-4 items-end" data-testid="chat-controls">
 				<div>
 					<label htmlFor="chat-personality" className="block text-sm text-slate-400 mb-1">
 						Personality
@@ -183,7 +279,8 @@ export default function ChatPage() {
 						id="chat-personality"
 						value={personality}
 						onChange={(e) => setPersonality(e.target.value)}
-						className="px-4 py-2 rounded-lg glass-panel border border-slate-600/50 text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber"
+						className="px-4 py-2 rounded-lg bg-zinc-800 border border-zinc-600 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-amber"
+						data-testid="personality-select"
 					>
 						{PERSONALITIES.map((p) => (
 							<option key={p.id} value={p.id}>
@@ -200,7 +297,7 @@ export default function ChatPage() {
 						id="chat-model"
 						value={model}
 						onChange={(e) => setModel(e.target.value)}
-						className="px-4 py-2 rounded-lg glass-panel border border-slate-600/50 text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber min-w-[140px]"
+						className="px-4 py-2 rounded-lg bg-zinc-800 border border-zinc-600 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-amber min-w-[140px]"
 					>
 						{models.length > 0 ? (
 							models.map((m) => (
@@ -213,31 +310,71 @@ export default function ChatPage() {
 						)}
 					</select>
 				</div>
-				{messages.length > 0 && (
-					<div className="flex gap-2">
-						<button
-							type="button"
-							onClick={() => handleExport("md")}
-							className="px-3 py-2 rounded-lg bg-slate-700 text-slate-200 text-sm hover:bg-slate-600"
-						>
-							Export MD
-						</button>
-						<button
-							type="button"
-							onClick={() => handleExport("json")}
-							className="px-3 py-2 rounded-lg bg-slate-700 text-slate-200 text-sm hover:bg-slate-600"
-						>
-							Export JSON
-						</button>
-					</div>
-				)}
+				<div className="flex items-center gap-2 self-center">
+					<span
+						className={`w-2 h-2 rounded-full ${
+							providerStatus === "connected"
+								? "bg-green-500"
+								: providerStatus === "offline"
+									? "bg-red-500"
+									: "bg-gray-500"
+						} animate-pulse`}
+					/>
+					<span className="text-zinc-400 text-sm">
+						{providerStatus === "connected"
+							? "Backend online"
+							: providerStatus === "offline"
+								? "Offline"
+								: "Detecting..."}
+					</span>
+				</div>
+				<div className="flex gap-2 self-center ml-auto">
+					{messages.length > 0 && (
+						<>
+							<button
+								type="button"
+								onClick={() => handleExport("md")}
+								className="px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-600 text-zinc-300 text-sm hover:bg-zinc-700"
+								data-testid="chat-export"
+							>
+								Export
+							</button>
+							<button
+								type="button"
+								onClick={handleClear}
+								className="p-2 rounded-lg bg-zinc-800 border border-zinc-600 text-zinc-400 hover:text-red-400"
+								title="Clear conversation"
+								data-testid="chat-clear"
+							>
+								<Trash2 size={16} />
+							</button>
+						</>
+					)}
+				</div>
 			</div>
-			<div className="flex-1 overflow-auto rounded-xl glass-panel border border-slate-600/50 p-4 space-y-4 min-h-0">
+
+			{/* Messages */}
+			<div
+				className="flex-1 overflow-auto rounded-xl bg-zinc-800/80 border border-zinc-600/50 p-4 space-y-4 min-h-0"
+				data-testid="chat-messages"
+			>
 				{messages.length === 0 && (
-					<p className="text-slate-500 text-center py-8">
-						Ask about your Plex library or anything. Uses Ollama/LM Studio. Set LLM_BASE_URL in
-						backend/.env.
-					</p>
+					<div>
+						<p className="text-zinc-500 text-center py-4">
+							Ask about your Plex library or anything. Uses Ollama/LM Studio.
+						</p>
+						<div className="flex flex-wrap gap-2 justify-center mt-2" data-testid="example-prompts">
+							{EXAMPLE_PROMPTS.map((prompt) => (
+								<button
+									key={prompt}
+									onClick={() => setInput(prompt)}
+									className="px-3 py-1.5 text-xs rounded-full bg-zinc-700 border border-zinc-600 text-zinc-300 hover:bg-zinc-600 hover:text-zinc-100 transition-colors"
+								>
+									{prompt}
+								</button>
+							))}
+						</div>
+					</div>
 				)}
 				{messages.map((msg, i) => (
 					<div
@@ -246,9 +383,7 @@ export default function ChatPage() {
 					>
 						<div
 							className={`max-w-[85%] rounded-lg px-4 py-2 ${
-								msg.role === "user"
-									? "bg-amber/20 text-slate-200"
-									: "bg-slate-700/80 text-slate-200"
+								msg.role === "user" ? "bg-amber/20 text-zinc-200" : "bg-zinc-700/80 text-zinc-200"
 							}`}
 						>
 							<p className="whitespace-pre-wrap">{msg.content}</p>
@@ -257,11 +392,15 @@ export default function ChatPage() {
 				))}
 				{loading && (
 					<div className="flex justify-start">
-						<div className="bg-slate-700/80 rounded-lg px-4 py-2 text-slate-400">...</div>
+						<div className="bg-zinc-700/80 rounded-lg px-4 py-2 text-zinc-400 animate-pulse">
+							Thinking...
+						</div>
 					</div>
 				)}
 				<div ref={bottomRef} />
 			</div>
+
+			{/* Input */}
 			<form onSubmit={handleSubmit} className="mt-4 flex flex-col sm:flex-row gap-2">
 				<div className="flex-1 flex gap-2">
 					<input
@@ -270,13 +409,14 @@ export default function ChatPage() {
 						onChange={(e) => setInput(e.target.value)}
 						placeholder="Message..."
 						disabled={loading}
-						className="flex-1 px-4 py-3 rounded-xl glass-panel border border-slate-600/50 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber disabled:opacity-50"
+						className="flex-1 px-4 py-3 rounded-xl bg-zinc-800 border border-zinc-600 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-amber disabled:opacity-50"
+						data-testid="chat-input"
 					/>
 					<button
 						type="button"
 						onClick={handleRefine}
 						disabled={loading || refining || !input.trim()}
-						className="px-3 py-3 rounded-xl bg-slate-700 text-slate-200 text-sm hover:bg-slate-600 disabled:opacity-50"
+						className="px-3 py-3 rounded-xl bg-zinc-700 text-zinc-200 text-sm hover:bg-zinc-600 disabled:opacity-50"
 						title="Refine with LLM"
 					>
 						{refining ? "..." : "Refine"}
@@ -285,7 +425,8 @@ export default function ChatPage() {
 				<button
 					type="submit"
 					disabled={loading || !input.trim()}
-					className="px-6 py-3 rounded-xl bg-amber text-slate-900 font-medium hover:bg-amber/90 disabled:opacity-50 disabled:cursor-not-allowed"
+					className="px-6 py-3 rounded-xl bg-amber text-zinc-900 font-medium hover:bg-amber/90 disabled:opacity-50 disabled:cursor-not-allowed"
+					data-testid="chat-send"
 				>
 					Send
 				</button>

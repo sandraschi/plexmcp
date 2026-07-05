@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     RELOAD: bool = True
 
     CORS_ORIGINS: str = (
-        "http://localhost:10741,http://127.0.0.1:10741,http://tauri.localhost,https://tauri.localhost,tauri://localhost"
+        "http://localhost:10741,http://127.0.0.1:10741,http://goliath:10741,http://goliath:10740,http://tauri.localhost,https://tauri.localhost,tauri://localhost"
     )
 
     @property

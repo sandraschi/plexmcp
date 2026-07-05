@@ -26,7 +26,9 @@ async def _try_llm_movie_notes(title: str, year: int | None, wiki_extract: str |
     base = (os.environ.get("LLM_BASE_URL") or settings.LLM_BASE_URL or "").strip().rstrip("/")
     if not base:
         return None
-    model = (os.environ.get("LLM_MODEL") or "llama3.2").strip()
+    model = (os.environ.get("LLM_MODEL") or "gemma4:12b").strip()
+    # override from query param when provided
+    model = (query_params.get("llm_model") or model)
     clip = wiki_extract.strip()[:4000]
     user = (
         f"Plex library item: title={title!r}, year={year!r}.\n"
@@ -53,7 +55,7 @@ async def _try_llm_movie_notes(title: str, year: int | None, wiki_extract: str |
             if key:
                 headers["Authorization"] = f"Bearer {key}"
             r = await client.post(
-                f"{base}/chat/completions",
+                f"{base}/v1/chat/completions",
                 headers=headers,
                 json={"model": model, "messages": messages, "stream": False},
             )

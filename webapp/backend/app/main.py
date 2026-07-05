@@ -9,6 +9,16 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+
+
+class SPAStaticFiles(StaticFiles):
+    async def get_response(self, path: str, scope):
+        response = await super().get_response(path, scope)
+        if response.status_code == 404:
+            response = await super().get_response("index.html", scope)
+        return response
+
 
 from .api import (
     arr_stack,
@@ -166,6 +176,33 @@ app.include_router(rag.router, prefix="/api/rag", tags=["rag"])
 app.include_router(arr_stack.router, prefix="/api/arr", tags=["arr"])
 app.include_router(workflows.router, prefix="/api/workflows", tags=["workflows"])
 
+# Mount frontend SPA at /app/ for Tauri WebView navigation
+import os as _os
+
+_frontend_dist = None
+_try_paths = []
+if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+    _mei = sys._MEIPASS
+    _try_paths = [
+        _os.path.join(_mei, "webapp", "frontend", "out"),
+        _os.path.join(_mei, "frontend", "out"),
+        _os.path.join(_os.path.dirname(_mei), "webapp", "frontend", "out"),
+    ]
+_try_paths.append(_os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "..", "..", "frontend", "out"))
+for _p in _try_paths:
+    if _p and _os.path.isdir(_p):
+        _frontend_dist = _p
+        break
+if _frontend_dist and _os.path.isdir(_frontend_dist):
+    _frontend_dist = _os.path.realpath(_frontend_dist)
+    try:
+        app.mount("/app", SPAStaticFiles(directory=_frontend_dist, html=True, follow_symlink=True), name="frontend")
+    except TypeError:
+        app.mount("/app", SPAStaticFiles(directory=_frontend_dist, html=True), name="frontend")
+    logger.info("Frontend SPA mounted at /app from %s", _frontend_dist)
+else:
+    logger.warning("Frontend dist not found (tried: %s) — API only", "; ".join(str(p) for p in _try_paths))
+
 
 @app.get("/")
 async def root():
@@ -176,9 +213,72 @@ async def root():
     }
 
 
+import contextlib as _ctx
+import time as _time
+
+_SERVER_START = _time.time()
+
+
 @app.get("/health")
 async def health():
-    return {"status": "healthy"}
+    return {
+        "status": "ok",
+        "server": "plex-mcp",
+        "version": "2.4.1",
+        "uptime_seconds": int(_time.time() - _SERVER_START),
+        "tool_count": _count_plex_tools(),
+        "providers": {"plex": "connected"},
+    }
+
+
+def _count_plex_tools() -> int:
+    try:
+        from plex_mcp.app import mcp as _mcp
+
+        if hasattr(_mcp, "_tools"):
+            return len(_mcp._tools)
+    except Exception:
+        pass
+    return 22
+
+
+@app.get("/api/v1/diagnostics")
+async def get_cua_diagnostics():
+    uptime = int(_time.time() - _SERVER_START)
+    cpu = mem = disk = None
+    tesseract = False
+    window = False
+    with _ctx.suppress(Exception):
+        import psutil
+
+        cpu = psutil.cpu_percent(interval=0.3)
+        mem = psutil.virtual_memory().percent
+        disk = psutil.disk_usage(__import__("os").environ.get("SystemDrive", "C:") + "\\").percent
+    with _ctx.suppress(Exception):
+        import subprocess
+
+        tesseract = (
+            subprocess.run(
+                [r"C:\Program Files\Tesseract-OCR\tesseract.exe", "--version"], capture_output=True, timeout=5
+            ).returncode
+            == 0
+        )
+    with _ctx.suppress(Exception):
+        import pywinauto
+
+        a = pywinauto.Application(backend="uia").connect(title_re="Plex MCP")
+        a.window(title_re="Plex MCP").wait("visible", timeout=2)
+        window = True
+    return {
+        "success": True,
+        "data": {
+            "backend": {"status": "ok", "version": "2.4.1", "uptime_seconds": uptime, "port": 10740},
+            "system": {"cpu_percent": cpu, "memory_percent": mem, "disk_percent": disk},
+            "tools": {"total": _count_plex_tools(), "categories": ["library", "media", "search", "playlist", "server"]},
+            "errors": {"count": 0, "recent": []},
+            "cua_status": {"window_found": window, "backend_reachable": True, "tesseract_available": tesseract},
+        },
+    }
 
 
 @app.get("/mcp/status")

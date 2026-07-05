@@ -5,7 +5,7 @@ import { ErrorBanner } from "@/components/ui/error-banner";
 import { type ArrStackResponse, getArrStackStatus, getServerStatus } from "@/utils/api";
 import { Library, Search, Server } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { BACKEND_DOWN_HINT, PLEX_TOKEN_HINT } from "@/utils/config-hints";
 
@@ -18,15 +18,26 @@ export default function Home() {
 	const [arrStatus, setArrStatus] = useState<ArrStackResponse | null>(null);
 	const [loading, setLoading] = useState(true);
 
+	const retryCount = useRef(0);
+
 	useEffect(() => {
 		let cancelled = false;
-		(async () => {
-			try {
-				const s = await getServerStatus();
-				if (!cancelled) setStatus(s);
-			} catch {
-				if (!cancelled) setStatus(null);
+		const fetchWithRetry = async () => {
+			while (!cancelled) {
+				try {
+					const s = await getServerStatus();
+					if (!cancelled) { setStatus(s); retryCount.current = 0; break; }
+				} catch {
+					if (cancelled) return;
+					const delay = Math.min(1000 * Math.pow(2, retryCount.current), 30000);
+					retryCount.current++;
+					setStatus(null);
+					await new Promise((r) => setTimeout(r, delay));
+				}
 			}
+		};
+		(async () => {
+			await fetchWithRetry();
 			try {
 				const a = await getArrStackStatus();
 				if (!cancelled) setArrStatus(a);
@@ -35,9 +46,7 @@ export default function Home() {
 			}
 			if (!cancelled) setLoading(false);
 		})();
-		return () => {
-			cancelled = true;
-		};
+		return () => { cancelled = true; };
 	}, []);
 
 	const cards = [

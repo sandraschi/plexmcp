@@ -1,0 +1,19 @@
+{
+  "product_name": "Plex MCP",
+  "install_dir": "%LOCALAPPDATA%\\Plex MCP",
+  "operator_exe": "plex-mcp-native.exe",
+  "backend_process_names": ["plex-mcp-native", "plex-mcp-backend"],
+  "backend_port": 10740,
+  "health_path": "/health",
+  "diagnostics_path": "/api/v1/diagnostics",
+  "feature_smoke_path": "/api/health",
+  "window_title_re": "Plex MCP",
+  "nsis_glob": "native/target/release/bundle/nsis/Plex MCP_*_x64-setup.exe",
+  "bridge_ok_text": "Plex MCP",
+  "uninstall_registry_filter": "*Plex*MCP*",
+  "nav_routes": [["Dashboard","Overview"],["Library","Libraries"],["Settings","Settings"],["Help","What is Plex"]],
+  "sidebar_click_x": 30,
+  "sidebar_first_y": 90,
+  "sidebar_step_y": 55,
+  "log_file_paths": ["%LOCALAPPDATA%\\Plex MCP\\plex-mcp.log"]
+}

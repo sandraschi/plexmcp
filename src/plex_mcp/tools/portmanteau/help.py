@@ -18,7 +18,7 @@ logger = get_logger(__name__)
 @mcp.tool(version="1.0.0", annotations={"readOnlyHint": True})
 async def plex_help(
     operation: Annotated[
-        Literal["help", "list_tools", "tool_info", "examples"], Field(description="The help operation to perform.")
+        Literal["help", "list_tools", "tool_info", "examples", "api_docs"], Field(description="The help operation to perform.")
     ],
     tool_name: Annotated[str | None, Field(description="Name of the tool to get info or examples for.")] = None,
     category: Annotated[str | None, Field(description="Category filter for help or list_tools operations.")] = None,
@@ -35,6 +35,7 @@ async def plex_help(
     - list_tools: Brief enumeration of all available tools and categories.
     - tool_info: Deep inspection of specific tool syntax and operation modes.
     - examples: Curated few-shot examples for complex media workflows.
+    - api_docs: Return URLs for Swagger UI, ReDoc, and OpenAPI schema.
 
     ## Return Format
     {"success": bool, "operation": str, "tools": list | None, "help": str | None, "error": str | None}
@@ -43,6 +44,7 @@ async def plex_help(
     await plex_help(operation="help")
     await plex_help(operation="list_tools")
     await plex_help(operation="tool_info", tool_name="plex_library")
+    await plex_help(operation="api_docs")
     """
     try:
         # Define available tools and their categories
@@ -391,12 +393,30 @@ Use list_tools to see all available tools, or tool_info to get details about a s
                 }
             )
 
+        if operation == "api_docs":
+            import os
+
+            backend_port = int(os.getenv("PLEX_BACKEND_PORT", "10740"))
+            base = f"http://localhost:{backend_port}"
+            return ToolResult(
+                content={
+                    "success": True,
+                    "operation": "api_docs",
+                    "swagger_ui": f"{base}/docs",
+                    "redoc": f"{base}/redoc",
+                    "openapi_json": f"{base}/openapi.json",
+                    "backend_port": backend_port,
+                    "webapp_url": f"http://localhost:{int(os.getenv('PLEX_FRONTEND_PORT', '10741'))}",
+                    "note": "The Swagger UI is available at /docs when the webapp backend is running.",
+                }
+            )
+
         return ToolResult(
             content={
                 "success": False,
                 "error": f"Unknown operation: {operation}",
                 "error_code": "INVALID_OPERATION",
-                "suggestions": ["Use one of: help, list_tools, tool_info, examples"],
+                "suggestions": ["Use one of: help, list_tools, tool_info, examples, api_docs"],
             }
         )
 
