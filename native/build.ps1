@@ -108,6 +108,20 @@ $nsisDir = "$PSScriptRoot\target\release\bundle\nsis"
 if (Test-Path $nsisDir) { Copy-Item "$nsisDir\*-setup.exe" "$distDir\" -Force }
 $strayExe = "$PSScriptRoot\target\release\${RepoName}-backend.exe"
 if (Test-Path $strayExe) { Remove-Item $strayExe -Force; Write-Host "  Cleaned stray: $strayExe" -ForegroundColor DarkGray }
+
+# Restore standalone .next cache (Tauri build left basePath:/app, breaks next start)
+$frontendDir = Join-Path $Root "webapp\frontend"
+if (Test-Path "$frontendDir\next.config.js") {
+    Write-Host "-> [5/5] Restoring standalone Next.js build..." -ForegroundColor Yellow
+    Push-Location $frontendDir
+    Remove-Item ".next" -Recurse -Force -ErrorAction SilentlyContinue
+    npm run build 2>&1 | Out-Null
+    if ((Test-Path ".next/static") -and -not (Test-Path ".next/standalone/.next/static")) {
+        Copy-Item ".next/static" ".next/standalone/.next/static" -Recurse -Force
+    }
+    Pop-Location
+}
+
 Write-Host "=== Build complete ===" -ForegroundColor Green
 Write-Host "Ship: $nsisDir\*.exe"
 

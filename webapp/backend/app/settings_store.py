@@ -62,15 +62,10 @@ def _path() -> Path:
     return base / "settings.json"
 
 
-def _dotenv_candidates() -> list[Path]:
-    """Known credential files — dev .env first, then app-data drop-in."""
+def _dotenv_path() -> Path:
+    """Single .env location — repo root. One source of truth, no fallback chain."""
     backend_dir = Path(__file__).resolve().parent.parent
-    repo_root = backend_dir.parent.parent
-    return [
-        _app_data_dir() / ".env",
-        backend_dir / ".env",
-        repo_root / ".env",
-    ]
+    return backend_dir.parent.parent / ".env"
 
 
 def _parse_dotenv(path: Path) -> dict[str, str]:
@@ -91,7 +86,7 @@ def _parse_dotenv(path: Path) -> dict[str, str]:
 
 
 def _import_dotenv_into_settings() -> None:
-    """If Plex token not in settings.json, bootstrap from an existing .env file."""
+    """Import .env into settings.json. .env ALWAYS wins over cached settings.json."""
     p = _path()
     data: dict[str, str] = {}
     if p.exists():
@@ -102,23 +97,19 @@ def _import_dotenv_into_settings() -> None:
                 data = {k: str(v) for k, v in loaded.items() if v is not None}
         except (json.JSONDecodeError, OSError):
             pass
-    if data.get("plex_token", "").strip():
-        return
 
-    for env_path in _dotenv_candidates():
-        if not env_path.is_file():
-            continue
+    merged = dict(data)
+    env_path = _dotenv_path()
+    if env_path.is_file():
         parsed = _parse_dotenv(env_path)
-        merged: dict[str, str] = dict(data)
         for env_key, settings_key in _DOTENV_TO_SETTINGS.items():
             val = parsed.get(env_key, "").strip()
-            if val and not merged.get(settings_key, "").strip():
+            if val:
                 merged[settings_key] = val
-        if merged.get("plex_token", "").strip():
-            p.parent.mkdir(parents=True, exist_ok=True)
-            with p.open("w", encoding="utf-8") as f:
-                json.dump(merged, f, indent=2)
-            return
+    if merged != data:
+        p.parent.mkdir(parents=True, exist_ok=True)
+        with p.open("w", encoding="utf-8") as f:
+            json.dump(merged, f, indent=2)
 
 
 def load_and_apply() -> None:

@@ -165,4 +165,16 @@ def tool_payload(result):
     # Priority: content dict > content list[TextContent] > structured_content
 ```
 
+## HTTP Daemon + Stdio Proxy
+
+This server owns persistent state (cache database, Plex server connection state). To prevent state contention when multiple stdio clients connect concurrently, use the HTTP Daemon + Stdio Proxy pattern:
+
+1. Start the HTTP daemon (owns DB): `python -m plex_mcp.server` (HTTP mode)
+2. Stdio clients (Claude Desktop, opencode, Cursor) probe `http://127.0.0.1:10740/mcp` on startup
+3. If the daemon is alive, the stdio instance becomes a lightweight proxy via `create_proxy()` — zero DB initialization
+4. If unreachable, starts normally as a standalone server
+
+**Env var** to override the probe URL: `PLEX_MCP_API_URL` (default: `http://127.0.0.1:10740/mcp`)
+**Reference implementation:** `src/plex_mcp/server.py`
+
 Install docs: follow mcp-central-docs/standards/AGENT_INSTALL_REFERENCE.md

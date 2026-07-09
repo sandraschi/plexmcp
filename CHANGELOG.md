@@ -1,4 +1,13 @@
 
+## [Unreleased] — 2026-07-09
+
+### Fixed
+- **Settings `.env` footgun removed:** `settings_store.py` no longer caches expired tokens in `settings.json` — `.env` always wins, no fallback chain across multiple `.env` files
+- **Config `.env` fallback chain removed:** `config.py` `_env_files()` replaced with single `_env_file()` pointing to repo root `.env` only
+- **Movies filter bug fixed:** `media_type` was passed as raw Plex filter field `mediatype` (Plex uses `libtype`) — changed to `libtype=media_type` parameter in both browse and search paths
+- **`min_rating` filter crash fixed:** Removed from Plex filter kwargs (Plex has no `minRating` field), applied as post-search Python filter instead
+- **Backend `search_media` now strips invalid filter fields:** `media_type` and `min_rating` popped from filters before passing to Plex API
+
 ## [Unreleased] — 2026-06-17
 
 ### Added

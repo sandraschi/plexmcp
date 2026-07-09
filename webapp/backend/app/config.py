@@ -6,25 +6,17 @@ from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-def _env_files() -> tuple[str, ...] | None:
-    paths: list[Path] = []
-    app_env = Path(os.environ.get("LOCALAPPDATA", "")) / "ai.fleet.plex-mcp" / ".env"
-    if app_env.is_file():
-        paths.append(app_env)
-    backend_env = Path(__file__).resolve().parent.parent / ".env"
-    if backend_env.is_file():
-        paths.append(backend_env)
-    repo_env = backend_env.parent.parent / ".env"
-    if repo_env.is_file():
-        paths.append(repo_env)
-    return tuple(str(p) for p in paths) if paths else None
+def _env_file() -> str | None:
+    """Single .env at repo root. One source of truth, no fallback chain."""
+    repo_env = Path(__file__).resolve().parent.parent.parent / ".env"
+    return str(repo_env) if repo_env.is_file() else None
 
 
 class Settings(BaseSettings):
     """Application settings."""
 
     model_config = SettingsConfigDict(
-        env_file=_env_files(),
+        env_file=_env_file(),
         env_file_encoding="utf-8",
         case_sensitive=True,
         extra="ignore",
@@ -38,9 +30,7 @@ class Settings(BaseSettings):
     PORT: int = 10740
     RELOAD: bool = True
 
-    CORS_ORIGINS: str = (
-        "http://localhost:10741,http://127.0.0.1:10741,http://goliath:10741,http://goliath:10740,http://tauri.localhost,https://tauri.localhost,tauri://localhost"
-    )
+    CORS_ORIGINS: str = "http://localhost:10741,http://127.0.0.1:10741,http://goliath:10741,http://goliath:10740,http://tauri.localhost,https://tauri.localhost,tauri://localhost"
 
     @property
     def cors_origins_list(self) -> list[str]:

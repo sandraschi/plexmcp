@@ -1,10 +1,10 @@
 "use client";
 
+import { useZoom } from "@/hooks/useZoom";
 import { useEffect, useState } from "react";
 import { BackendStatusBanner } from "./backend-status-banner";
 import { Sidebar } from "./sidebar";
 import { Topbar } from "./topbar";
-import { useZoom } from "@/hooks/useZoom";
 
 const STORAGE_KEY = "plex-sidebar-collapsed";
 

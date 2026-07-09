@@ -1195,7 +1195,10 @@ class PlexMediaService(BaseService):
             if sort:
                 search_params["sort"] = sort
 
-            # Add additional filters
+            # Add additional filters (strip media_type to prevent it being passed to Plex as a filter field)
+            # Strip non-Plex filter fields to prevent "Unknown filter field" errors
+            for _key in ("media_type", "min_rating"):
+                filters.pop(_key, None)
             search_params.update({k.replace("_", ""): v for k, v in filters.items() if v is not None})
 
             # Execute search

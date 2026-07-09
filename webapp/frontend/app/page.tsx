@@ -26,7 +26,11 @@ export default function Home() {
 			while (!cancelled) {
 				try {
 					const s = await getServerStatus();
-					if (!cancelled) { setStatus(s); retryCount.current = 0; break; }
+					if (!cancelled) {
+						setStatus(s);
+						retryCount.current = 0;
+						break;
+					}
 				} catch {
 					if (cancelled) return;
 					const delay = Math.min(1000 * Math.pow(2, retryCount.current), 30000);
@@ -46,7 +50,9 @@ export default function Home() {
 			}
 			if (!cancelled) setLoading(false);
 		})();
-		return () => { cancelled = true; };
+		return () => {
+			cancelled = true;
+		};
 	}, []);
 
 	const cards = [

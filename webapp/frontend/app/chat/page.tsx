@@ -12,6 +12,7 @@ interface Message {
 
 const STORAGE_KEY = "plex-mcp-chat-history";
 const PERSONALITY_KEY = "plex-mcp-chat-personality";
+const CUSTOM_PROMPT_KEY = "plex-mcp-chat-custom-prompt";
 const MAX_MESSAGES = 100;
 
 const PERSONALITIES = [
@@ -52,6 +53,7 @@ const PERSONALITIES = [
 		preprompt:
 			"You are a friendly media enthusiast. Chat naturally about movies, shows, and recommendations.",
 	},
+	{ id: "custom", label: "Custom", preprompt: "" },
 ];
 
 const EXAMPLE_PROMPTS = [
@@ -93,6 +95,14 @@ export default function ChatPage() {
 	const [model, setModel] = useState("gemma4:12b");
 	const [models, setModels] = useState<string[]>([]);
 	const [personality, setPersonality] = useState(loadPersonality);
+	const [customPrompt, setCustomPrompt] = useState("");
+
+	useEffect(() => {
+		try {
+			const saved = localStorage.getItem(CUSTOM_PROMPT_KEY);
+			if (saved) setCustomPrompt(saved);
+		} catch {}
+	}, []);
 	const [providerStatus, setProviderStatus] = useState<"connected" | "offline" | "detecting">(
 		"detecting",
 	);
@@ -209,12 +219,15 @@ export default function ChatPage() {
 		setInput("");
 		setLoading(true);
 
-		const preprompt = PERSONALITIES.find((p) => p.id === personality)?.preprompt ?? "";
+		const useCustom = personality === "custom";
+		const preprompt = useCustom
+			? customPrompt
+			: (PERSONALITIES.find((p) => p.id === personality)?.preprompt ?? "");
 		const messagesToSend = preprompt
 			? [{ role: "system" as const, content: preprompt }, ...messages, userMsg]
 			: [...messages, userMsg];
 		try {
-			const res = await fetch(`${API_BASE}/api/llm/chat`, {
+			const res = await fetch(`${API_BASE}/api/llm/agentic`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
@@ -223,7 +236,6 @@ export default function ChatPage() {
 						content: x.content,
 					})),
 					model,
-					stream: false,
 				}),
 			});
 			const text = await res.text();
@@ -310,6 +322,23 @@ export default function ChatPage() {
 						)}
 					</select>
 				</div>
+				{personality === "custom" && (
+					<div className="self-stretch flex-1 max-w-md">
+						<label className="block text-xs text-slate-400 mb-1">Custom Prompt</label>
+						<textarea
+							value={customPrompt}
+							onChange={(e) => {
+								setCustomPrompt(e.target.value);
+								try {
+									localStorage.setItem(CUSTOM_PROMPT_KEY, e.target.value);
+								} catch {}
+							}}
+							placeholder="Write your custom system prompt here..."
+							rows={2}
+							className="w-full px-3 py-1.5 rounded bg-zinc-800 border border-zinc-600 text-zinc-100 text-xs placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-amber resize-none"
+						/>
+					</div>
+				)}
 				<div className="flex items-center gap-2 self-center">
 					<span
 						className={`w-2 h-2 rounded-full ${

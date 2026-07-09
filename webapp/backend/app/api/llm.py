@@ -1,5 +1,6 @@
 """LLM API for chat, prompt refine, and workflows (Ollama / OpenAI-compatible)."""
 
+import json
 import logging
 import os
 
@@ -15,6 +16,55 @@ logger = logging.getLogger(__name__)
 
 OLLAMA_DEFAULT = "http://127.0.0.1:11434"
 LMSTUDIO_DEFAULT = "http://127.0.0.1:1234/v1"
+
+TOOLS = [
+    {
+        "type": "function",
+        "function": {
+            "name": "list_libraries",
+            "description": "List all Plex media libraries with their types (movie, show, music, photo).",
+            "parameters": {"type": "object", "properties": {}, "required": []},
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "search_media",
+            "description": "Search for media in Plex by title, actor, genre, or year.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "Search text — title, actor, or keywords."},
+                    "library_id": {"type": "string", "description": "Library section ID to search within (optional)."},
+                    "limit": {"type": "integer", "description": "Max results (1-50).", "default": 15},
+                },
+                "required": [],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_server_status",
+            "description": "Get Plex server status, version, and connection info.",
+            "parameters": {"type": "object", "properties": {}, "required": []},
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_recent_media",
+            "description": "Get recently added media across all libraries.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "limit": {"type": "integer", "description": "Max results.", "default": 20},
+                },
+                "required": [],
+            },
+        },
+    },
+]
 
 
 def _get_base_url(provider: str | None = None, base_url: str | None = None) -> str:
@@ -133,6 +183,123 @@ async def chat(
         if r.status_code != 200:
             return {"error": r.text, "status": r.status_code}
         return r.json()
+
+
+async def _llm_call(messages: list, model: str, url: str, tools: list | None = None) -> dict | None:
+    if ":11434" in url or "ollama" in url.lower():
+        payload = {"model": model, "messages": messages, "stream": False}
+        if tools:
+            payload["tools"] = tools
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            try:
+                r = await client.post(f"{url}/api/chat", json=payload)
+                return r.json() if r.status_code == 200 else None
+            except httpx.ConnectError:
+                return None
+    headers = {"Content-Type": "application/json"}
+    key = os.environ.get("LLM_API_KEY") or settings.LLM_API_KEY
+    if key:
+        headers["Authorization"] = f"Bearer {key}"
+    payload = {"model": model, "messages": messages, "stream": False}
+    if tools:
+        payload["tools"] = tools
+    async with httpx.AsyncClient(timeout=120.0) as client:
+        try:
+            r = await client.post(f"{url}/v1/chat/completions", json=payload, headers=headers)
+            return r.json() if r.status_code == 200 else None
+        except httpx.ConnectError:
+            return None
+
+
+def _extract_message(data: dict | None) -> dict | None:
+    if not data:
+        return None
+    if "message" in data:
+        return data["message"]
+    choices = data.get("choices", [])
+    return choices[0].get("message") if choices else None
+
+
+def _extract_content(msg: dict | None) -> str:
+    return (msg or {}).get("content") or ""
+
+
+def _extract_tool_calls(msg: dict | None) -> list[dict]:
+    tc = (msg or {}).get("tool_calls") or []
+    return [{"id": t.get("id", ""), "function": t.get("function", t)} for t in tc]
+
+
+async def _dispatch_mcp(tool_name: str, args: dict) -> dict:
+    from ..mcp.client import mcp_client as _mc
+
+    route = {
+        "list_libraries": ("plex_library", {"operation": "list"}),
+        "search_media": ("plex_search", {"operation": "search", "query": args.get("query", ""), "limit": min(args.get("limit", 15), 50)}),
+        "get_server_status": ("plex_server", {"operation": "status"}),
+        "get_recent_media": ("plex_media", {"operation": "get_recent", "limit": min(args.get("limit", 20), 50)}),
+    }
+    mcp_tool, mcp_args = route.get(tool_name, (None, None))
+    if not mcp_tool:
+        return {"error": f"Unknown tool: {tool_name}"}
+    try:
+        result = await _mc.call_tool(mcp_tool, mcp_args)
+        return result if isinstance(result, dict) else {"result": str(result)}
+    except Exception as e:
+        logger.warning("Tool call %s failed: %s", tool_name, e)
+        return {"error": str(e)}
+
+
+@router.post("/agentic")
+async def agentic_chat(
+    messages: list[dict[str, str]] = Body(...),
+    model: str = Body("gemma4:12b"),
+    provider: str | None = Body(None),
+    base_url: str | None = Body(None),
+):
+    """Agentic chat with proper OpenAI-compatible tool calling for Plex."""
+    try:
+        return await _agentic_impl(messages, model, provider, base_url)
+    except Exception as e:
+        logger.error("Agentic chat error: %s", e, exc_info=True)
+        return {"message": {"role": "assistant", "content": f"Sorry, something went wrong: {e}"}}
+
+
+async def _agentic_impl(
+    messages: list[dict[str, str]], model: str, provider: str | None, base_url: str | None,
+) -> dict:
+    url = _get_base_url(provider, base_url)
+    system_msgs = [m for m in messages if m["role"] == "system"]
+    history = [m for m in messages if m["role"] in ("user", "assistant")]
+    if not history:
+        return {"message": {"role": "assistant", "content": "Send a message to start."}}
+
+    ctx = [*system_msgs, *history]
+    for _turn in range(5):
+        data = await _llm_call(ctx, model, url, tools=TOOLS)
+        msg = _extract_message(data)
+        if not msg:
+            return {"message": {"role": "assistant", "content": "LLM not reachable"}}
+
+        content = _extract_content(msg)
+        tool_calls = _extract_tool_calls(msg)
+        if not tool_calls:
+            return {"message": {"role": "assistant", "content": content or "Done."}}
+
+        ctx.append({"role": "assistant", "content": content or "", "tool_calls": tool_calls})
+        for tc in tool_calls:
+            fn = tc.get("function", {})
+            name = fn.get("name", "") if isinstance(fn, dict) else ""
+            raw_args = fn.get("arguments", "{}") if isinstance(fn, dict) else "{}"
+            parsed_args = json.loads(raw_args) if isinstance(raw_args, str) else raw_args
+
+            result = await _dispatch_mcp(name, parsed_args)
+            result_str = json.dumps(result, default=str, ensure_ascii=False)
+            if len(result_str) > 4000:
+                result_str = result_str[:4000] + "\n... (truncated)"
+            ctx.append({"role": "tool", "content": result_str, "tool_call_id": tc.get("id", ""), "name": name})
+
+    last_msg = _extract_message(await _llm_call(ctx, model, url))
+    return {"message": {"role": "assistant", "content": _extract_content(last_msg) or "I need more specific information."}}
 
 
 @router.post("/refine")
