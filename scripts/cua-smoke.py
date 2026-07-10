@@ -119,182 +119,86 @@ def log_warn(msg: str):
     print(f"  [WARN] {msg}", flush=True)
 
 
-# ── CUA Client (pywinauto-mcp HTTP API → fallback to direct) ─────
+# ── Direct pywinauto (no pywinauto-mcp dependency) ─────────────────
 
-_CUA_CLIENT_OK = False  # Did we connect to pywinauto-mcp?
-
-
-def _init_cua_client():
-    """Try pywinauto-mcp HTTP API first, then direct imports, then flag unavailable."""
-    global _CUA_CLIENT_OK
-    # Try HTTP API
-    try:
-        r = urllib.request.urlopen("http://127.0.0.1:10789/api/v1/health", timeout=2)
-        if r.status == 200:
-            log("pywinauto-mcp HTTP API reachable at :10789")
-            _CUA_CLIENT_OK = True
-            return "http"
-    except Exception:
-        pass
-    # Try direct import
-    try:
-        import pywinauto  # noqa: F401
-
-        log("pywinauto direct import OK")
-        _CUA_CLIENT_OK = True
-        return "direct"
-    except ImportError:
-        pass
-    log("CUA client unavailable (install pywinauto or start pywinauto-mcp at :10789)")
-    return None
-
-
-def _cua_call(tool: str, params: dict) -> dict | None:
-    """Call pywinauto-mcp tool via HTTP API, or run directly if available."""
-    if _CUA_CLIENT_MODE == "http":
-        try:
-            body = json.dumps({"name": tool, "arguments": params}).encode()
-            r = urllib.request.Request(
-                "http://127.0.0.1:10789/api/v1/tools/call",
-                data=body,
-                headers={"Content-Type": "application/json"},
-            )
-            resp = urllib.request.urlopen(r, timeout=30)
-            return json.loads(resp.read())
-        except Exception as e:
-            log(f"CUA HTTP call '{tool}' failed: {e}")
-            return None
-    elif _CUA_CLIENT_MODE == "direct":
-        return _cua_call_direct(tool, params)
-    return None
-
-
-def _cua_call_direct(tool: str, params: dict) -> dict | None:
-    """Run a pywinauto-mcp tool function directly via import."""
-    try:
-        if tool == "automation_windows":
-            from pywinauto_mcp.tools.portmanteau_windows import automation_windows
-
-            op = params.get("operation", "find")
-            result = automation_windows(op, **{k: v for k, v in params.items() if k != "operation"})
-            return {"result": result}
-        if tool == "automation_visual":
-            from pywinauto_mcp.tools.portmanteau_visual import automation_visual
-
-            result = automation_visual(**params)
-            return {"result": result}
-        if tool == "automation_elements":
-            from pywinauto_mcp.tools.portmanteau_elements import automation_elements
-
-            result = automation_elements(**params)
-            return {"result": result}
-        if tool == "automation_mouse":
-            from pywinauto_mcp.tools.portmanteau_mouse import automation_mouse
-
-            result = automation_mouse(**params)
-            return {"result": result}
-        if tool == "get_window_state":
-            from pywinauto_mcp.tools.window_state import get_window_state
-
-            result = get_window_state(**params)
-            return {"result": result}
-    except Exception as e:
-        log(f"Direct call '{tool}' failed: {e}")
-        return None
-
-
-_CUA_CLIENT_MODE = _init_cua_client()
+try:
+    import pywinauto
+    import pywinauto.findwindows
+    _HAS_PYWAUTO = True
+except ImportError:
+    _HAS_PYWAUTO = False
 
 
 def cua_available() -> bool:
-    return _CUA_CLIENT_OK
+    return _HAS_PYWAUTO
+
+
+def _find_tauri_window(title_re: str):
+    """Find Tauri webview window — excludes classic apps by class_name."""
+    wins = pywinauto.findwindows.find_elements(title_re=title_re)
+    tauri = [w for w in wins if w.class_name != "QMainWindow"]
+    if not tauri:
+        raise RuntimeError(f"No Tauri window found (classes: {set(w.class_name for w in wins)})")
+    return tauri[0].handle
+
+
+def _get_window(handle: int):
+    app = pywinauto.Application(backend="uia").connect(handle=handle)
+    return app.window(handle=handle)
 
 
 def cua_find_window(title_re: str = "") -> dict | None:
     """Find a window by title regex. Returns {handle, title, rect} or None."""
-    result = _cua_call("automation_windows", {"operation": "find", "title": title_re, "partial": True})
-    if result and result.get("result", {}).get("status") == "success":
-        windows = result["result"].get("data", {}).get("windows", [])
-        if windows:
-            return windows[0]
-    # Fallback to pywinauto directly
     try:
         import pywinauto
 
-        app = pywinauto.Application(backend="uia").connect(title_re=title_re)
-        win = app.window(title_re=title_re)
+        wins = pywinauto.findwindows.find_elements(title_re=title_re)
+        tauri = [w for w in wins if w.class_name != "QMainWindow"]
+        if not tauri:
+            return None
+        handle = tauri[0].handle
+        app = pywinauto.Application(backend="uia").connect(handle=handle)
+        win = app.window(handle=handle)
         win.wait("visible", timeout=5)
         rect = win.rectangle()
         w = rect.width if isinstance(rect.width, int) else rect.width()
         h = rect.height if isinstance(rect.height, int) else rect.height()
-        return {
-            "handle": win.handle,
-            "title": win.window_text(),
-            "rect": {"left": rect.left, "top": rect.top, "width": w, "height": h},
-        }
+        return {"handle": handle, "title": win.window_text(), "rect": {"left": rect.left, "top": rect.top, "width": w, "height": h}}
     except Exception:
         return None
 
 
 def cua_screenshot(window_handle: int = 0, output_path: str = "") -> str | None:
     """Take a screenshot. Returns path or None."""
-    if _CUA_CLIENT_MODE == "http":
-        result = _cua_call(
-            "automation_visual",
-            {
-                "operation": "screenshot",
-                "window_handle": window_handle,
-                "format": "png",
-                "output_path": output_path,
-            },
-        )
-        if result and result.get("result", {}).get("status") == "success":
-            path = result["result"].get("data", {}).get("screenshot_path", output_path)
-            if os.path.exists(path):
-                return path
     try:
         import pywinauto
 
-        app = pywinauto.Application(backend="uia").connect(title_re=WINDOW_TITLE_RE)
-        win = app.window(title_re=WINDOW_TITLE_RE)
-        win.set_focus()
-        time.sleep(1)
-        capture = win.capture_as_image()
-        capture.save(output_path)
-        return output_path
+        wins = pywinauto.findwindows.find_elements(title_re=WINDOW_TITLE_RE)
+        tauri = [w for w in wins if w.class_name != "QMainWindow"]
+        if tauri:
+            app = pywinauto.Application(backend="uia").connect(handle=tauri[0].handle)
+            win = app.window(handle=tauri[0].handle)
+            win.set_focus()
+            time.sleep(1)
+            capture = win.capture_as_image()
+            capture.save(output_path)
+            return output_path
     except Exception:
         return None
 
 
 def cua_ocr_text(window_handle: int = 0, image_path: str = "") -> str:
     """Run OCR on a window screenshot. Returns text."""
-    # Try HTTP API OCR
-    if _CUA_CLIENT_MODE == "http" and window_handle:
-        result = _cua_call(
-            "automation_visual",
-            {
-                "operation": "extract_text",
-                "window_handle": window_handle,
-            },
-        )
-        if result and result.get("result", {}).get("status") == "success":
-            return result["result"].get("data", {}).get("text", "")
-    # Try direct pytesseract
     try:
         import pytesseract
-
         pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
         if image_path and os.path.exists(image_path):
             from PIL import Image
-
             return pytesseract.image_to_string(Image.open(image_path))
         if window_handle:
-            import pywinauto
-
-            app = pywinauto.Application(backend="uia").connect(title_re=WINDOW_TITLE_RE)
-            win = app.window(title_re=WINDOW_TITLE_RE)
+            app = pywinauto.Application(backend="uia").connect(handle=window_handle)
+            win = app.window(handle=window_handle)
             from PIL import Image
-
             capture = win.capture_as_image()
             return pytesseract.image_to_string(capture)
     except Exception:
@@ -303,17 +207,8 @@ def cua_ocr_text(window_handle: int = 0, image_path: str = "") -> str:
 
 
 def cua_click(window_handle: int, x: int, y: int):
-    """Click at (x,y) relative to window."""
-    if _CUA_CLIENT_MODE == "http":
-        _cua_call("automation_mouse", {"operation": "click", "x": x, "y": y, "absolute": True})
-        return
-    if _CUA_CLIENT_MODE == "direct":
-        try:
-            import pywinauto.mouse
-
-            pywinauto.mouse.click(button="left", coords=(x, y))
-        except Exception:
-            pass
+    """No-op: coordinate-based clicking is unreliable and breaks user input."""
+    pass
 
 
 # ── Helpers ───────────────────────────────────────────────────────────
@@ -491,56 +386,21 @@ def verify_webview_bridge(output_dir: str):
 
 
 def nav_click_through(output_dir: str):
-    """Click each sidebar nav item, verify page loads via OCR."""
-    if not cua_available():
-        log("CUA client unavailable -- nav click-through skipped")
-        return
-
-    nav_routes = cfg(
-        "nav_routes",
-        [["Dashboard", "Automation Dashboard"], ["Logging", "Logs"], ["Settings", "Settings"], ["Help", "Help"]],
-    )
-    if isinstance(nav_routes, list):
-        nav_routes = [(r[0], r[1]) for r in nav_routes if len(r) >= 2]
-
-    # Get window rect for coordinate-based clicking
+    """Verify nav labels are visible via OCR — no clicking (breaks user input)."""
     win = cua_find_window(WINDOW_TITLE_RE)
     if not win:
-        log("No window found for nav click-through")
+        log("No window found for nav check")
         return
-    r = win.get("rect", {}) or {}
-    wx = r.get("left", 0) or 0
-    wy = r.get("top", 0) or 0
-    snap_dir = os.path.join(output_dir, "nav")
-
-    for label, expected_header in nav_routes:
-        try:
-            idx = next((i for i, (l, _) in enumerate(nav_routes) if l == label), 0)
-            sidebar_click_x = int(cfg("sidebar_click_x", 30))
-            sidebar_first_y = int(cfg("sidebar_first_y", 90))
-            sidebar_step_y = int(cfg("sidebar_step_y", 55))
-            click_x = wx + sidebar_click_x
-            click_y = wy + sidebar_first_y + idx * sidebar_step_y
-            cua_click(win.get("handle", 0), click_x, click_y)
-            time.sleep(2)
-
-            # OCR after click
-            snap_path = os.path.join(snap_dir, f"nav-{label.lower()}-{int(time.time())}.png")
-            os.makedirs(snap_dir, exist_ok=True)
-            result = cua_screenshot(win.get("handle", 0), snap_path)
-            text = cua_ocr_text(win.get("handle", 0), snap_path)
-
-            if expected_header.lower() in text.lower():
-                log(f"Nav '{label}': V page loaded (found '{expected_header}')")
-            else:
-                log(f"Nav '{label}': X header '{expected_header}' not found in OCR")
-
-        except Exception as e:
-            log(f"Nav '{label}' failed (non-fatal): {e}")
-
-    # Return to dashboard
-    cua_click(win.get("handle", 0), wx + sidebar_click_x, wy + sidebar_first_y)
-    time.sleep(1)
+    snap_path = os.path.join(output_dir, f"nav-{int(time.time())}.png")
+    os.makedirs(os.path.dirname(snap_path), exist_ok=True)
+    result = cua_screenshot(win.get("handle", 0), snap_path)
+    text = cua_ocr_text(win.get("handle", 0), snap_path)
+    nav_items = cfg("nav_routes", [["Overview", "Overview"], ["Books", "Books"], ["Search", "Search"]])
+    for label, expected in nav_items:
+        if expected.lower() in text.lower():
+            log(f"Nav '{label}': V visible in OCR")
+        else:
+            log(f"Nav '{label}': X '{expected}' not found in OCR (non-fatal)")
 
 
 # ── Phase 10: Log analysis ────────────────────────────────────────────
