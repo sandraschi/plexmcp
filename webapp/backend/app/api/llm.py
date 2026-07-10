@@ -234,7 +234,10 @@ async def _dispatch_mcp(tool_name: str, args: dict) -> dict:
 
     route = {
         "list_libraries": ("plex_library", {"operation": "list"}),
-        "search_media": ("plex_search", {"operation": "search", "query": args.get("query", ""), "limit": min(args.get("limit", 15), 50)}),
+        "search_media": (
+            "plex_search",
+            {"operation": "search", "query": args.get("query", ""), "limit": min(args.get("limit", 15), 50)},
+        ),
         "get_server_status": ("plex_server", {"operation": "status"}),
         "get_recent_media": ("plex_media", {"operation": "get_recent", "limit": min(args.get("limit", 20), 50)}),
     }
@@ -265,7 +268,10 @@ async def agentic_chat(
 
 
 async def _agentic_impl(
-    messages: list[dict[str, str]], model: str, provider: str | None, base_url: str | None,
+    messages: list[dict[str, str]],
+    model: str,
+    provider: str | None,
+    base_url: str | None,
 ) -> dict:
     url = _get_base_url(provider, base_url)
     system_msgs = [m for m in messages if m["role"] == "system"]
@@ -299,7 +305,9 @@ async def _agentic_impl(
             ctx.append({"role": "tool", "content": result_str, "tool_call_id": tc.get("id", ""), "name": name})
 
     last_msg = _extract_message(await _llm_call(ctx, model, url))
-    return {"message": {"role": "assistant", "content": _extract_content(last_msg) or "I need more specific information."}}
+    return {
+        "message": {"role": "assistant", "content": _extract_content(last_msg) or "I need more specific information."}
+    }
 
 
 @router.post("/refine")

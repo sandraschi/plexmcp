@@ -149,3 +149,11 @@ ignore = [
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
+
+[dependency-groups]
+dev = [
+    "pillow>=12.2.0",
+    "pyinstaller>=6.21.0",
+    "pytesseract>=0.3.13",
+    "pywinauto>=0.6.9",
+]
