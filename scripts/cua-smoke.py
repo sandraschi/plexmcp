@@ -178,8 +178,6 @@ def cua_screenshot(window_handle: int = 0, output_path: str = "") -> str | None:
         if tauri:
             app = pywinauto.Application(backend="uia").connect(handle=tauri[0].handle)
             win = app.window(handle=tauri[0].handle)
-            win.set_focus()
-            time.sleep(1)
             capture = win.capture_as_image()
             capture.save(output_path)
             return output_path
@@ -196,11 +194,10 @@ def cua_ocr_text(window_handle: int = 0, image_path: str = "") -> str:
             from PIL import Image
             return pytesseract.image_to_string(Image.open(image_path))
         if window_handle:
-            app = pywinauto.Application(backend="uia").connect(handle=window_handle)
-            win = app.window(handle=window_handle)
             from PIL import Image
-            capture = win.capture_as_image()
-            return pytesseract.image_to_string(capture)
+            capture = cua_screenshot(window_handle, f"{image_path or 'capture'}.png")
+            if capture and os.path.exists(capture):
+                return pytesseract.image_to_string(Image.open(capture))
     except Exception:
         pass
     return ""
