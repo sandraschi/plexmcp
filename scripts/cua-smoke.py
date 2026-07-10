@@ -185,6 +185,17 @@ def cua_screenshot(window_handle: int = 0, output_path: str = "") -> str | None:
         return None
 
 
+def _show_automation_warning():
+    """Warn user that automation is about to click around. Flashes a red HUD overlay."""
+    print("\n  " + "!" * 60, flush=True)
+    print("  !!! CUA AUTOMATION WARNING !!!", flush=True)
+    print("  !!! The script will now take control of the mouse and keyboard.", flush=True)
+    print("  !!! Please do not touch the mouse or keyboard until the test completes.", flush=True)
+    print("  !!! This will take approximately 3 seconds per page.", flush=True)
+    print("  " + "!" * 60 + "\n", flush=True)
+    time.sleep(3)
+
+
 def cua_ocr_text(window_handle: int = 0, image_path: str = "") -> str:
     """Run OCR on a window screenshot. Returns text."""
     try:
@@ -399,12 +410,31 @@ def verify_webview_bridge(output_dir: str):
 # ── Phase 9: Nav click-through ──────────────────────────────────────
 
 
+def _verify_page_ocr(text: str, label: str, expected: str) -> bool:
+    """Check OCR text for page validity. Returns True if page seems OK."""
+    text_lower = text.lower()
+    fail_keywords = ["404", "not found", "could not find", "error", "timeout", "internal server error", "bad gateway"]
+    for kw in fail_keywords:
+        if kw in text_lower:
+            log(f"  Page '{label}': ERROR keyword '{kw}' found in OCR")
+            return False
+    if not text.strip():
+        log(f"  Page '{label}': EMPTY OCR — page may be blank or not loading")
+        return False
+    if expected.lower() in text_lower:
+        log(f"  Page '{label}': V OK (found '{expected}')")
+        return True
+    log(f"  Page '{label}': X expected '{expected}' not found in OCR — page may be wrong")
+    return False
+
+
 def nav_click_through(output_dir: str):
     """Click each sidebar nav item, verify page loads via OCR."""
     if not cua_available():
         log("CUA client unavailable -- nav click-through skipped")
         return
     _release_mouse()
+    _show_automation_warning()
 
     nav_routes = cfg("nav_routes", [["Dashboard", "Automation Dashboard"], ["Logging", "Logs"], ["Settings", "Settings"], ["Help", "Help"]])
     nav_routes = [(r[0], r[1]) for r in nav_routes if len(r) >= 2]
@@ -417,6 +447,16 @@ def nav_click_through(output_dir: str):
     wy = r.get("top", 0) or 0
     snap_dir = os.path.join(output_dir, "nav")
 
+    # Bring window to front (user was warned)
+    try:
+        import pywinauto
+        app = pywinauto.Application(backend="uia").connect(handle=win["handle"])
+        w = app.window(handle=win["handle"])
+        w.set_focus()
+        time.sleep(1)
+    except Exception:
+        pass
+
     for label, expected_header in nav_routes:
         try:
             idx = next((i for i, (l, _) in enumerate(nav_routes) if l == label), 0)
@@ -424,19 +464,17 @@ def nav_click_through(output_dir: str):
             click_y = wy + int(cfg("sidebar_first_y", 90)) + idx * int(cfg("sidebar_step_y", 55))
             cua_click(win.get("handle", 0), click_x, click_y)
             _release_mouse()
-            time.sleep(2)
+            time.sleep(3)
 
             snap_path = os.path.join(snap_dir, f"nav-{label.lower()}-{int(time.time())}.png")
             os.makedirs(snap_dir, exist_ok=True)
             result = cua_screenshot(win.get("handle", 0), snap_path)
             text = cua_ocr_text(win.get("handle", 0), snap_path)
 
-            if expected_header.lower() in text.lower():
-                log(f"Nav '{label}': V page loaded (found '{expected_header}')")
-            else:
-                log(f"Nav '{label}': X header '{expected_header}' not found in OCR")
+            _verify_page_ocr(text, label, expected_header)
         except Exception as e:
             log(f"Nav '{label}' failed (non-fatal): {e}")
+            _release_mouse()
 
     _release_mouse()
 
