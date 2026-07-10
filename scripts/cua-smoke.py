@@ -428,6 +428,37 @@ def _verify_page_ocr(text: str, label: str, expected: str) -> bool:
     return False
 
 
+def _nav_click_element(win_handle: int, wx: int, wy: int, idx: int):
+    """Click a nav item. Tries UIA element finding first, falls back to coordinates."""
+    import pywinauto
+    app = pywinauto.Application(backend="uia").connect(handle=win_handle)
+    w = app.window(handle=win_handle)
+
+    # Try UIA: find sidebar link by class or type (Tauri WebView exposes nav as Hyperlink or Text)
+    try:
+        elements = w.descendants(control_type="Hyperlink")
+        if idx < len(elements):
+            elements[idx].click_input()
+            return
+    except Exception:
+        pass
+    # Try Pane (some WebView versions)  
+    try:
+        elements = w.descendants(control_type="Pane")
+        nav_elements = [e for e in elements if e.rectangle().left < wx + 200]
+        nav_elements_sorted = sorted(nav_elements, key=lambda e: e.rectangle().top)
+        if idx < len(nav_elements_sorted):
+            nav_elements_sorted[idx].click_input()
+            return
+    except Exception:
+        pass
+
+    # Fallback to coordinate click
+    click_x = wx + int(cfg("sidebar_click_x", 30))
+    click_y = wy + int(cfg("sidebar_first_y", 90)) + idx * int(cfg("sidebar_step_y", 55))
+    cua_click(win_handle, click_x, click_y)
+
+
 def nav_click_through(output_dir: str):
     """Click each sidebar nav item, verify page loads via OCR."""
     if not cua_available():
@@ -446,30 +477,28 @@ def nav_click_through(output_dir: str):
     wx = r.get("left", 0) or 0
     wy = r.get("top", 0) or 0
     snap_dir = os.path.join(output_dir, "nav")
+    handle = win.get("handle", 0)
 
     # Bring window to front (user was warned)
     try:
         import pywinauto
-        app = pywinauto.Application(backend="uia").connect(handle=win["handle"])
-        w = app.window(handle=win["handle"])
+        app = pywinauto.Application(backend="uia").connect(handle=handle)
+        w = app.window(handle=handle)
         w.set_focus()
         time.sleep(1)
     except Exception:
         pass
 
-    for label, expected_header in nav_routes:
+    for idx, (label, expected_header) in enumerate(nav_routes):
         try:
-            idx = next((i for i, (l, _) in enumerate(nav_routes) if l == label), 0)
-            click_x = wx + int(cfg("sidebar_click_x", 30))
-            click_y = wy + int(cfg("sidebar_first_y", 90)) + idx * int(cfg("sidebar_step_y", 55))
-            cua_click(win.get("handle", 0), click_x, click_y)
+            _nav_click_element(handle, wx, wy, idx)
             _release_mouse()
             time.sleep(3)
 
             snap_path = os.path.join(snap_dir, f"nav-{label.lower()}-{int(time.time())}.png")
             os.makedirs(snap_dir, exist_ok=True)
-            result = cua_screenshot(win.get("handle", 0), snap_path)
-            text = cua_ocr_text(win.get("handle", 0), snap_path)
+            cua_screenshot(handle, snap_path)
+            text = cua_ocr_text(handle, snap_path)
 
             _verify_page_ocr(text, label, expected_header)
         except Exception as e:
