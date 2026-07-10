@@ -204,8 +204,25 @@ def cua_ocr_text(window_handle: int = 0, image_path: str = "") -> str:
 
 
 def cua_click(window_handle: int, x: int, y: int):
-    """No-op: coordinate-based clicking is unreliable and breaks user input."""
-    pass
+    """Click at (x,y) relative to window."""
+    try:
+        import pywinauto.mouse
+        pywinauto.mouse.click(button="left", coords=(x, y))
+    except Exception:
+        pass
+
+
+def _release_mouse():
+    """Release all mouse buttons — call after any clicking to prevent stuck input."""
+    try:
+        import ctypes
+        MOUSEEVENTF_LEFTUP = 0x0004
+        MOUSEEVENTF_RIGHTUP = 0x0010
+        MOUSEEVENTF_MIDDLEUP = 0x0040
+        for flag in (MOUSEEVENTF_LEFTUP, MOUSEEVENTF_RIGHTUP, MOUSEEVENTF_MIDDLEUP):
+            ctypes.windll.user32.mouse_event(flag, 0, 0, 0, 0)
+    except Exception:
+        pass
 
 
 # ── Helpers ───────────────────────────────────────────────────────────
@@ -383,21 +400,45 @@ def verify_webview_bridge(output_dir: str):
 
 
 def nav_click_through(output_dir: str):
-    """Verify nav labels are visible via OCR — no clicking (breaks user input)."""
+    """Click each sidebar nav item, verify page loads via OCR."""
+    if not cua_available():
+        log("CUA client unavailable -- nav click-through skipped")
+        return
+    _release_mouse()
+
+    nav_routes = cfg("nav_routes", [["Dashboard", "Automation Dashboard"], ["Logging", "Logs"], ["Settings", "Settings"], ["Help", "Help"]])
+    nav_routes = [(r[0], r[1]) for r in nav_routes if len(r) >= 2]
     win = cua_find_window(WINDOW_TITLE_RE)
     if not win:
-        log("No window found for nav check")
+        log("No window found for nav click-through")
         return
-    snap_path = os.path.join(output_dir, f"nav-{int(time.time())}.png")
-    os.makedirs(os.path.dirname(snap_path), exist_ok=True)
-    result = cua_screenshot(win.get("handle", 0), snap_path)
-    text = cua_ocr_text(win.get("handle", 0), snap_path)
-    nav_items = cfg("nav_routes", [["Overview", "Overview"], ["Books", "Books"], ["Search", "Search"]])
-    for label, expected in nav_items:
-        if expected.lower() in text.lower():
-            log(f"Nav '{label}': V visible in OCR")
-        else:
-            log(f"Nav '{label}': X '{expected}' not found in OCR (non-fatal)")
+    r = win.get("rect", {}) or {}
+    wx = r.get("left", 0) or 0
+    wy = r.get("top", 0) or 0
+    snap_dir = os.path.join(output_dir, "nav")
+
+    for label, expected_header in nav_routes:
+        try:
+            idx = next((i for i, (l, _) in enumerate(nav_routes) if l == label), 0)
+            click_x = wx + int(cfg("sidebar_click_x", 30))
+            click_y = wy + int(cfg("sidebar_first_y", 90)) + idx * int(cfg("sidebar_step_y", 55))
+            cua_click(win.get("handle", 0), click_x, click_y)
+            _release_mouse()
+            time.sleep(2)
+
+            snap_path = os.path.join(snap_dir, f"nav-{label.lower()}-{int(time.time())}.png")
+            os.makedirs(snap_dir, exist_ok=True)
+            result = cua_screenshot(win.get("handle", 0), snap_path)
+            text = cua_ocr_text(win.get("handle", 0), snap_path)
+
+            if expected_header.lower() in text.lower():
+                log(f"Nav '{label}': V page loaded (found '{expected_header}')")
+            else:
+                log(f"Nav '{label}': X header '{expected_header}' not found in OCR")
+        except Exception as e:
+            log(f"Nav '{label}' failed (non-fatal): {e}")
+
+    _release_mouse()
 
 
 # ── Phase 10: Log analysis ────────────────────────────────────────────
@@ -511,22 +552,25 @@ def main():
     print(f"  CUA Smoke Test — {PRODUCT_NAME}")
     print(f"{'=' * 50}\n")
 
-    for is_fatal, name, fn in phases:
-        print(f"  Phase {phases.index((is_fatal, name, fn)) + 1}: {name}")
-        try:
-            fn()
-            print(f"  V {name}\n")
-            passed += 1
-        except PhaseFailed:
-            print(f"  X {name}\n")
-            failed += 1
-            if is_fatal:
-                fatal_failed = True
-        except Exception as e:
-            print(f"  X {name}: {e}\n")
-            failed += 1
-            if is_fatal:
-                fatal_failed = True
+    try:
+        for is_fatal, name, fn in phases:
+            print(f"  Phase {phases.index((is_fatal, name, fn)) + 1}: {name}")
+            try:
+                fn()
+                print(f"  V {name}\n")
+                passed += 1
+            except PhaseFailed:
+                print(f"  X {name}\n")
+                failed += 1
+                if is_fatal:
+                    fatal_failed = True
+            except Exception as e:
+                print(f"  X {name}: {e}\n")
+                failed += 1
+                if is_fatal:
+                    fatal_failed = True
+    finally:
+        _release_mouse()
 
     print(f"{'=' * 50}")
     print(f"  Result: {passed}/{passed + failed} phases passed")
