@@ -479,12 +479,13 @@ def nav_click_through(output_dir: str):
     snap_dir = os.path.join(output_dir, "nav")
     handle = win.get("handle", 0)
 
-    # Bring window to front (user was warned)
+    # Bring window to front and maximize (user was warned)
     try:
         import pywinauto
         app = pywinauto.Application(backend="uia").connect(handle=handle)
         w = app.window(handle=handle)
         w.set_focus()
+        w.maximize()
         time.sleep(1)
     except Exception:
         pass
