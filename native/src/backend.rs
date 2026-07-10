@@ -147,6 +147,7 @@ pub fn spawn_backend(app: AppHandle, state: &BackendProcess) -> Result<String, S
     command
         .current_dir(&workdir)
         .env("PORT", BACKEND_PORT.to_string())
+        .env("MCP_TRANSPORT", "http")
         .env("PLEX_TAURI", "1")
         .stdout(Stdio::null())
         .stderr(Stdio::null());
