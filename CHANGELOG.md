@@ -7,6 +7,10 @@
 - **Movies filter bug fixed:** `media_type` was passed as raw Plex filter field `mediatype` (Plex uses `libtype`) — changed to `libtype=media_type` parameter in both browse and search paths
 - **`min_rating` filter crash fixed:** Removed from Plex filter kwargs (Plex has no `minRating` field), applied as post-search Python filter instead
 - **Backend `search_media` now strips invalid filter fields:** `media_type` and `min_rating` popped from filters before passing to Plex API
+- **Tauri app frontend fixed:** `main.rs` navigates to backend URL immediately (with window retry); `backend.rs` now sets `MCP_TRANSPORT=http`
+- **PyInstaller opentelemetry crash fixed:** `build.ps1` patches `opentelemetry.context` StopIteration fallback; runtime hook disables propagator loading
+- **CUA smoke test rewritten:** uses direct pywinauto (no pywinauto-mcp dep); automation warning banner; set_focus + maximize before nav; UIA element discovery for sidebar nav; `_release_mouse()` in finally block; page verification via OCR (checks 404/error/blank)
+- **Nav links now UIA-accessible:** `aria-label` on every sidebar `<Link>`; `core:window:allow-set-focus` permission added to capabilities
 
 ## [Unreleased] — 2026-06-17
 
