@@ -255,11 +255,17 @@ def http_app():
         "http://127.0.0.1:10742",
         "http://localhost:10741",
         "http://127.0.0.1:10741",
+        "http://localhost:10740",
+        "http://127.0.0.1:10740",
+        "http://tauri.localhost",
+        "https://tauri.localhost",
+        "tauri://localhost",
     ]
     middleware = [
         Middleware(
             CORSMiddleware,
             allow_origins=allowed_origins,
+            allow_origin_regex=r"https?://(?:[a-zA-Z0-9-]+\.ts\.net|.*?\.tail-[a-f0-9]+\.ts\.net|tauri\.localhost|localhost|127\.0\.0\.1|192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|100\.\d{1,3}\.\d{1,3}\.\d{1,3})(?::\d+)?$|^tauri://localhost$",
             allow_methods=["*"],
             allow_headers=["*"],
             expose_headers=["*"],

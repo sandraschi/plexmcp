@@ -65,14 +65,16 @@ if not _is_stdio_mode:
         return 0
 
     async def health(request):
-        return JSONResponse({
-            "status": "ok",
-            "server": "plex-mcp",
-            "version": "2.4.1",
-            "uptime_seconds": int(_time_module.time() - _SERVER_START),
-            "tool_count": _count_plex_tools(),
-            "providers": {"plex": "connected"},
-        })
+        return JSONResponse(
+            {
+                "status": "ok",
+                "server": "plex-mcp",
+                "version": "2.4.1",
+                "uptime_seconds": int(_time_module.time() - _SERVER_START),
+                "tool_count": _count_plex_tools(),
+                "providers": {"plex": "connected"},
+            }
+        )
 
     async def metrics(request):
         body, media_type = prometheus_metrics_body_and_type()
@@ -89,7 +91,7 @@ if not _is_stdio_mode:
                     "https://tauri.localhost",
                     "tauri://localhost",
                 ],
-                allow_origin_regex=r"https?://tauri\.localhost(:\d+)?",
+                allow_origin_regex=r"https?://(?:[a-zA-Z0-9-]+\.ts\.net|.*?\.tail-[a-f0-9]+\.ts\.net|tauri\.localhost|localhost|127\.0\.0\.1|192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|100\.\d{1,3}\.\d{1,3}\.\d{1,3})(?::\d+)?$|^tauri://localhost$",
                 allow_credentials=True,
                 allow_methods=["*"],
                 allow_headers=["*"],
@@ -161,14 +163,25 @@ def main():
     _probe_url = os.environ.get("PLEX_MCP_API_URL", "http://127.0.0.1:10740/mcp")
     try:
         import httpx
+
         _resp = httpx.post(
             _probe_url,
-            json={"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2025-11-25", "capabilities": {}, "clientInfo": {"name": "probe", "version": "1"}}},
+            json={
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "initialize",
+                "params": {
+                    "protocolVersion": "2025-11-25",
+                    "capabilities": {},
+                    "clientInfo": {"name": "probe", "version": "1"},
+                },
+            },
             headers={"Accept": "application/json, text/event-stream"},
             timeout=0.5,
         )
         if _resp.status_code == 200:
             from fastmcp.server import create_proxy
+
             logger.info("HTTP daemon found at %s -- proxying tool calls", _probe_url)
             _proxy = create_proxy(_probe_url, name="Plex MCP")
             _proxy.run(transport="stdio")

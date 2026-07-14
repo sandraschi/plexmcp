@@ -1,0 +1,20 @@
+{
+  "timestamp": "2026-07-14T01:50:00Z",
+  "repo": "plex-mcp",
+  "assess_fix_version": "1.0",
+  "actions": [
+    "Created .opencode/skills/session-context.md with session context injection prompt",
+    "Fixed CORS allow_origins=[\"*\"] in src/plex_mcp/transport.py — replaced with explicit origins + allow_origin_regex for Tailscale/LAN/Tauri",
+    "Updated CORS in src/plex_mcp/app.py — added Tauri origins (tauri://localhost, http://tauri.localhost) and unconditional allow_origin_regex",
+    "Updated CORS in src/plex_mcp/server.py — expanded allow_origin_regex to cover Tailscale/LAN/CGNAT in addition to Tauri",
+    "Updated CORS in webapp/backend/app/main.py — made allow_origin_regex unconditional (was gated on PLEX_TAURI env var)",
+    "Updated glama.json — fixed tool count (8->20), framework (FastMCP 2.13+ -> FastMCP 3.4+), transports (added http), description",
+    "Ran ruff check src/ --quiet — passed clean",
+    "Ran ruff check webapp/backend/ --quiet — pre-existing E402 and PTH112 remain (not auto-fixable)",
+    "Built MCPB: dist/plex-mcp-v2.4.1.mcpb (21.0kB)"
+  ],
+  "pre_existing_ruff_issues": [
+    "webapp/backend/app/main.py: E402 (Module level import not at top of file) — 5 instances",
+    "webapp/backend/app/main.py: PTH112 (os.path.isdir -> Path.is_dir) — 2 instances"
+  ]
+}
