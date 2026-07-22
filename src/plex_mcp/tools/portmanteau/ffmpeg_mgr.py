@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+import tempfile
 from pathlib import Path
 from typing import Annotated, Literal
 
@@ -29,7 +30,16 @@ async def _get_plex_service() -> PlexService:
 @mcp.tool(version="1.0.0", annotations={"readOnlyHint": False, "destructiveHint": True})
 async def plex_ffmpeg_mgr(
     operation: Annotated[
-        Literal["sync_audio", "probe", "revert", "extract_subtitles", "sync_subtitles", "set_aspect"],
+        Literal[
+            "sync_audio",
+            "probe",
+            "revert",
+            "extract_subtitles",
+            "extract_clip",
+            "extract_audio",
+            "sync_subtitles",
+            "set_aspect",
+        ],
         Field(description="Operation to perform."),
     ],
     media_key: Annotated[str, Field(description="Plex ratingKey of the media item.")],
@@ -37,6 +47,11 @@ async def plex_ffmpeg_mgr(
     aspect_ratio: Annotated[str | None, Field(description="Target aspect ratio (e.g. 16:9).")] = None,
     stream_index: Annotated[int, Field(description="Stream index for subtitle extraction.")] = 0,
     reencode: Annotated[bool, Field(description="Full re-encode for set_aspect.")] = False,
+    start_seconds: Annotated[float, Field(description="Start offset in seconds for clip extraction.")] = 0,
+    duration_seconds: Annotated[float, Field(description="Duration in seconds for clip extraction.")] = 30,
+    output_path: Annotated[
+        str | None, Field(description="Output file path. Auto-generated in temp dir if omitted.")
+    ] = None,
 ) -> ToolResult:
     """Industrial-grade FFmpeg management tool for Plex media.
 
@@ -45,12 +60,24 @@ async def plex_ffmpeg_mgr(
     FFmpeg binaries. This avoids tool explosion while providing powerful repair
     capabilities for broken rips or sync-drifted media.
 
+    OPERATIONS:
+    - probe: Inspect media file streams and format metadata.
+    - sync_audio: Shift audio track timing by an offset.
+    - sync_subtitles: Shift subtitle track timing by an offset.
+    - revert: Restore the .bak backup of a modified file.
+    - extract_subtitles: Extract a subtitle stream to a sidecar file.
+    - extract_clip: Extract a video segment using FFmpeg with stream copy.
+    - extract_audio: Extract an audio segment as WAV PCM.
+    - set_aspect: Change display aspect ratio (metadata or re-encode).
+
     ## Return Format
     {"success": bool, "data": dict, "message": str}
 
     ## Examples
     await plex_ffmpeg_mgr(operation="probe", media_key="12345")
     await plex_ffmpeg_mgr(operation="sync_audio", media_key="12345", offset_seconds=-1.5)
+    await plex_ffmpeg_mgr(operation="extract_clip", media_key="12345", start_seconds=30, duration_seconds=10)
+    await plex_ffmpeg_mgr(operation="extract_audio", media_key="12345", start_seconds=60, duration_seconds=15)
     """
     plex = await _get_plex_service()
     try:
@@ -98,6 +125,14 @@ async def plex_ffmpeg_mgr(
             return await _handle_set_aspect(source_path, aspect_ratio, reencode, plex, media_key)
         if operation == "extract_subtitles":
             return await _handle_extract_subtitles(source_path, stream_index, plex, media_key)
+        if operation == "extract_clip":
+            return await _handle_extract_clip(
+                source_path, start_seconds, duration_seconds, output_path, plex, media_key
+            )
+        if operation == "extract_audio":
+            return await _handle_extract_audio(
+                source_path, start_seconds, duration_seconds, output_path, plex, media_key
+            )
 
         return ToolResult(
             content={
@@ -377,3 +412,106 @@ async def _handle_revert(file_path: Path, plex: PlexService, media_key: str) -> 
                 "error": f"Revert operation failed: {e!s}",
             }
         )
+
+
+async def _handle_extract_clip(
+    file_path: Path,
+    start_seconds: float,
+    duration_seconds: float,
+    output_path: str | None,
+    plex: PlexService,
+    media_key: str,
+) -> ToolResult:
+    """Extract a video segment using FFmpeg with stream copy."""
+    if output_path:
+        out = Path(output_path)
+    else:
+        tmp = Path(tempfile.gettempdir())
+        out = tmp / f"{file_path.stem}_clip_{start_seconds}_{duration_seconds}.mp4"
+
+    cmd = [
+        FFMPEG_PATH,
+        "-ss",
+        str(start_seconds),
+        "-i",
+        str(file_path),
+        "-t",
+        str(duration_seconds),
+        "-c",
+        "copy",
+        "-y",
+        str(out),
+    ]
+    logger.info(f"Extracting clip: {file_path} -> {out}")
+    process = await asyncio.create_subprocess_exec(*cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+    stdout, stderr = await process.communicate()
+
+    if process.returncode != 0:
+        return ToolResult(
+            content={
+                "success": False,
+                "operation": "extract_clip",
+                "error": f"FFmpeg clip extraction failed: {stderr.decode().strip()}",
+            }
+        )
+
+    return ToolResult(
+        content={
+            "success": True,
+            "operation": "extract_clip",
+            "message": f"Clip extracted: {out}",
+            "data": {"file_path": str(out), "duration": duration_seconds, "format": "mp4"},
+        }
+    )
+
+
+async def _handle_extract_audio(
+    file_path: Path,
+    start_seconds: float,
+    duration_seconds: float,
+    output_path: str | None,
+    plex: PlexService,
+    media_key: str,
+) -> ToolResult:
+    """Extract an audio segment as WAV PCM."""
+    if output_path:
+        out = Path(output_path)
+    else:
+        tmp = Path(tempfile.gettempdir())
+        out = tmp / f"{file_path.stem}_audio_{start_seconds}_{duration_seconds}.wav"
+
+    cmd = [
+        FFMPEG_PATH,
+        "-ss",
+        str(start_seconds),
+        "-i",
+        str(file_path),
+        "-t",
+        str(duration_seconds),
+        "-vn",
+        "-acodec",
+        "pcm_s16le",
+        "-y",
+        str(out),
+    ]
+    logger.info(f"Extracting audio: {file_path} -> {out}")
+    process = await asyncio.create_subprocess_exec(*cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+    stdout, stderr = await process.communicate()
+
+    if process.returncode != 0:
+        return ToolResult(
+            content={
+                "success": False,
+                "operation": "extract_audio",
+                "error": f"FFmpeg audio extraction failed: {stderr.decode().strip()}",
+            }
+        )
+
+    return ToolResult(
+        content={
+            "success": True,
+            "operation": "extract_audio",
+            "message": f"Audio extracted: {out}",
+            "data": {"file_path": str(out), "duration": duration_seconds, "format": "wav"},
+        }
+    )
