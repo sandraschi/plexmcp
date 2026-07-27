@@ -212,3 +212,39 @@ async def get_media_file_path(rating_key: str) -> dict[str, str | bool]:
         raise
     except Exception as e:
         raise handle_mcp_error(e) from e
+
+
+@router.get("/{rating_key}/art")
+async def get_media_art(rating_key: str) -> dict[str, str | bool | None]:
+    """Return proxied poster/thumb URLs for a Plex item (movies, shows, tracks, albums)."""
+    try:
+        result = await mcp_client.call_tool(
+            "plex_media",
+            {"operation": "get", "rating_key": rating_key},
+        )
+        if not result.get("success", True):
+            raise HTTPException(status_code=404, detail=result.get("error") or "Media not found")
+        data = result.get("data") or {}
+        thumb = data.get("grandparentThumb") or data.get("parentThumb") or data.get("thumb")
+        art = data.get("art") or data.get("thumb") or thumb
+
+        def proxy(path: str | None) -> str | None:
+            if not path:
+                return None
+            return f"/api/image/{str(path).lstrip('/')}"
+
+        media_type = str(data.get("type") or "")
+        cover = proxy(thumb)
+        poster = proxy(art)
+        return {
+            "success": True,
+            "rating_key": rating_key,
+            "type": media_type,
+            "cover_url": cover,
+            "poster_url": poster,
+            "artwork_url": poster if media_type in ("movie", "show", "season", "episode") else cover,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise handle_mcp_error(e) from e
