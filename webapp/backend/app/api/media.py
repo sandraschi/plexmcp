@@ -187,3 +187,28 @@ async def get_media_detail(rating_key: str) -> dict[str, Any]:
         raise handle_mcp_error(e) from e
     else:
         return {"success": True, "data": data}
+
+
+@router.get("/{rating_key}/file")
+async def get_media_file_path(rating_key: str) -> dict[str, str | bool]:
+    """Return local filesystem path for the first media part (for DJ deck load)."""
+    try:
+        from plex_mcp.services.plex_service import PlexService
+
+        plex = PlexService()
+        analysis = await plex.get_media_analysis(rating_key)
+        media_list = analysis.get("media") or []
+        for media in media_list:
+            parts = media.get("parts") or []
+            if parts and parts[0].get("file"):
+                return {
+                    "success": True,
+                    "rating_key": rating_key,
+                    "file": parts[0]["file"],
+                    "title": str(analysis.get("title") or ""),
+                }
+        raise HTTPException(status_code=404, detail="No local file path for this item")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise handle_mcp_error(e) from e
