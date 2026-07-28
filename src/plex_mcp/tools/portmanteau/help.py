@@ -18,7 +18,8 @@ logger = get_logger(__name__)
 @mcp.tool(version="1.0.0", annotations={"readOnlyHint": True})
 async def plex_help(
     operation: Annotated[
-        Literal["help", "list_tools", "tool_info", "examples", "api_docs"], Field(description="The help operation to perform.")
+        Literal["help", "list_tools", "tool_info", "examples", "api_docs"],
+        Field(description="The help operation to perform."),
     ],
     tool_name: Annotated[str | None, Field(description="Name of the tool to get info or examples for.")] = None,
     category: Annotated[str | None, Field(description="Category filter for help or list_tools operations.")] = None,
