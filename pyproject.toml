@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 license = { text = "MIT" }
 authors = [
-    { name = "Sandra Schipal", email = "sandra@schipal.at" }
+    { name = "Sandra Schipal", email = "sandraschipal@gmail.com" }
 ]
 keywords = ["mcp", "plex", "media", "streaming", "fastmcp", "glama-gold", "mcpb"]
 classifiers = [
@@ -52,7 +52,6 @@ dependencies = [
     "pytest-asyncio>=0.21.0",
     "black>=23.0.0",
     "rich>=13.0.0",
-    "ruff>=0.14.3",
 ]
 
 [project.optional-dependencies]
@@ -62,7 +61,7 @@ dev = [
     "pytest-cov>=4.0.0,<5.0.0",
     "black>=24.0.0,<25.0.0",
     "isort>=5.12.0,<6.0.0",
-    "ruff>=0.1.0",
+    "ruff>=0.16.0,<0.17",
     "mypy>=1.8.0,<2.0.0",
     "bandit>=1.7.0,<2.0.0",
     "safety>=2.3.0,<3.0.0",
