@@ -1,4 +1,4 @@
-set windows-shell := ["pwsh.exe", "-NoLogo", "-Command"]
+set windows-shell := ["powershell.exe", "-NoProfile", "-Command"]
 import 'scripts/just/fleet.just'
 
 # PlexMCP Project Management (Justfile)
@@ -13,10 +13,15 @@ version:
 
 # --- Basic Workflow ---
 
+# Synchronize deps, pre-commit hooks, and webapp frontend
+bootstrap:
+    uv sync --extra dev --group dev
+    uv run pre-commit install
+    Set-Location webapp/frontend; npm ci; if ($LASTEXITCODE -ne 0) { npm install }
+    Write-Host "Pre-commit hooks installed." -ForegroundColor Green
+
 # Setup development environment
-install:
-	uv sync
-	pre-commit install
+install: bootstrap
 
 # Start Server (STDIO)
 start:
@@ -92,7 +97,7 @@ clean:
 
 # Build embedded Python backend → native/resources/
 build-sidecar:
-    pwsh -NoProfile -ExecutionPolicy Bypass -File '{{justfile_directory()}}\native\build-sidecar.ps1'
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -File '{{justfile_directory()}}\native\build-sidecar.ps1'
 
 # Primary end-user deliverable: Next static export + embedded backend + NSIS
 build-native install-desktop:
@@ -105,24 +110,20 @@ build-native-debug:
     $env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"
     npx @tauri-apps/cli build --debug
 
-# Run CUA smoke test against installed NSIS app
-cua-nsis-test:
-    C:\Windows\py.exe scripts/cua-smoke.py
-
 # ── RAG (LanceDB metadata sync) ──────────────────────────────────────────────
 
 # Sync Plex metadata into LanceDB (CPU)
 rag-sync:
-    @pwsh.exe -NoProfile -ExecutionPolicy Bypass -File scripts/just/rag-sync.ps1
+    @powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/just/rag-sync.ps1
 
 # Sync Plex metadata into LanceDB on GPU (after rag-gpu-install)
 rag-gpu-sync:
-    @pwsh.exe -NoProfile -ExecutionPolicy Bypass -File scripts/just/rag-gpu-sync.ps1
+    @powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/just/rag-gpu-sync.ps1
 
 # One-time: install fastembed-gpu + onnxruntime-gpu + NVIDIA CUDA 12 runtimes (~1.5 GB)
 rag-gpu-install:
-    @pwsh.exe -NoProfile -ExecutionPolicy Bypass -File scripts/just/rag-gpu-install.ps1
+    @powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/just/rag-gpu-install.ps1
 
 # Revert to CPU onnxruntime stack
 rag-cpu-install:
-    @pwsh.exe -NoProfile -ExecutionPolicy Bypass -File scripts/just/rag-cpu-install.ps1
+    @powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/just/rag-cpu-install.ps1

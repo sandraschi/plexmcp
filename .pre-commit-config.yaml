@@ -1,20 +1,28 @@
+# Fleet: mcp-central-docs/templates/pre-commit-config.yaml.template
+
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.9.6
+    rev: v0.15.0
     hooks:
       - id: ruff
-        args: [ --fix ]
+        args: [--fix]
       - id: ruff-format
 
-  - repo: https://github.com/biomejs/pre-commit
-    rev: v1.9.4
+  - repo: local
     hooks:
-      - id: biome-check
-        files: ^webapp/frontend/
-        # Default entry already includes --write; do not use non-schema keys like additional_params
+      - id: biome-web
+        name: biome check (webapp)
+        entry: powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/pre-commit-biome.ps1
+        language: system
+        files: ^(webapp(/frontend)?|web_sota|web)/(.*\.(ts|tsx|js|jsx)|biome\.json)$
+        pass_filenames: false
+        require_serial: true
 
-  # Semgrep is not run from pre-commit here: the official `repo: returntocorp/semgrep` hook
-  # clones a huge repo and can fail on Windows (bad checkout in cache), and the `language: python`
-  # install path mangles Windows shebang paths. Semgrep on Windows is also spotty (Unix-only
-  # `resource` in some code paths). CI runs `semgrep scan` on Ubuntu (see .github/workflows/ci.yml).
-  # Use WSL or `just lint` on Linux/macOS if you want local Semgrep.
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+        args: [--maxkb=5120]
