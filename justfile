@@ -36,7 +36,7 @@ webapp:
 # Lint and check all files (Python + JS/TS + Security)
 lint:
 	@echo "--- Checking Python (Ruff) ---"
-	ruff check .
+	uv run ruff check .
 	@echo "--- Checking JS/TS (Biome) ---"
 	cd webapp/frontend && npx @biomejs/biome check .
 	@echo "--- Checking Security (Semgrep) ---"
@@ -53,18 +53,18 @@ _semgrep-if-supported:
 
 # Format all files
 fmt:
-	ruff format .
+	uv run ruff format .
 	cd webapp/frontend && npx @biomejs/biome format --write .
 
 # Automated fix (Ruff + Biome)
 fix:
-	ruff check . --fix
-	ruff format .
+	uv run ruff check . --fix
+	uv run ruff format .
 	cd webapp/frontend && npx @biomejs/biome check --write .
 
 # Run Tests
 test:
-	@pytest --cov=src/plex_mcp tests/
+	@uv run pytest --cov=src/plex_mcp tests/
 
 # Playwright smoke (Next dev is started by Playwright; run `npm ci` in webapp/frontend first)
 e2e:
@@ -72,7 +72,7 @@ e2e:
 
 # Integration Tests (requires PLEX_TOKEN and PLEX_URL)
 test-integration:
-	@pytest tests/test_integration_real_plex.py -v
+	@uv run pytest tests/test_integration_real_plex.py -v
 
 # Serve docs locally (via docsify or similar)
 docs-serve:
@@ -127,3 +127,5 @@ rag-gpu-install:
 # Revert to CPU onnxruntime stack
 rag-cpu-install:
     @powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/just/rag-cpu-install.ps1
+
+# Bootstrap: install dev deps + pre-commit hook
