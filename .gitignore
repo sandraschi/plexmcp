@@ -102,3 +102,7 @@ _dashboard/
 run_server.py
 pyproject.toml.bak
 *.bak
+
+# Runtime logs
+*.log
+logs/
