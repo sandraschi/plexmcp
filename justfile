@@ -42,7 +42,7 @@ lint:
 	@echo "--- Checking Security (Semgrep) ---"
 	@just _semgrep-if-supported
 
-# On Windows, Semgrep’s installed CLI is often broken in the same ways as in pre-commit; CI runs it on Ubuntu.
+# --- On Windows Semgrep s installed CLI is often broken in the same ways as in pre-commit CI runs it on Ubuntu ---
 [windows]
 _semgrep-if-supported:
 	@echo "Skipping local Semgrep on Windows; use CI or WSL, or install Semgrep and run: semgrep scan --config auto ."
@@ -93,9 +93,9 @@ clean:
 	@powershell -Command "Remove-Item -Recurse -Force .pytest_cache, .ruff_cache, dist, build, htmlcov -ErrorAction SilentlyContinue"
 	@powershell -Command "Get-ChildItem -Path . -Recurse -Directory -Filter __pycache__ -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue"
 
-# ── Native (Tauri) ─────────────────────────────────────────────────────────────
+# --- Native  Tauri ---
 
-# Build embedded Python backend → native/resources/
+# --- Build embedded Python backend  native resources ---
 build-sidecar:
     powershell.exe -NoProfile -ExecutionPolicy Bypass -File '{{justfile_directory()}}\native\build-sidecar.ps1'
 
@@ -110,7 +110,7 @@ build-native-debug:
     $env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"
     npx @tauri-apps/cli build --debug
 
-# ── RAG (LanceDB metadata sync) ──────────────────────────────────────────────
+# --- RAG  LanceDB metadata sync ---
 
 # Sync Plex metadata into LanceDB (CPU)
 rag-sync:

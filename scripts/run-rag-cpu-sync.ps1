@@ -1,4 +1,4 @@
-# Plex metadata RAG sync on CPU — venv python (not uv run while GPU mode active).
+# Plex metadata RAG sync on CPU - venv python (not uv run while GPU mode active).
 $ErrorActionPreference = "Stop"
 $RepoRoot = Split-Path $PSScriptRoot -Parent
 Set-Location $RepoRoot

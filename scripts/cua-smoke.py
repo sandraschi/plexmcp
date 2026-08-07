@@ -58,7 +58,7 @@ def load_config(path: str | None = None) -> dict:
     return {k: _expand(v) for k, v in cfg.items()}
 
 
-CUA_SMOKE_VERSION = 2  # bump when template changes; see docstring
+CUA_SMOKE_VERSION = 3  # bump when template changes; see docstring
 
 
 def _check_version():
@@ -428,13 +428,32 @@ def _verify_page_ocr(text: str, label: str, expected: str) -> bool:
     return False
 
 
-def _nav_click_element(win_handle: int, wx: int, wy: int, idx: int):
-    """Click a nav item. Tries UIA element finding first, falls back to coordinates."""
+def _nav_click_element(win_handle: int, wx: int, wy: int, idx: int, label: str = ""):
+    """Click a nav item. Tries title-based UIA matching first, then index, then coordinates."""
     import pywinauto
     app = pywinauto.Application(backend="uia").connect(handle=win_handle)
     w = app.window(handle=win_handle)
 
-    # Try UIA: find sidebar link by class or type (Tauri WebView exposes nav as Hyperlink or Text)
+    # Preferred: match by accessible name (title= is the pywinauto criteria for UIA Name).
+    # Index-based Hyperlink ordering is fragile - sidebar order may differ from nav_routes.
+    if label:
+        try:
+            link = w.descendants(title=label)
+            if link:
+                link[0].click_input()
+                return
+        except Exception:
+            pass
+        try:
+            elements = w.descendants(control_type="Hyperlink")
+            el = [e for e in elements if label.lower() in (e.window_text() or "").lower()]
+            if el:
+                el[0].click_input()
+                return
+        except Exception:
+            pass
+
+    # Fallback: positional Hyperlink
     try:
         elements = w.descendants(control_type="Hyperlink")
         if idx < len(elements):
@@ -492,7 +511,7 @@ def nav_click_through(output_dir: str):
 
     for idx, (label, expected_header) in enumerate(nav_routes):
         try:
-            _nav_click_element(handle, wx, wy, idx)
+            _nav_click_element(handle, wx, wy, idx, label)
             _release_mouse()
             time.sleep(3)
 

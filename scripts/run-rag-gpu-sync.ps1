@@ -1,4 +1,4 @@
-# Plex metadata RAG sync on GPU — venv python (not uv run).
+# Plex metadata RAG sync on GPU - venv python (not uv run).
 $ErrorActionPreference = "Stop"
 $RepoRoot = Split-Path $PSScriptRoot -Parent
 Set-Location $RepoRoot
