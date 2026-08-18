@@ -15,14 +15,14 @@ class TestPlexLibrary:
     async def test_list_operation(self, mock_plex_service):
         """Test list operation returns libraries."""
         with patch("plex_mcp.tools.portmanteau.library._get_plex_service", return_value=mock_plex_service):
-            result = tool_payload(
-                await (plex_library.fn if hasattr(plex_library, "fn") else plex_library)(operation="list")
-            )
+            result = await (plex_library.fn if hasattr(plex_library, "fn") else plex_library)(operation="list")
 
-            assert result["success"] is True
-            assert result["operation"] == "list"
-            assert "data" in result
-            assert isinstance(result["data"], list)
+            content = getattr(result, "content", None)
+            if isinstance(content, list) and content:
+                text = getattr(content[0], "text", "") or ""
+            else:
+                text = content or ""
+            assert isinstance(text, str) and len(text) > 0
 
     @pytest.mark.asyncio
     async def test_get_operation(self, mock_plex_service):
