@@ -105,13 +105,10 @@ async def plex_library(
         # Operation: list
         if operation == "list":
             libraries = await plex.get_libraries()
+            from ...utils.summarize import summarize_items
+
             return ToolResult(
-                content={
-                    "success": True,
-                    "operation": "list",
-                    "data": libraries,
-                    "count": len(libraries),
-                },
+                content=summarize_items(libraries, "library"),
                 structured_content=build_library_grid(libraries),
                 meta={"prefabs": ["plex_library_grid"]},
             )
@@ -478,19 +475,10 @@ async def plex_library(
                 media_type=media_type,
             )
             data = [item.model_dump() if hasattr(item, "model_dump") else item for item in items]
+            from ...utils.summarize import summarize_items
+
             return ToolResult(
-                content={
-                    "success": True,
-                    "operation": "list_items",
-                    "library_id": library_id,
-                    "data": data,
-                    "count": len(data),
-                    "limit": limit,
-                    "offset": offset,
-                    "sort": sort,
-                    "media_type": media_type,
-                    "has_more": len(data) >= limit,
-                },
+                content=summarize_items(data, "item"),
             )
 
         return ToolResult(

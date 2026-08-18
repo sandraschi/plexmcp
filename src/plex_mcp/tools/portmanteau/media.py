@@ -38,7 +38,7 @@ def _get_plex_service():
 @mcp.tool(version="1.0.0", annotations={"readOnlyHint": False, "destructiveHint": False})
 async def plex_media(
     operation: Annotated[
-        Literal["browse", "search", "get_details", "get_recent", "update_metadata"],
+        Literal["browse", "search", "get_details", "get_recent", "update_metadata", "get_stream_url"],
         Field(description="The media operation to perform."),
     ],
     library_id: Annotated[str | None, Field(description="ID of the library to browse or search within.")] = None,
@@ -72,6 +72,8 @@ async def plex_media(
     - get_details: Get comprehensive details about a specific media item.
     - get_recent: Get recently added media items.
     - update_metadata: Update metadata (title, year, summary) for an item.
+    - get_stream_url: Build direct-download + audio-transcode URLs for an item
+      (offline transcription pipelines, e.g. speech-mcp).
 
     ## Return Format
     {"success": bool, "data": dict|list, "operation": str, "count": int}
@@ -80,6 +82,7 @@ async def plex_media(
     await plex_media(operation="browse", library_id="1")
     await plex_media(operation="search", query="inception")
     await plex_media(operation="get_details", media_key="12345")
+    await plex_media(operation="get_stream_url", media_key="12345")
     """
     try:
         plex = _get_plex_service()
@@ -119,15 +122,10 @@ async def plex_media(
             data = [item.model_dump() if hasattr(item, "model_dump") else item for item in raw_data]
             if min_rating is not None:
                 data = [d for d in data if d.get("rating") is not None and d["rating"] >= min_rating]
+            from ...utils.summarize import summarize_items
+
             return ToolResult(
-                content={
-                    "success": True,
-                    "operation": "browse",
-                    "data": data,
-                    "count": len(data),
-                    "limit": limit,
-                    "offset": offset,
-                },
+                content=summarize_items(data, "result"),
                 meta={"prefabs": ["plex_media_browser"]},
                 structured_content=build_media_browser(data),
             )
@@ -160,15 +158,10 @@ async def plex_media(
             data = [item.model_dump() if hasattr(item, "model_dump") else item for item in items]
             if min_rating is not None:
                 data = [d for d in data if d.get("rating") is not None and d["rating"] >= min_rating]
+            from ...utils.summarize import summarize_items
+
             return ToolResult(
-                content={
-                    "success": True,
-                    "operation": "search",
-                    "data": data,
-                    "count": len(data),
-                    "limit": limit,
-                    "offset": offset,
-                },
+                content=summarize_items(data, "result"),
                 meta={"prefabs": ["plex_media_browser"]},
                 structured_content=build_media_browser(data),
             )
@@ -200,17 +193,36 @@ async def plex_media(
         if operation == "get_recent":
             items = await plex.get_recently_added(library_id=library_id, limit=limit)
             data = [item.model_dump() if hasattr(item, "model_dump") else item for item in items]
+            from ...utils.summarize import summarize_items
+
             return ToolResult(
-                content={
-                    "success": True,
-                    "operation": "get_recent",
-                    "data": data,
-                    "count": len(data),
-                    "limit": limit,
-                },
+                content=summarize_items(data, "result"),
                 meta={"prefabs": ["plex_media_browser"]},
                 structured_content=build_media_browser(data),
             )
+
+        # Operation: get_stream_url
+        if operation == "get_stream_url":
+            if not media_key:
+                return ToolResult(
+                    content={
+                        "success": False,
+                        "error": "media_key is required for get_stream_url operation",
+                        "error_code": "MISSING_MEDIA_KEY",
+                        "suggestions": ["Get media_key from browse or search results"],
+                    },
+                )
+
+            stream = await plex.get_stream_url(media_key)
+            if not stream:
+                return ToolResult(
+                    content={
+                        "success": False,
+                        "operation": "get_stream_url",
+                        "error": f"Could not resolve stream URLs for media_key {media_key}",
+                    },
+                )
+            return ToolResult(content={"success": True, "operation": "get_stream_url", "data": stream})
 
         # Operation: update_metadata
         if operation == "update_metadata":
@@ -255,7 +267,7 @@ async def plex_media(
                 "error": f"Invalid operation: '{operation}'",
                 "error_code": "INVALID_OPERATION",
                 "suggestions": [
-                    "Valid operations: browse, search, get_details, get_recent, update_metadata",
+                    "Valid operations: browse, search, get_details, get_recent, update_metadata, get_stream_url",
                     f"You provided: '{operation}'",
                 ],
             },

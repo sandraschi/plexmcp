@@ -165,13 +165,10 @@ async def plex_search(
 
             # Convert MediaItem models to dicts before passing to prefab builder
             data = [item.model_dump() if hasattr(item, "model_dump") else item for item in results]
+            from ...utils.summarize import summarize_items
+
             return ToolResult(
-                content={
-                    "success": True,
-                    "operation": "search",
-                    "data": data,
-                    "count": len(data),
-                },
+                content=summarize_items(data, "result"),
                 structured_content=build_media_browser(data),
                 meta={"prefabs": ["plex_media_browser"]},
             )
@@ -229,13 +226,10 @@ async def plex_search(
                 sort_dir=sort_dir,
             )
             data = [item.model_dump() if hasattr(item, "model_dump") else item for item in results]
+            from ...utils.summarize import summarize_items
+
             return ToolResult(
-                content={
-                    "success": True,
-                    "operation": "advanced_search",
-                    "data": data,
-                    "count": len(data),
-                },
+                content=summarize_items(data, "result"),
                 structured_content=build_media_browser(data),
                 meta={"prefabs": ["plex_media_browser"]},
             )

@@ -189,18 +189,29 @@ class PlexService:
         if not self.server:
             raise RuntimeError("Not connected to Plex server")
 
+        # Callers pass `libtype`; PlexServer.search() accepts only `mediatype`
+        # (plexapi 4.x). Section.search() accepts `libtype` directly.
+        kwargs = dict(kwargs)
+        libtype = kwargs.pop("libtype", None)
+
         if library_id:
             section = self.server.library.sectionByID(int(library_id))
             # Fetch limit+offset items then slice manually; container_start was removed in
             # newer plexapi versions and raises an unexpected keyword argument error.
             _fetch = limit + offset if offset else limit
-            results = section.search(query, maxresults=_fetch, **kwargs)
+            if libtype:
+                results = section.search(query, maxresults=_fetch, libtype=libtype, **kwargs)
+            else:
+                results = section.search(query, maxresults=_fetch, **kwargs)
             if offset:
                 results = results[offset : offset + limit]
         else:
             # PlexServer.search() accepts limit but not container_start in newer plexapi.
             _fetch = limit + offset if offset else limit
-            results = self.server.search(query, limit=_fetch, **kwargs)
+            if libtype:
+                results = self.server.search(query, limit=_fetch, mediatype=libtype, **kwargs)
+            else:
+                results = self.server.search(query, limit=_fetch, **kwargs)
             if offset:
                 results = results[offset : offset + limit]
 
@@ -1211,6 +1222,69 @@ class PlexService:
             return await self._format_media_item(item)
         except Exception as e:
             logger.error(f"Error getting media info for {media_id}: {e}")
+            return None
+
+    async def get_stream_url(self, media_id: str) -> dict[str, Any] | None:
+        """Build direct-download and audio-transcode URLs for a media item.
+
+        Intended for offline transcription pipelines (e.g. speech-mcp): the
+        audio URL streams a low-bandwidth audio-only HLS transcode, the download
+        URL serves the original file. Both require the Plex token.
+
+        Args:
+            media_id: ratingKey of the media item
+
+        Returns:
+            Dict with media_key, title, parts (media/part indices), download_url,
+            audio_url, base_url. None if the item cannot be resolved.
+        """
+        if not self._initialized:
+            await self.connect()
+
+        try:
+            item = await self._run_in_executor(lambda: self.server.fetchItem(int(media_id)))
+            rating_key = str(getattr(item, "ratingKey", media_id))
+            title = str(getattr(item, "title", ""))
+            media_list = list(getattr(item, "media", []) or [])
+            parts: list[dict[str, Any]] = []
+            for mi, media in enumerate(media_list):
+                part_items = list(getattr(media, "parts", []) or [])
+                for pi, part in enumerate(part_items):
+                    parts.append(
+                        {
+                            "media_index": mi,
+                            "part_index": pi,
+                            "part_key": str(getattr(part, "key", "") or ""),
+                            "container": str(getattr(media, "container", "") or ""),
+                            "file": str(getattr(part, "file", "") or ""),
+                        }
+                    )
+            base = self.base_url.rstrip("/")
+            first = parts[0] if parts else None
+            download_url = None
+            audio_url = None
+            if first and first["part_key"]:
+                download_url = f"{base}{first['part_key']}?download=1&X-Plex-Token={self.token}"
+                audio_url = (
+                    f"{base}/video/:/transcode/audio/start"
+                    f"?path=/library/metadata/{rating_key}"
+                    f"&mediaIndex={first['media_index']}&partIndex={first['part_index']}"
+                    f"&protocol=hls&format=ogg&directStream=1&subtitles=none"
+                    f"&X-Plex-Token={self.token}"
+                )
+            return {
+                "success": True,
+                "media_key": rating_key,
+                "title": title,
+                "type": str(getattr(item, "type", "") or ""),
+                "duration_s": getattr(item, "duration", None),
+                "parts": parts,
+                "download_url": download_url,
+                "audio_url": audio_url,
+                "base_url": base,
+            }
+        except Exception as e:
+            logger.error(f"Error building stream URL for {media_id}: {e}")
             return None
 
     async def update_media(self, media_id: str, **updates) -> dict[str, Any] | None:

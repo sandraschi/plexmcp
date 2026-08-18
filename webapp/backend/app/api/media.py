@@ -189,6 +189,23 @@ async def get_media_detail(rating_key: str) -> dict[str, Any]:
         return {"success": True, "data": data}
 
 
+@router.get("/{rating_key}/stream-url")
+async def get_media_stream_url(rating_key: str) -> dict[str, str | bool | list | None]:
+    """Return direct-download + audio-transcode URLs for an item (offline transcription)."""
+    try:
+        from plex_mcp.services.plex_service import PlexService
+
+        plex = PlexService()
+        stream = await plex.get_stream_url(rating_key)
+        if not stream:
+            raise HTTPException(status_code=404, detail="No stream URLs for this item")
+        return stream
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise handle_mcp_error(e) from e
+
+
 @router.get("/{rating_key}/file")
 async def get_media_file_path(rating_key: str) -> dict[str, str | bool]:
     """Return local filesystem path for the first media part (for DJ deck load)."""
