@@ -38,7 +38,7 @@ lint:
 	@echo "--- Checking Python (Ruff) ---"
 	uv run ruff check .
 	@echo "--- Checking JS/TS (Biome) ---"
-	cd webapp/frontend && npx @biomejs/biome check .
+	cd webapp/frontend; npx @biomejs/biome check .
 	@echo "--- Checking Security (Semgrep) ---"
 	@just _semgrep-if-supported
 
@@ -54,13 +54,13 @@ _semgrep-if-supported:
 # Format all files
 fmt:
 	uv run ruff format .
-	cd webapp/frontend && npx @biomejs/biome format --write .
+	cd webapp/frontend; npx @biomejs/biome format --write .
 
 # Automated fix (Ruff + Biome)
 fix:
 	uv run ruff check . --fix
 	uv run ruff format .
-	cd webapp/frontend && npx @biomejs/biome check --write .
+	cd webapp/frontend; npx @biomejs/biome check --write .
 
 # Run Tests
 test:
