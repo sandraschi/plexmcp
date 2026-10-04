@@ -178,9 +178,10 @@ Concrete, not generic:
 3. ~~**Deep metadata enrichment**~~ **Done 2026-09-13** — Wikipedia + TMDB
    (deep) + JustWatch, LLM-synthesised critical dossier, library-wide
    cross-references, `/media` detail page + `/enrichment` bulk-run page. Full
-   detail: `DEEP_METADATA_ENRICHMENT.md`. **Taste modelling** (same original
-   item, Part 4) is still open — it's the natural next step since it consumes
-   the richer per-item data this just produced.
+   detail: `DEEP_METADATA_ENRICHMENT.md`. ~~**Taste modelling**~~ **Done
+   2026-10-04** - learned from watch history and scored as lift against the
+   library rather than the spec's capped EMA, which saturated every dimension at
+   +1 on real data (see `TASTE_MODELLING.md`, "What actually shipped").
 4. **Household profiles** (Part 3A) — small effort, meaningfully changes who
    the recommendations are actually for.
 5. Everything else, roughly in the order it's written above.

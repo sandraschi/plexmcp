@@ -15,7 +15,7 @@ without reading the others.
 |-----------------------------------|------------------------------|--------|
 | `ROADMAP.md`                      | Overview and ordering        | —      |
 | `DEEP_METADATA_ENRICHMENT.md`     | Rich per-item metadata — **shipped 2026-09-13** | 3–4 d  |
-| `TASTE_MODELLING.md`              | User preference profile      | 2–3 d  |
+| `TASTE_MODELLING.md`              | User preference profile — **shipped 2026-10-04** | 2–3 d  |
 | `MOOD_PICKER.md`                  | Nightly "what to watch"      | 1–2 d  |
 | `SUBTITLE_RAG.md`                 | Semantic search over subs    | 4–5 d  |
 | `EPISODE_INTELLIGENCE.md`         | Per-episode context for TV   | 3–4 d  |

@@ -20,6 +20,9 @@ As of v2.4.1 (April 2026), plex-mcp is a FastMCP 3.2 server with:
   item, library-wide cross-references (director/cast/collection/theme),
   webapp `/media` detail page and `/enrichment` bulk-run + theme-search page.
   See `DEEP_METADATA_ENRICHMENT.md`.
+- **Taste modelling** (`plex_taste`, shipped 2026-10-04): a taste profile learned from
+  watch history, scored as lift against the library (not the spec's saturating EMA), per
+  movie/TV, per time of week; `/taste` page. See `TASTE_MODELLING.md`.
 - Sampling-based natural assistant (`plex_natural_assistant`)
 - Webapp on ports 10741/10742 with dashboard, library browsing,
   search, chat
@@ -66,7 +69,7 @@ Each project has its own spec in `docs/plans/`. Each is independent.
 |---|---------------------------------|---------------------------------------|--------|------------------|
 | 1 | ~~Deep metadata enrichment~~ **Shipped 2026-09-13** | `DEEP_METADATA_ENRICHMENT.md`         | 3–4 d  | High             |
 | 2 | Subtitle RAG                    | `SUBTITLE_RAG.md`                     | 4–5 d  | Very high        |
-| 3 | Taste modelling                 | `TASTE_MODELLING.md`                  | 2–3 d  | High             |
+| 3 | ~~Taste modelling~~ **Shipped 2026-10-04** | `TASTE_MODELLING.md`                  | 2–3 d  | High             |
 | 4 | Mood-based nightly picker       | `MOOD_PICKER.md`                      | 1–2 d  | High             |
 | 5 | Episode-level intelligence      | `EPISODE_INTELLIGENCE.md`             | 3–4 d  | Medium           |
 | 6 | Cross-library linking           | `CROSS_LIBRARY_LINKS.md`              | 2 d    | Medium           |
