@@ -29,6 +29,7 @@ All 22 tools are FastMCP 3.2 aligned (`version="1.0.0"`, `annotations=READ_ONLY|
 | `plex_audio_mgr` | `MUTATING` | Audio stream management |
 | `plex_ffmpeg_mgr` | `DESTRUCTIVE` | FFmpeg process management |
 | `plex_media_enrichment` | `MUTATING` | Wikipedia + TMDB + JustWatch quick lookups, and deep LLM-synthesised per-item dossiers with library cross-references (writes to local `data/enrichment.db`) |
+| `plex_taste` | `MUTATING` | Taste profile learned from watch history (lift vs your library, per movie/TV, per time of week), `score_item` / `score_library` ranking, `recent_shifts`; writes to local `data/taste.db`, only reads from Plex |
 | `arr_stack` | `READ_ONLY` | Optional Radarr/Sonarr/Lidarr HTTP status (requires env URLs + API keys) |
 | `agentic_plex_workflow` | `MUTATING` | Multi-step agentic flow with sampling |
 | `plex_natural_assistant` | `MUTATING` | Single-turn natural language via sampling |

@@ -43,6 +43,10 @@ Replace with PNGs if you need marketing shots — see [assets/README.md](assets/
 
 Optional Radarr/Sonarr/Lidarr URLs and API keys in **Settings** power the Overview *arr card and the `arr_stack` MCP tool (read-only status + queue counts). Typical setups use Docker media stacks; use the base URL reachable from the backend.
 
+## Taste
+
+**`/taste`** shows what you gravitate toward and what you pass over, learned from your Plex watch history. A score is *lift against your library* in [-1, 1]: positive = you pick it more than its share of what's available, negative = it's there but you skip it. Movies and TV are separate (different populations), and you can narrow to a time of week ("Sunday mornings") or one family (genres, decades, directors...). A "Lately" panel shows which genres are moving. First visit: **Build my profile** reads your whole history in the background (a couple of minutes on a large library); afterwards **Update from latest viewing** folds in new views, and the backend does it every 10 minutes by itself (`TASTE_SYNC_INTERVAL_SEC`). Hover a row for the numbers behind it. See `docs/plans/TASTE_MODELLING.md`.
+
 ## Deep enrichment
 
 - **`/media?ratingKey=...`** — a book-like dossier for one library item: synopsis, critical overview, "why this matters," content warnings, thematic tags (clickable), and "Related in your library" (by director, shared cast, collection, or theme). Opened via "Full dossier" on a movie's detail modal. "Enrich now" fetches Wikipedia + TMDB (deep) + JustWatch and, if an LLM provider/model is picked, synthesises the dossier; without one, it shows the raw sources instead.

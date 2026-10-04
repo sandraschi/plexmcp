@@ -42,6 +42,14 @@ dossier (vs. raw sources) uses whichever provider/model is picked in the
 webapp's Enrichment/media pages — no separate env var, it reuses the LLM
 provider settings above. See [ENRICHMENT.md](ENRICHMENT.md).
 
+## Taste modelling (optional)
+
+| Variable | Description |
+|----------|-------------|
+| `TASTE_SYNC_INTERVAL_SEC` | How often the webapp backend folds new Plex viewing into the taste profile (default `600`; `0` disables). It does nothing until a profile has been built once from the Taste page or `plex_taste(operation="rebuild_from_history")`, so a fresh install never starts reading Plex on its own. |
+
+Only reads from Plex; derived data is stored in `data/taste.db` (gitignored). See [plans/TASTE_MODELLING.md](plans/TASTE_MODELLING.md).
+
 ## RAG / semantic search
 
 The `plex_rag` tool (LanceDB + embeddings) needs shared vector code importable as `docs_mcp.backend.rag_core` (e.g. clone [mcp-central-docs](https://github.com/sandraschi/mcp-central-docs) and add its `src` to `PYTHONPATH`). See [RAG.md](RAG.md).

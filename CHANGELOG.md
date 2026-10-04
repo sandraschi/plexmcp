@@ -14,7 +14,19 @@
 ### Changed
 - **Agentic tool results no longer send the Prefab tree to the model.** `_prefab` is stripped from the string fed back as the `tool` message: it is UI, not information, and a single `list_libraries` card measured ~22 KB - previously dumped in and truncated at 4 KB, which both wasted context and truncated the actual library data the model needed to answer.
 
-## [Unreleased] — 2026-10-04
+## [Unreleased] — 2026-10-04 (taste modelling)
+
+### Added (Taste modelling - roadmap project 3 of 6)
+- **`plex_taste` MCP tool** (`status`, `rebuild_from_history`, `sync`, `profile`, `temporal_profile`, `recent_shifts`, `dimensions_for`, `score_item`, `score_library`), `/api/taste/*` REST endpoints, and a **`/taste` webapp page**: what you gravitate toward and what you pass over, per movies/TV, per time of week, with a "Lately" panel of moving genres. New module `src/plex_mcp/services/taste/`, data in `data/taste.db` (gitignored). Only reads from Plex.
+- **Scoring is lift against your library, not the spec's EMA.** Run against a real library (16,928 history entries), the designed capped EMA scored every dimension +1.00 (history is nearly all positive events, so it saturates and means only "watched"). Replaced with exponentially decayed attention (1-year half-life) compared to a one-time survey of the library: score = `(watch_share - library_share) / (watch_share + library_share)` in [-1, 1]. Stratified by movie/show (shows lack director/country and use different genre names; mixing them produced artifacts such as `country:japan` disliked while `genre:anime` was liked). Concave per-show episode weighting so a 200-episode series counts like ~7 movie views. Full reasoning: `docs/plans/TASTE_MODELLING.md`.
+- Event capture, verified against a live Plex: a history entry = completed (history has no progress), a repeat = rewatched, 4+/2- star ratings count strongly (992 rated items here, so ratings are not sparse), partly-watched-then-left On Deck items = dampened abandonment. Plex does not expose On Deck dismissals, so `on_deck_dismissed` is never captured. Episodes roll up to the show via `grandparentKey` (`grandparentRatingKey` is `None` on history entries).
+- Background incremental sync every 10 minutes (`TASTE_SYNC_INTERVAL_SEC`, `0` disables), which does nothing until a profile has been built once. Incremental sync is tested to produce the same profile as a full rebuild, and the history cursor is not advanced if a sync fails midway.
+- Live build on this library: 15,615 events from 1,541 items, 12,201 library items surveyed, ~2 minutes. Result is recognizable (the Bond films' directors and leads, thrillers/adventure/shorts; passes over Japanese/French/Italian cinema, 60-90 minute films, documentaries).
+- `TMDB` enrichment now also records `production_countries`. Enrichment contributes only `theme:` dimensions to taste, which are recorded but not scored until a library baseline exists for them.
+- 50 new tests (`test_taste_service.py` x42, `test_api_taste.py` x8).
+
+### Not built, deliberately
+- `watch_transitions` (nothing consumes it), per-account profiles (events store `account_id`; household profiles can rebuild from them), scoring of `theme:` dimensions.
 
 ### Fixed (test suite: 13 long-standing failures cleared)
 - All 13 failing tests were stale test expectations, not tool bugs: tests subscripted `ToolResult` directly (`result["success"]`) instead of unwrapping it, and several asserted shapes the tools never had. Added `tests/helpers.py::tool_data_payload` (normalizes text-summary-plus-`meta["data"]` tools to `{success, operation, data}`) and used the existing `tool_payload` elsewhere.

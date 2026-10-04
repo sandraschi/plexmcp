@@ -1,9 +1,63 @@
 # Taste Modelling — Spec
 
 **Author:** Claude Opus 4.7 (Anthropic), April 2026
-**Status:** design
+**Status:** **Shipped 2026-10-04** (Claude Sonnet 5.5). The scoring model deliberately differs from the design below - see "What actually shipped".
 **Effort:** 2–3 days
 **Priority:** 2 of 6
+
+---
+
+## What actually shipped (2026-10-04)
+
+The pipeline (watch events -> per-dimension profile -> time-of-week profiles -> taste-fit
+scoring) matches this spec, but the **scoring model was changed after a live run showed
+the designed one doesn't work on real data.**
+
+**Why the EMA was replaced.** Run against a real library (16,928 history entries, 2021-2026),
+the spec's capped EMA scored essentially every dimension +1.00: sci-fi, comedy, every
+decade, every country. History is almost all positive events (completed/rewatched) with
+very few negatives, so the average saturates at +1 for anything ever touched, and the score
+means only "watched". The `MAX_WEIGHT = 100` cap also gave a memory of ~11 days at ~9
+events/day. Anti-preferences (the "Comedies, films after 2020" the spec wants to show) are
+impossible without something to compare against.
+
+**What replaced it** (`src/plex_mcp/services/taste/`):
+- **Lift against the library.** Each dimension accumulates *exponentially decayed attention*
+  (1-year half-life). Score = `(watch_share - library_share) / (watch_share + library_share)`,
+  bounded in [-1, 1]: 0 = proportional to what's available, -1 = in the library but never
+  watched. This needs a one-time survey of the library (`library_dimensions`, ~1-2 minutes
+  for ~12k items; section listings already include all tags).
+- **Stratified by kind (movie vs show).** Shows have no directors/countries in Plex, use
+  TV-specific genre names, and are watched in far larger volume; comparing them against a
+  movie-dominated baseline produced artifacts (`country:japan` disliked while `genre:anime`
+  was liked). Totals, baselines and scores are per kind.
+- **Concave episode weighting.** The k-th episode event of a show weighs `0.25/sqrt(k)`, so a
+  200-episode series counts like ~7 movie views, not 50. Abandonment is dampened (0.5); a
+  4+ star / 2- star rating is strong (2.0); a middling rating is not evidence.
+
+**Event capture, as verified against Plex:**
+- Plex history entries carry **no playback progress**, so a history entry = completed and a
+  repeat view of the same item = rewatched. Episodes roll up to their show via
+  `grandparentKey` (not `grandparentRatingKey`, which is `None`).
+- `abandoned` is derived from On Deck items stopped under 30% / at least 15 minutes in and
+  untouched for 14+ days. `on_deck_dismissed` is supported by the scorer but **Plex does not
+  expose dismissals, so it is never captured.**
+- Ratings are not sparse for this library (992 rated items), contrary to the gotcha below.
+
+**Deliberately not built:**
+- `watch_transitions` ("what do I watch after what"): the spec lists the table but no tool
+  operation or UI consumes it.
+- Theme dimensions are recorded from enrichment but **not scored yet**: they have no library
+  baseline until enrichment coverage is broad. Enrichment contributes `theme:` only, because
+  mixing TMDB director/country into some items would break baseline consistency.
+- Per-account profiles: events store `account_id`, but there is one profile. Household
+  profiles (next in the sequence) can rebuild per-account from the stored events.
+- The background poll only runs after a profile has been built once (`TASTE_SYNC_INTERVAL_SEC`,
+  default 600, `0` disables), so a fresh install never starts hitting Plex on its own.
+
+Surface: `plex_taste` MCP tool (`status`, `rebuild_from_history`, `sync`, `profile`,
+`temporal_profile`, `recent_shifts`, `dimensions_for`, `score_item`, `score_library`),
+`/api/taste/*`, and the `/taste` webapp page. Data: `data/taste.db` (gitignored).
 
 ---
 
@@ -273,9 +327,9 @@ profile. If she doesn't, the model is wrong.
 
 ## Update on completion
 
-- CHANGELOG
-- docs/plans/README.md
-- FLEET_INDEX.md
+- [x] CHANGELOG (repo and mcp-central-docs mirror)
+- [x] docs/plans/README.md, ROADMAP.md, GAP_ANALYSIS_AND_IMPROVEMENTS.md
+- [ ] FLEET_INDEX.md in mcp-central-docs - not touched, do at the next fleet-wide capability sweep
 
 ---
 
