@@ -35,6 +35,7 @@ from .reporting import plex_reporting
 from .search import plex_search
 from .server import plex_server
 from .streaming import plex_streaming
+from .taste import plex_taste
 from .user import plex_user
 
 __all__ = [
@@ -57,5 +58,6 @@ __all__ = [
     "plex_search",
     "plex_server",
     "plex_streaming",
+    "plex_taste",
     "plex_user",
 ]

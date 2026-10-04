@@ -37,6 +37,7 @@ from .api import (
     search,
     server,
     system,
+    taste,
     v1,
     webapp_launch,
     workflows,
@@ -111,7 +112,13 @@ async def lifespan(_app: FastAPI):
     """Lifespan handler — starts lazy FastMCP mount in background."""
     # Start loading FastMCP in background (takes ~90s, non-blocking)
     _asyncio.create_task(_lazy_mount_mcp())
-    yield
+    from .taste_loop import taste_sync_loop
+
+    taste_task = _asyncio.create_task(taste_sync_loop())
+    try:
+        yield
+    finally:
+        taste_task.cancel()
 
 
 app = FastAPI(
@@ -176,6 +183,7 @@ app.include_router(rag.router, prefix="/api/rag", tags=["rag"])
 app.include_router(arr_stack.router, prefix="/api/arr", tags=["arr"])
 app.include_router(workflows.router, prefix="/api/workflows", tags=["workflows"])
 app.include_router(enrichment.router, prefix="/api/enrichment", tags=["enrichment"])
+app.include_router(taste.router, prefix="/api/taste", tags=["taste"])
 
 # Mount frontend SPA at /app/ for Tauri WebView navigation
 import os as _os
