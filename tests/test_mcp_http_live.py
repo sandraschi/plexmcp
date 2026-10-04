@@ -13,7 +13,7 @@ def test_backend_health(mcp_http_live: str) -> None:
     r = httpx.get(f"{mcp_http_live}/health", timeout=5.0)
     assert r.status_code == 200
     data = r.json()
-    assert data.get("status") == "healthy"
+    assert data.get("status") == "ok"  # fleet HEALTH_ENDPOINT_STANDARD.md
 
 
 @pytest.mark.asyncio
