@@ -686,3 +686,111 @@ export async function getStaleEnrichments(
 	if (!res.ok) throw new Error(await res.text());
 	return res.json();
 }
+
+// --- Taste modelling ---------------------------------------------------------
+
+export type TasteKind = "movie" | "show";
+
+export type TasteDimension = {
+	dimension: string;
+	score: number;
+	watch_share: number;
+	library_share: number;
+	library_count: number;
+	attention: number;
+	strength: number;
+};
+
+export type TasteProfile = {
+	success: boolean;
+	built: boolean;
+	error_code?: string;
+	message?: string;
+	kind: TasteKind;
+	time_bucket: string | null;
+	prefix: string | null;
+	scored_dimensions: number;
+	library_items: number;
+	likes: TasteDimension[];
+	dislikes: TasteDimension[];
+};
+
+export type TasteStatus = {
+	success: boolean;
+	events: number;
+	dimensions: number;
+	library_items: number;
+	last_history_ts: string | null;
+	rebuilt_at: string | null;
+	built: boolean;
+	running: boolean;
+	progress: { phase: string; message: string; done?: number; total?: number };
+};
+
+export type TasteShift = {
+	dimension: string;
+	score_then: number | null;
+	score_now: number;
+	delta: number;
+	new: boolean;
+};
+
+async function tasteFetch<T>(path: string, init?: RequestInit): Promise<T> {
+	const res = await fetch(`${getBaseUrl()}/api/taste${path}`, { cache: "no-store", ...init });
+	if (!res.ok) {
+		let detail = "";
+		try {
+			detail = (await res.json()).detail ?? "";
+		} catch {
+			detail = await res.text();
+		}
+		throw new Error(detail || `HTTP ${res.status}`);
+	}
+	return res.json();
+}
+
+export function getTasteStatus(): Promise<TasteStatus> {
+	return tasteFetch("/status");
+}
+
+export function getTasteProfile(params: {
+	kind: TasteKind;
+	bucket?: string | null;
+	prefix?: string | null;
+	top?: number;
+}): Promise<TasteProfile> {
+	const sp = new URLSearchParams({ kind: params.kind, top: String(params.top ?? 25) });
+	if (params.bucket) sp.set("bucket", params.bucket);
+	if (params.prefix) sp.set("prefix", params.prefix);
+	return tasteFetch(`/profile?${sp.toString()}`);
+}
+
+export function getTasteShifts(params: {
+	kind: TasteKind;
+	days: number;
+	prefix?: string | null;
+	top?: number;
+}): Promise<{ success: boolean; built: boolean; shifts: TasteShift[] }> {
+	const sp = new URLSearchParams({
+		kind: params.kind,
+		days: String(params.days),
+		top: String(params.top ?? 10),
+	});
+	if (params.prefix) sp.set("prefix", params.prefix);
+	return tasteFetch(`/recent-shifts?${sp.toString()}`);
+}
+
+/** Rebuild the whole profile from Plex history. Runs in the background: poll getTasteStatus. */
+export function startTasteRebuild(
+	opts: { refresh_baseline?: boolean } = {},
+): Promise<{ success: boolean }> {
+	return tasteFetch("/rebuild", {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify(opts),
+	});
+}
+
+export function syncTaste(): Promise<{ success: boolean; events_new?: number; message?: string }> {
+	return tasteFetch("/sync", { method: "POST" });
+}

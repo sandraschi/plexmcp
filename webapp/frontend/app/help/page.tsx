@@ -143,6 +143,11 @@ function WebappSection() {
 					movie).
 				</li>
 				<li>
+					<strong>Taste</strong> — what you gravitate toward and what you pass over, learned from
+					your Plex watch history and scored against what&apos;s in your library. Build it once; it
+					then keeps itself up to date.
+				</li>
+				<li>
 					<strong>Tools</strong> — a raw view over the MCP tool surface, for debugging what the
 					agent side sees.
 				</li>
