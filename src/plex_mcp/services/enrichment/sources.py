@@ -96,6 +96,7 @@ async def fetch_tmdb_deep(title: str, year: int | None, media_type: str, api_key
         "budget": detail.get("budget"),
         "revenue": detail.get("revenue"),
         "production_companies": [c.get("name") for c in (detail.get("production_companies") or []) if c.get("name")],
+        "countries": [c.get("name") for c in (detail.get("production_countries") or []) if c.get("name")],
         "poster_url": f"{TMDB_IMAGE_BASE}{poster}" if poster else None,
         "director": director,
         "writers": writers,
