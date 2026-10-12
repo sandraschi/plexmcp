@@ -1,5 +1,6 @@
 """LLM API for chat, prompt refine, and workflows (local + cloud providers)."""
 
+import asyncio
 import json
 import logging
 import os
@@ -45,7 +46,7 @@ async def get_onboarding():
 @router.get("/gpus")
 async def get_gpus():
     """Live GPU VRAM telemetry. Empty list on a GPU-less machine - not an error."""
-    return {"gpus": lp.gpu_vram()}
+    return {"gpus": await asyncio.to_thread(lp.gpu_vram)}
 
 
 @router.get("/loaded")
