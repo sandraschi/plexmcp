@@ -46,12 +46,6 @@ export async function search(params?: {
 	return res.json();
 }
 
-export async function getSystemStatus() {
-	const res = await fetch(`${getBaseUrl()}/api/system/status`);
-	if (!res.ok) throw new Error(await res.text());
-	return res.json();
-}
-
 export type ArrServiceStatus = {
 	name: string;
 	configured: boolean;
@@ -793,4 +787,399 @@ export function startTasteRebuild(
 
 export function syncTaste(): Promise<{ success: boolean; events_new?: number; message?: string }> {
 	return tasteFetch("/sync", { method: "POST" });
+}
+
+// --- Dashboard aggregation ---------------------------------------------------
+
+export type DashboardResponse = {
+	success: boolean;
+	warnings?: string[];
+	server: { success?: boolean; message?: string; [key: string]: unknown } | null;
+	libraries: {
+		count: number;
+		types: Record<string, number>;
+		items: { id: string; title: string; type: string }[];
+	};
+	enrichment: { enriched_count: number | null };
+	rag: { available: boolean; indexed_count: number | null };
+	rag_sync?: { phase: string; message?: string };
+	taste: {
+		built: boolean;
+		events?: number | null;
+		dimensions?: number | null;
+		library_items?: number | null;
+		running?: boolean;
+	};
+	arr?: ArrStackResponse & { success: boolean };
+	llm?: { providers: LlmProviderInfo[] };
+	backend?: { uptime_seconds: number; plex_configured: boolean };
+};
+
+/** One call for the Overview hero + KPI cards. Never throws for partial data. */
+export async function getDashboard(): Promise<DashboardResponse> {
+	const res = await fetch(`${getBaseUrl()}/api/dashboard/`, { cache: "no-store" });
+	if (!res.ok) throw new Error(await res.text());
+	return res.json();
+}
+
+// --- Phase 0 parity contracts ------------------------------------------------
+
+export type AdvancedSearchParams = {
+	query?: string;
+	library_id?: string;
+	media_type?: string;
+	title?: string;
+	genre?: string;
+	year?: number;
+	decade?: number;
+	actor?: string;
+	director?: string;
+	collection?: string;
+	min_rating?: number;
+	max_rating?: number;
+	min_year?: number;
+	max_year?: number;
+	unwatched?: boolean;
+	sort_by?: string;
+	sort_dir?: string;
+	limit?: number;
+	offset?: number;
+};
+
+/** Multi-filter Plex search (genre, year, actor, collection, ratings, watched). */
+export async function advancedSearch(params: AdvancedSearchParams) {
+	const res = await fetch(`${getBaseUrl()}/api/search/advanced`, {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify(params),
+	});
+	if (!res.ok) throw new Error(await res.text());
+	return res.json();
+}
+
+export async function getLibrary(libraryId: string) {
+	const res = await fetch(`${getBaseUrl()}/api/libraries/${encodeURIComponent(libraryId)}`, {
+		cache: "no-store",
+	});
+	if (!res.ok) throw new Error(await res.text());
+	return res.json();
+}
+
+export async function listLibraryItems(
+	libraryId: string,
+	params?: { limit?: number; offset?: number },
+) {
+	const sp = new URLSearchParams();
+	if (params?.limit != null) sp.set("limit", String(params.limit));
+	if (params?.offset != null) sp.set("offset", String(params.offset));
+	const qs = sp.toString();
+	const res = await fetch(
+		`${getBaseUrl()}/api/libraries/${encodeURIComponent(libraryId)}/items${qs ? `?${qs}` : ""}`,
+		{ cache: "no-store" },
+	);
+	if (!res.ok) throw new Error(await res.text());
+	return res.json();
+}
+
+export type TasteScoreResponse = {
+	success: boolean;
+	built: boolean;
+	rating_key?: string;
+	score?: number;
+	detail?: unknown;
+	message?: string;
+};
+
+/** Per-item taste score (requires a built profile). */
+export function getTasteScore(
+	ratingKey: string,
+	bucket?: string | null,
+): Promise<TasteScoreResponse> {
+	const sp = bucket ? `?bucket=${encodeURIComponent(bucket)}` : "";
+	return tasteFetch(`/score/${encodeURIComponent(ratingKey)}${sp}`);
+}
+
+export type TasteRankItem = {
+	rating_key: string;
+	title?: string;
+	year?: number | null;
+	score?: number;
+	watched?: boolean;
+};
+
+export type TasteRankResponse = {
+	success: boolean;
+	built: boolean;
+	data?: TasteRankItem[];
+	items?: TasteRankItem[];
+	count?: number;
+	message?: string;
+};
+
+/** Rank a library by taste (unwatched recommendations). */
+export function getTasteRank(params: {
+	library_id: string;
+	limit?: number;
+	unwatched_only?: boolean;
+	bucket?: string | null;
+}): Promise<TasteRankResponse> {
+	const sp = new URLSearchParams({ library_id: params.library_id });
+	if (params.limit != null) sp.set("limit", String(params.limit));
+	if (params.unwatched_only != null) sp.set("unwatched_only", String(params.unwatched_only));
+	if (params.bucket) sp.set("bucket", params.bucket);
+	return tasteFetch(`/rank?${sp.toString()}`);
+}
+
+/** Time-of-week profile (e.g. sunday_morning). Same shape as TasteProfile. */
+export function getTasteTemporal(
+	bucket: string,
+	params?: { kind?: TasteKind; top?: number; prefix?: string | null },
+): Promise<TasteProfile> {
+	const sp = new URLSearchParams({
+		kind: params?.kind ?? "movie",
+		top: String(params?.top ?? 25),
+	});
+	if (params?.prefix) sp.set("prefix", params.prefix);
+	return tasteFetch(`/temporal/${encodeURIComponent(bucket)}?${sp.toString()}`);
+}
+
+export type MediaStreamUrlResponse = {
+	success: boolean;
+	rating_key?: string;
+	url?: string;
+	urls?: string[];
+	error?: string;
+};
+
+/** Direct-download + transcode URLs for offline use. */
+export async function getMediaStreamUrl(ratingKey: string): Promise<MediaStreamUrlResponse> {
+	const res = await fetch(`${getBaseUrl()}/api/media/${encodeURIComponent(ratingKey)}/stream-url`, {
+		cache: "no-store",
+	});
+	if (!res.ok) throw new Error(await res.text());
+	return res.json();
+}
+
+export type MediaFileResponse = {
+	success: boolean;
+	rating_key?: string;
+	file?: string;
+	title?: string;
+	error?: string;
+};
+
+/** Local filesystem path for the first media part. */
+export async function getMediaFile(ratingKey: string): Promise<MediaFileResponse> {
+	const res = await fetch(`${getBaseUrl()}/api/media/${encodeURIComponent(ratingKey)}/file`, {
+		cache: "no-store",
+	});
+	if (!res.ok) throw new Error(await res.text());
+	return res.json();
+}
+
+export type MediaArtResponse = {
+	success: boolean;
+	rating_key?: string;
+	type?: string;
+	cover_url?: string | null;
+	poster_url?: string | null;
+	artwork_url?: string | null;
+};
+
+/** Proxied poster/thumb URLs for a Plex item. */
+export async function getMediaArt(ratingKey: string): Promise<MediaArtResponse> {
+	const res = await fetch(`${getBaseUrl()}/api/media/${encodeURIComponent(ratingKey)}/art`, {
+		cache: "no-store",
+	});
+	if (!res.ok) throw new Error(await res.text());
+	return res.json();
+}
+
+export type PlaybackClient = {
+	id?: string;
+	name?: string;
+	title?: string;
+	[key: string]: unknown;
+};
+
+/** Plex clients available for playback. */
+export async function listPlaybackClients(): Promise<{
+	success: boolean;
+	data?: PlaybackClient[];
+	clients?: PlaybackClient[];
+}> {
+	const res = await fetch(`${getBaseUrl()}/api/playback/clients`, { cache: "no-store" });
+	if (!res.ok) throw new Error(await res.text());
+	return res.json();
+}
+
+/** Play media on a Plex client (best-effort; client support varies). */
+export async function playMedia(mediaKey: string, clientId?: string) {
+	const res = await fetch(`${getBaseUrl()}/api/playback/play`, {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify(
+			clientId ? { media_key: mediaKey, client_id: clientId } : { media_key: mediaKey },
+		),
+	});
+	if (!res.ok) throw new Error(await res.text());
+	return res.json();
+}
+
+/** Probe technical streams/codecs for a media item. */
+export async function probeMedia(mediaKey: string) {
+	const res = await fetch(
+		`${getBaseUrl()}/api/repair/probe?media_key=${encodeURIComponent(mediaKey)}`,
+		{
+			method: "POST",
+		},
+	);
+	if (!res.ok) throw new Error(await res.text());
+	return res.json();
+}
+
+/** Execute a repair operation (sync, aspect, extract). */
+export async function executeRepair(
+	operation: string,
+	mediaKey: string,
+	params?: Record<string, unknown>,
+) {
+	const res = await fetch(`${getBaseUrl()}/api/repair/execute`, {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({ operation, media_key: mediaKey, params: params ?? {} }),
+	});
+	if (!res.ok) throw new Error(await res.text());
+	return res.json();
+}
+
+/** Vector-store statistics (row counts, backend type). */
+export async function getRagStats() {
+	const res = await fetch(`${getBaseUrl()}/api/rag/stats`, { cache: "no-store" });
+	if (!res.ok) throw new Error(await res.text());
+	return res.json();
+}
+
+/** Light RAG: Plex results as LLM context string. */
+export async function getRagContext(params: {
+	query: string;
+	library_id?: string;
+	limit?: number;
+}) {
+	const sp = new URLSearchParams({ query: params.query });
+	if (params.library_id) sp.set("library_id", params.library_id);
+	if (params.limit != null) sp.set("limit", String(params.limit));
+	const res = await fetch(`${getBaseUrl()}/api/rag/context?${sp.toString()}`, {
+		cache: "no-store",
+	});
+	if (!res.ok) throw new Error(await res.text());
+	return res.json();
+}
+
+export type LlmOnboardingResponse = {
+	has_local?: boolean;
+	has_key?: boolean;
+	recommended?: string;
+	steps?: unknown;
+	[key: string]: unknown;
+};
+
+/** Fresh-install starter facts + recommended local-vs-cloud path. */
+export async function getLlmOnboarding(): Promise<LlmOnboardingResponse> {
+	const res = await fetch(`${getBaseUrl()}/api/llm/onboarding`, { cache: "no-store" });
+	if (!res.ok) throw new Error(await res.text());
+	return res.json();
+}
+
+/** Remove a cloud provider's stored API key. */
+export async function deleteLlmProviderKey(
+	provider: string,
+): Promise<{ success: boolean; deleted?: boolean; error?: string }> {
+	const res = await fetch(`${getBaseUrl()}/api/llm/keys/${encodeURIComponent(provider)}`, {
+		method: "DELETE",
+	});
+	if (!res.ok) throw new Error(await res.text());
+	return res.json();
+}
+
+/** Plain chat completion (non-agentic). Supports provider/base_url passthrough. */
+export async function postLlmChat(params: {
+	messages: { role: string; content: string }[];
+	model?: string;
+	provider?: string;
+	base_url?: string;
+	use_context?: boolean;
+	stream?: boolean;
+}) {
+	const res = await fetch(`${getBaseUrl()}/api/llm/chat`, {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({
+			messages: params.messages,
+			model: params.model ?? "gemma4:12b",
+			stream: params.stream ?? false,
+			...(params.provider ? { provider: params.provider } : {}),
+			...(params.base_url ? { base_url: params.base_url } : {}),
+			...(params.use_context != null ? { use_context: params.use_context } : {}),
+		}),
+	});
+	if (!res.ok) throw new Error(await res.text());
+	return res.json();
+}
+
+/** Agentic chat with Plex tool-calling (OpenAI-compatible). */
+export async function postLlmAgentic(params: {
+	messages: { role: string; content: string }[];
+	model?: string;
+	provider?: string;
+	base_url?: string;
+}) {
+	const res = await fetch(`${getBaseUrl()}/api/llm/agentic`, {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({
+			messages: params.messages,
+			model: params.model ?? "gemma4:12b",
+			...(params.provider ? { provider: params.provider } : {}),
+			...(params.base_url ? { base_url: params.base_url } : {}),
+		}),
+	});
+	if (!res.ok) throw new Error(await res.text());
+	return res.json();
+}
+
+/** Refine/improve a user message before sending. */
+export async function refinePrompt(text: string, model?: string) {
+	const res = await fetch(`${getBaseUrl()}/api/llm/refine`, {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({ text, model: model ?? "gemma4:12b" }),
+	});
+	if (!res.ok) throw new Error(await res.text());
+	return res.json();
+}
+
+/** Run an AI workflow (currently: search_and_summarize). */
+export async function runWorkflow(id: string, params?: Record<string, unknown>) {
+	const res = await fetch(`${getBaseUrl()}/api/workflows/run`, {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({ id, params: params ?? {} }),
+	});
+	if (!res.ok) throw new Error(await res.text());
+	return res.json();
+}
+
+/** Swagger/ReDoc/OpenAPI locations for the API-docs page. */
+export async function getApiDocsInfo(): Promise<{
+	swagger_ui: string;
+	redoc: string;
+	openapi_json: string;
+	backend_port: number;
+	webapp_url: string;
+	note: string;
+}> {
+	const res = await fetch(`${getBaseUrl()}/api/system/api-docs-info`, { cache: "no-store" });
+	if (!res.ok) throw new Error(await res.text());
+	return res.json();
 }
