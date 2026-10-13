@@ -50,7 +50,7 @@ When **mcp-central-docs** is on `PYTHONPATH`, GPU mode applies there too (`just 
 
 Run once before querying:
 
-- MCP: `plex_rag(operation="sync_metadata", enrich=False)` (Standard sync), or  
+- MCP: `plex_rag(operation="sync_metadata", enrich=False)` (Standard sync), or
 - MCP (Deep): `plex_rag(operation="sync_metadata", enrich=True)` (Enriched sync), or
 - Subtitles: `plex_rag(operation="sync_subtitles")` (Dialogue indexing), or
 - Webapp: **Semantic search** → “Sync / Index metadata”, or **Settings** → **RAG / Indexing** → Reindex.
@@ -92,5 +92,6 @@ For detailed usage, see [**docs/ENRICHMENT.md**](ENRICHMENT.md).
 
 The webapp provides an **Industrial RAG Management** dashboard with real-time telemetry:
 - **Streaming Logs**: Track exactly which library and item is being indexed in real-time.
-- **Vector Stats**: Monitor document counts for both **Metadata** and **Dialogue** stores.
+- **Vector Stats**: Monitor document counts for both **Metadata** and **Dialogue** stores (`GET /api/rag/stats`).
 - **Sync Control**: Trigger full or incremental syncs for metadata or subtitles directly from the UI.
+- **Context tester**: a try-it box for light RAG (`GET /api/rag/context?query=...`) — the same endpoint chat uses for LLM context injection — so a query can be checked without starting a sync.

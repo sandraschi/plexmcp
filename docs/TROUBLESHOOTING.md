@@ -21,6 +21,9 @@ Faster path: [QUICKSTART.md](QUICKSTART.md).
 | “RAG not available” / semantic search empty | [RAG / semantic search unavailable](#rag--semantic-search-unavailable) |
 | Radarr/Sonarr read errors | [*arr status unreachable](#arr-status-unreachable) |
 | Webapp log file / terminal noise | [Logging](#logging) |
+| Something broken, unclear what | [Diagnostics first](#diagnostics-first) |
+| No NVIDIA GPU / VRAM panel missing | [GPU-less machines](#gpu-less-machines) |
+| Play on client does nothing | [Playback is best-effort](#playback-is-best-effort) |
 
 ---
 
@@ -58,3 +61,15 @@ Faster path: [QUICKSTART.md](QUICKSTART.md).
 ## Logging
 
 Webapp backend logs: `logs/webapp.log` (rotating). Set `PLEXMCP_ALLOW_LOGGING` as documented in tests if FastMCP logging conflicts with your terminal.
+
+## Diagnostics first
+
+Before digging: open **Server** (top of the page) or **Settings → Diagnostics** — one traffic-light list for Plex, LLM, RAG, and *arr (`GET /api/system/diagnostics`, Re-check on demand). The Overview dashboard (`GET /api/dashboard/`) shows the same state as KPI cards plus a red onboarding button when Plex itself is down.
+
+## GPU-less machines
+
+No NVIDIA GPU is not an error: the Settings VRAM panel only appears when an Ollama engine or GPU telemetry is present, and `GET /api/llm/gpus` returns `[]` by design. Use a cloud provider (Anthropic/DeepSeek/OpenRouter) from the Settings LLM section instead — keys are per-provider and removable.
+
+## Playback is best-effort
+
+The media page's **Play on client** (`POST /api/playback/play`) depends on Plex client APIs and fails for some clients (notably non-GDM ones like Plex Web / Windows App). Treat a sent-but-ignored command as a client limitation, not a backend bug — see PRD known gaps.

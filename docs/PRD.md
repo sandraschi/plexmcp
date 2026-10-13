@@ -1,6 +1,6 @@
 # PlexMCP — product requirements
 
-**Package:** `plex-mcp-advanced` · **Framework:** FastMCP **3.1+** · **Python:** **3.12+**  
+**Package:** `plex-mcp-advanced` · **Framework:** FastMCP **3.1+** · **Python:** **3.12+**
 **Status:** Alpha — see [CHANGELOG.md](../CHANGELOG.md) and root [README.md](../README.md).
 
 ## Purpose
@@ -15,14 +15,15 @@ Provide a **Model Context Protocol** server for **Plex Media Server** so AI assi
 | **Plex** | Libraries, media browse/search, server status, sessions/clients, playlists, users, reporting, metadata refresh patterns supported by `plexapi` / Plex HTTP API. |
 | **Sampling** | Server-side OpenAI-compatible LLM (`PLEX_SAMPLING_*`) for `plex_natural_assistant` and `agentic_plex_workflow` when the host does not sample; optional client LLM via `PLEX_SAMPLING_USE_CLIENT_LLM=1`. |
 | **RAG** | `plex_rag`: LanceDB index from Plex metadata (`sync_metadata`, `semantic_search`); optional bridge to **mcp-central-docs** `docs_mcp.backend.rag_core` when on `PYTHONPATH`. |
-| **Webapp** | FastAPI backend (**10740**) + Next.js frontend (**10741**): dashboard, libraries, movies, keyword + semantic search, chat with preprompt, settings (Plex, LLM, *arr). FastMCP mounted at **`/mcp`**. |
+| **Webapp** | FastAPI backend (**10740**) + Next.js frontend (**10741**): dashboard with hero + KPI cards + quick actions (`GET /api/dashboard/`), libraries, movies, keyword + semantic + advanced multi-filter search, taste profile + rank/score/temporal, media dossier + AI context + file/stream/art + playback, chat (agentic + refine) with preprompt, settings (Plex, LLM incl. onboarding/GPU/resident-model/key-delete, *arr), diagnostics traffic-light panel, repair, RAG management, API docs. FastMCP mounted at **`/mcp`**. |
 | ***arr** | Read-only HTTP status for Radarr / Sonarr / Lidarr when URLs and API keys are configured (`arr_stack` + UI cards). |
 | **Install** | **uv**-first workflow; `uv.exe` on PATH (Windows). **PyPI** install documented as **conditional** until the package is published there. |
 
 ## Out of scope / known gaps
 
-- **Playback control** (`plex_streaming` play/pause/stop): **not reliable** across client types; treat as best-effort / diagnostic only until Plex client APIs behave consistently. See [CHANGELOG.md](../CHANGELOG.md) Known Issues.
+- **Playback control** (`plex_streaming` play/pause/stop): **not reliable** across client types; webapp exposes play + client picker as best-effort / diagnostic only until Plex client APIs behave consistently. See [CHANGELOG.md](../CHANGELOG.md) Known Issues.
 - **PyPI one-liner** as the only install path: blocked until **PyPI registration** and release are complete; repo + `uv sync` remains primary.
+- **Legacy `/api/v1/*`** (semantic-search + placeholder chat): superseded by `/api/rag/*` + `/api/llm/*`; kept only until callers are migrated, then removed. `POST /api/fleet/launch` duplicates `POST /api/webapp-launch` (the latter is supported).
 
 ## Non-functional
 

@@ -37,7 +37,17 @@ Replace with PNGs if you need marketing shots — see [assets/README.md](assets/
 
 ## Diagnostics
 
-**Settings → Diagnostics** runs every connectivity check at once — Plex, LLM provider, RAG index, *arr stack — as a single traffic-light list, instead of hunting through separate pages to find which one is actually broken. Re-check on demand.
+**Settings → Diagnostics** runs every connectivity check at once — Plex, LLM provider, RAG index, *arr stack — as a single traffic-light list, instead of hunting through separate pages to find which one is actually broken. Re-check on demand. The same panel is also shown at the top of **`/server`** (`GET /api/system/diagnostics`).
+
+## Overview dashboard
+
+**`/`** follows the fleet gate: a hero (brand + headline + Browse/Search/Chat actions), six KPI cards (libraries, Plex server, enriched dossiers, semantic index, taste profile, LLM providers), quick-action links, and a library preview — all fed by one **`GET /api/dashboard/`** call that aggregates server, libraries, enrichment, RAG, taste, *arr, and LLM state best-effort (a failing section yields `null` plus a `warnings` entry, never a 500). When Plex is not connected, a red **Complete onboarding — connect Plex** button (`data-testid="onboarding-cue"`) links straight to Settings.
+
+## Search
+
+- **Basic** (`GET /api/search/`) — keyword query with optional library filter; **Dialogue** mode runs subtitle semantic search.
+- **Advanced** (`POST /api/search/advanced`) — collapsible filter panel on `/search`: title, genre, actor, director, collection, media type, year / min / max, rating range, unwatched-only, sort field + direction.
+- **Semantic** (`GET /api/rag/semantic`) and **light RAG context** (`GET /api/rag/context`, with a try-it box on the RAG page) round out the three search paths.
 
 ## *arr integration
 
@@ -47,8 +57,34 @@ Optional Radarr/Sonarr/Lidarr URLs and API keys in **Settings** power the Overvi
 
 **`/taste`** shows what you gravitate toward and what you pass over, learned from your Plex watch history. A score is *lift against your library* in [-1, 1]: positive = you pick it more than its share of what's available, negative = it's there but you skip it. Movies and TV are separate (different populations), and you can narrow to a time of week ("Sunday mornings") or one family (genres, decades, directors...). A "Lately" panel shows which genres are moving. First visit: **Build my profile** reads your whole history in the background (a couple of minutes on a large library); afterwards **Update from latest viewing** folds in new views, and the backend does it every 10 minutes by itself (`TASTE_SYNC_INTERVAL_SEC`). Hover a row for the numbers behind it. See `docs/plans/TASTE_MODELLING.md`.
 
+A **recommendations panel** sits below the profile: rank any library by taste (`GET /api/taste/rank`, unwatched-only by default), score a single rating key (`GET /api/taste/score/{key}`), and probe a time bucket (`GET /api/taste/temporal/{bucket}`).
+
+## Media item (`/media?ratingKey=...`)
+
+Beyond the dossier (below), each item now carries:
+
+- **AI context** — Wikipedia summary + TMDB match + links + optional LLM notes (`GET /api/media/{key}/ai-context`, 7-day server cache, Refresh bypasses it). Also available as a modal from search/movies via the "AI context" button.
+- **Files and artwork** — local file path (`.../file`), direct-download/transcode URL (`.../stream-url`), proxied poster/thumb (`.../art`).
+- **Playback** — pick a discovered Plex client and send play (`POST /api/playback/play`, `GET /api/playback/clients`). Best-effort: client support varies, see [Troubleshooting](TROUBLESHOOTING.md).
+
 ## Deep enrichment
 
 - **`/media?ratingKey=...`** — a book-like dossier for one library item: synopsis, critical overview, "why this matters," content warnings, thematic tags (clickable), and "Related in your library" (by director, shared cast, collection, or theme). Opened via "Full dossier" on a movie's detail modal. "Enrich now" fetches Wikipedia + TMDB (deep) + JustWatch and, if an LLM provider/model is picked, synthesises the dossier; without one, it shows the raw sources instead.
-- **`/enrichment`** — enriched-item count, stale (>90 day) count, a bulk-enrichment launcher (library + max items + optional LLM provider/model) with live progress, and theme search. Bulk runs as a background job; one at a time.
+- **`/enrichment`** — enriched-item count, stale (>90 day) count, a bulk-enrichment launcher (library + max items + optional LLM provider/model) with live progress, theme search **and person search** (`GET /api/enrichment/by-person`, optional director/actor role filter).
 - Sources: Wikipedia + TMDB (deep) + JustWatch only — see `docs/plans/DEEP_METADATA_ENRICHMENT.md` for why Letterboxd/IMDB/Rotten Tomatoes/Metacritic scraping was deliberately left out.
+
+## Chat and workflows
+
+**`/chat`** runs agentic tool-calling chat (`POST /api/llm/agentic`, plain `POST /api/llm/chat` also exists), prompt refining (`POST /api/llm/refine`), personalities, and export — plus a **Search + summarize** runner for the `search_and_summarize` AI workflow (`POST /api/workflows/run`).
+
+## Settings extras
+
+- **LLM onboarding card** (`GET /api/llm/onboarding`) with the recommended local-vs-cloud path on fresh installs.
+- **GPU target select** when 2+ NVIDIA GPUs are present (persisted to `llm_gpu` in the browser; telemetry, resident models, and Evict-all were already there).
+- **Remove saved key** for keystore cloud providers (`DELETE /api/llm/keys/{provider}`).
+
+## API notes
+
+- All browser calls go through `webapp/frontend/utils/api.ts` — no raw `fetch("/api/...")` outside it (the chat streaming path and the topbar launcher are the documented exceptions).
+- Legacy `POST /api/v1/search` and `POST /api/v1/chat` are **deprecated** (superseded by `/api/rag/*` and `/api/llm/*`) and kept for compatibility only.
+- `POST /api/fleet/launch` (by repo path) duplicates `POST /api/webapp-launch` (by port, used by the topbar); the latter is the supported one.
