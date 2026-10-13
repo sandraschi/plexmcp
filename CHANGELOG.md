@@ -1,4 +1,35 @@
 
+## [Unreleased] — 2026-10-08 (dashboard overhaul + webapp API parity)
+
+### Added (Overview dashboard + sidebar to standard)
+
+- **Overview rewritten to the fleet gate**: hero (brand + headline + Browse/Search/Chat CTAs, `dashboard-hero-cta`) + 6 KPI cards (libraries, server, enriched, semantic index, taste, LLM) + quick actions + library preview + red `onboarding-cue` button when Plex is down.
+- **New `GET /api/dashboard/` aggregation endpoint** (`webapp/backend/app/api/dashboard.py`): server, libraries, enrichment, RAG, taste, *arr, LLM, best-effort per section (failing section yields `null` + `warnings` entry, never 500).
+- **Sidebar to standard**: collapse toggle moved to the top header (was bottom), logo + version in header, live backend/Plex connection indicator (15s probe).
+
+### Added (API parity — every backend route now has UI or a recorded reason)
+
+- **Advanced search** (`POST /api/search/advanced`): filter panel on `/search` (title, genre, actor, director, collection, type, year/range, ratings, unwatched-only, sort).
+- **Taste recommendations**: rank-any-library (`GET /api/taste/rank`), single-item score (`score/{key}`), time-bucket probe (`temporal/{bucket}`) on `/taste`.
+- **Media actions**: AI-context button (existing modal, now opened from `/media` too), files/art panel (`stream-url`/`file`/`art`), play-on-client picker (`POST /api/playback/play`, best-effort labeled).
+- **Enrichment person search** (`by-person` + role filter); **chat workflow runner** (`search_and_summarize` via `POST /api/workflows/run`).
+- **Settings**: LLM onboarding card, GPU target select (secondary default), per-provider key delete (`DELETE /api/llm/keys/{provider}`); **RAG page**: light-context tester (`GET /api/rag/context`); **Server page**: diagnostics traffic-light panel; **API docs**: live backend label via `api-docs-info` + corrected quick-ref.
+- **Frontend contract**: 19 new `utils/api.ts` wrappers; repair, RAG, and chat components migrated off raw `fetch` onto them.
+
+### Changed / Deprecated
+
+- Dead `getSystemStatus` wrapper removed (no backend route ever existed).
+- Legacy `POST /api/v1/search` + `POST /api/v1/chat` marked deprecated in `api/v1.py` (superseded by `/api/rag/*` + `/api/llm/*`).
+- `POST /api/fleet/launch` left as-is (possible external callers); `POST /api/webapp-launch` is the supported launcher.
+
+### Audit corrections
+
+- `getMediaAiContext`, `getLlmGpus`/`getLlmLoaded`/`unloadLlm`, diagnostics, and RAG stats **already had callers** (search/movies modals, VramPanel, settings DiagnosticsPanel, rag-dashboard) — an early audit pass only grepped `app/` and missed `components/`. Corrected before building.
+
+### Verified
+
+- `tsc --noEmit` clean, `biome check --write` applied, `ruff check` + `format --check` clean, pytest 52 passed (main, config, plex-auth, taste, llm-providers, enrichment).
+
 ## [Unreleased] — 2026-09-21
 
 ### Added (Prefab cards render in the webapp chat)
