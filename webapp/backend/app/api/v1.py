@@ -1,4 +1,8 @@
-"""Legacy v1 API: semantic search and chat (delegated to MCP tools)."""
+"""Legacy v1 API: semantic search and chat (delegated to MCP tools).
+
+Deprecated: superseded by /api/rag/* (semantic/context) and /api/llm/* (chat,
+agentic). Kept for backward compatibility; the webapp does not call these.
+"""
 
 import logging
 

@@ -5,6 +5,7 @@ import { ratingKeyFromItem } from "@/utils/plex-media-ui";
 import { useState } from "react";
 import MovieCard from "../components/MovieCard";
 import MovieMetadataModal from "../components/MovieMetadataModal";
+import { AdvancedSearchPanel } from "./advanced-search-panel";
 import { SearchForm } from "./search-form";
 
 interface SearchClientProps {
@@ -40,6 +41,7 @@ export default function SearchClient({
 			</p>
 
 			<SearchForm query={query} libraryId={libraryId} mode={mode as any} />
+			<AdvancedSearchPanel />
 
 			{results.length > 0 ? (
 				<div className="mt-8">

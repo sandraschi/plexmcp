@@ -1,5 +1,6 @@
 "use client";
 
+import { MediaAiContextPanel } from "@/components/media/media-ai-context-panel";
 import {
 	type EnrichmentReport,
 	type LlmProviderInfo,
@@ -11,6 +12,7 @@ import {
 } from "@/utils/api";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { MediaFilesPanel, MediaPlaybackPanel } from "./media-action-panels";
 
 const SOURCE_OPTIONS = [
 	{ id: "wikipedia", label: "Wikipedia" },
@@ -46,6 +48,7 @@ export function MediaDetailClient({ ratingKey }: { ratingKey: string }) {
 	const [llmModel, setLlmModel] = useState("");
 	const [sources, setSources] = useState<string[]>(["wikipedia", "tmdb", "justwatch"]);
 	const [showOptions, setShowOptions] = useState(false);
+	const [aiContextKey, setAiContextKey] = useState<string | null>(null);
 
 	const load = async () => {
 		setLoading(true);
@@ -121,6 +124,14 @@ export function MediaDetailClient({ ratingKey }: { ratingKey: string }) {
 					</p>
 				</div>
 				<div className="flex gap-2">
+					<button
+						type="button"
+						onClick={() => setAiContextKey(ratingKey)}
+						data-testid="media-ai-context-open"
+						className="px-4 py-2 rounded-lg bg-slate-700 text-slate-100 text-sm font-medium hover:bg-slate-600 border border-slate-600/50"
+					>
+						AI context
+					</button>
 					<button
 						type="button"
 						onClick={() => setShowOptions((v) => !v)}
@@ -297,6 +308,10 @@ export function MediaDetailClient({ ratingKey }: { ratingKey: string }) {
 					</div>
 				</div>
 			)}
+
+			<MediaFilesPanel ratingKey={ratingKey} />
+			<MediaPlaybackPanel ratingKey={ratingKey} />
+			<MediaAiContextPanel ratingKey={aiContextKey} onClose={() => setAiContextKey(null)} />
 
 			{Object.keys(grouped).length > 0 && (
 				<div className="flex flex-col gap-4">

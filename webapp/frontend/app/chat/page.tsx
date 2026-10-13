@@ -2,9 +2,10 @@
 
 import { PrefabRenderer } from "@/components/prefab/prefab-renderer";
 import type { PrefabPayload } from "@/components/prefab/prefab-types";
-import { API_BASE } from "@/utils/api";
+import { checkBackendHealth, getLlmModels, postLlmAgentic, refinePrompt } from "@/utils/api";
 import { Trash2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { WorkflowPanel } from "./workflow-panel";
 
 interface Message {
 	role: "user" | "assistant";
@@ -144,16 +145,15 @@ export default function ChatPage() {
 		let cancelled = false;
 		(async () => {
 			try {
-				const r = await fetch(`${API_BASE}/health`);
+				const ok = await checkBackendHealth();
 				if (cancelled) return;
-				setProviderStatus(r.ok ? "connected" : "offline");
+				setProviderStatus(ok ? "connected" : "offline");
 			} catch {
 				if (!cancelled) setProviderStatus("offline");
 			}
 		})();
 
-		fetch(`${API_BASE}/api/llm/models`)
-			.then((r) => r.json())
+		getLlmModels()
 			.then((d: { models?: string[] }) => {
 				if (cancelled) return;
 				const list = d.models ?? [];
@@ -204,12 +204,7 @@ export default function ChatPage() {
 		if (!input.trim() || refining) return;
 		setRefining(true);
 		try {
-			const res = await fetch(`${API_BASE}/api/llm/refine`, {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ text: input.trim(), model }),
-			});
-			const data = await res.json();
+			const data = await refinePrompt(input.trim(), model);
 			if (data.refined) setInput(data.refined);
 		} catch {
 			// ignore
@@ -238,31 +233,13 @@ export default function ChatPage() {
 			? [{ role: "system" as const, content: preprompt }, ...messages, userMsg]
 			: [...messages, userMsg];
 		try {
-			const res = await fetch(`${API_BASE}/api/llm/agentic`, {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
-					messages: messagesToSend.map((x) => ({
-						role: x.role,
-						content: x.content,
-					})),
-					model,
-				}),
-			});
-			const text = await res.text();
-			let data: Record<string, unknown>;
-			try {
-				data = text ? JSON.parse(text) : {};
-			} catch {
-				setMessages((m) => [
-					...m,
-					{
-						role: "assistant",
-						content: `Failed: invalid response (${text.slice(0, 80)}...)`,
-					},
-				]);
-				return;
-			}
+			const data = (await postLlmAgentic({
+				messages: messagesToSend.map((x) => ({
+					role: x.role,
+					content: x.content,
+				})),
+				model,
+			})) as Record<string, unknown>;
 			if (data.error) {
 				setMessages((m) => [...m, { role: "assistant", content: `Error: ${data.error}` }]);
 			} else {
@@ -399,6 +376,8 @@ export default function ChatPage() {
 					)}
 				</div>
 			</div>
+
+			<WorkflowPanel model={model} />
 
 			{/* Messages */}
 			<div

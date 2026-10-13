@@ -22,6 +22,7 @@ class SPAStaticFiles(StaticFiles):
 
 from .api import (
     arr_stack,
+    dashboard,
     enrichment,
     fleet,
     help_api,
@@ -181,6 +182,7 @@ app.include_router(help_api.router, prefix="/api/help", tags=["help"])
 app.include_router(llm.router, prefix="/api/llm", tags=["llm"])
 app.include_router(rag.router, prefix="/api/rag", tags=["rag"])
 app.include_router(arr_stack.router, prefix="/api/arr", tags=["arr"])
+app.include_router(dashboard.router, prefix="/api/dashboard", tags=["dashboard"])
 app.include_router(workflows.router, prefix="/api/workflows", tags=["workflows"])
 app.include_router(enrichment.router, prefix="/api/enrichment", tags=["enrichment"])
 app.include_router(taste.router, prefix="/api/taste", tags=["taste"])

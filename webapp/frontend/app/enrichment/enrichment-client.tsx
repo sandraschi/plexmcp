@@ -11,6 +11,7 @@ import {
 	getLlmProviders,
 	getStaleEnrichments,
 	listLibraries,
+	searchByPerson,
 	searchByTheme,
 	startBulkEnrichment,
 } from "@/utils/api";
@@ -66,6 +67,76 @@ function ThemeSearch({ initialTheme }: { initialTheme: string }) {
 			</div>
 			{hits.length > 0 && (
 				<div className="flex flex-wrap gap-2 mt-3">
+					{hits.map((h) => (
+						<Link
+							key={h.plex_rating_key}
+							href={`/media?ratingKey=${encodeURIComponent(h.plex_rating_key)}`}
+							className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600/50 text-sm text-slate-200"
+						>
+							{h.title}
+							{h.year ? ` (${h.year})` : ""}
+						</Link>
+					))}
+				</div>
+			)}
+		</div>
+	);
+}
+
+function PersonSearch() {
+	const [name, setName] = useState("");
+	const [role, setRole] = useState("");
+	const [hits, setHits] = useState<EnrichmentThemeHit[]>([]);
+	const [searching, setSearching] = useState(false);
+
+	const runSearch = async () => {
+		if (!name.trim()) {
+			setHits([]);
+			return;
+		}
+		setSearching(true);
+		try {
+			const res = await searchByPerson(name.trim(), role.trim() || undefined);
+			setHits(res.data);
+		} finally {
+			setSearching(false);
+		}
+	};
+
+	return (
+		<div className="rounded-lg border border-slate-600/50 bg-slate-900/40 p-4">
+			<h2 className="text-sm font-semibold text-slate-200 mb-2">Search by person</h2>
+			<div className="flex flex-wrap gap-2">
+				<input
+					value={name}
+					onChange={(e) => setName(e.target.value)}
+					onKeyDown={(e) => e.key === "Enter" && void runSearch()}
+					placeholder="Director or actor name"
+					data-testid="person-search-name"
+					className="flex-1 min-w-40 bg-slate-800 border border-slate-600/50 rounded-lg px-3 py-2 text-slate-100 text-sm"
+				/>
+				<select
+					value={role}
+					onChange={(e) => setRole(e.target.value)}
+					data-testid="person-search-role"
+					className="bg-slate-800 border border-slate-600/50 rounded-lg px-3 py-2 text-slate-100 text-sm"
+				>
+					<option value="">Any role</option>
+					<option value="director">Director</option>
+					<option value="actor">Actor</option>
+				</select>
+				<button
+					type="button"
+					onClick={() => void runSearch()}
+					disabled={searching}
+					data-testid="person-search-run"
+					className="px-4 py-2 rounded-lg bg-slate-700 text-slate-100 text-sm hover:bg-slate-600 border border-slate-600/50"
+				>
+					{searching ? "Searching…" : "Search"}
+				</button>
+			</div>
+			{hits.length > 0 && (
+				<div data-testid="person-search-results" className="flex flex-wrap gap-2 mt-3">
 					{hits.map((h) => (
 						<Link
 							key={h.plex_rating_key}
@@ -289,6 +360,7 @@ function EnrichmentPageInner() {
 			</div>
 
 			<ThemeSearch initialTheme={initialTheme} />
+			<PersonSearch />
 
 			{stale.length > 0 && (
 				<div className="rounded-lg border border-slate-600/50 bg-slate-900/40 p-4">

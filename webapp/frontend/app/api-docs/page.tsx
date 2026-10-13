@@ -1,8 +1,8 @@
 "use client";
 
-import { getBaseUrl } from "@/utils/api";
+import { getApiDocsInfo, getBaseUrl } from "@/utils/api";
 import { BookOpen, Code2, ExternalLink, RefreshCw } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type DocsView = "swagger" | "redoc";
 
@@ -60,6 +60,23 @@ export default function ApiDocsPage() {
 	const [view, setView] = useState<DocsView>("swagger");
 	const [loading, setLoading] = useState(true);
 	const iframeRef = useRef<HTMLIFrameElement>(null);
+	const [backendLabel, setBackendLabel] = useState("http://localhost:10740");
+
+	useEffect(() => {
+		let cancelled = false;
+		getApiDocsInfo()
+			.then((d) => {
+				if (!cancelled && d.swagger_ui) {
+					try {
+						setBackendLabel(new URL(d.swagger_ui).origin);
+					} catch {}
+				}
+			})
+			.catch(() => {});
+		return () => {
+			cancelled = true;
+		};
+	}, []);
 
 	const handleIframeLoad = () => {
 		setLoading(false);
@@ -143,16 +160,17 @@ export default function ApiDocsPage() {
 			{/* Quick-ref strip */}
 			<div className="flex items-center gap-2 px-5 py-2 border-b border-zinc-800 shrink-0 overflow-x-auto">
 				<span className="text-xs text-zinc-600 shrink-0">Backend:</span>
-				<code className="text-xs text-amber-400 font-mono shrink-0">http://localhost:10740</code>
+				<code className="text-xs text-amber-400 font-mono shrink-0">{backendLabel}</code>
 				<span className="text-zinc-700 mx-1">·</span>
 				{[
-					["GET", "/api/libraries", "blue"],
+					["GET", "/api/libraries/", "blue"],
 					["GET", "/api/movies", "blue"],
-					["GET", "/api/search", "blue"],
+					["GET", "/api/search/", "blue"],
+					["POST", "/api/search/advanced", "green"],
 					["POST", "/api/llm/chat", "green"],
-					["GET", "/api/server", "blue"],
-					["GET", "/api/rag", "blue"],
-					["GET", "/api/arr", "blue"],
+					["GET", "/api/server/status", "blue"],
+					["GET", "/api/dashboard/", "blue"],
+					["GET", "/api/taste/rank", "blue"],
 				].map(([method, path, color]) => (
 					<a
 						key={path}
