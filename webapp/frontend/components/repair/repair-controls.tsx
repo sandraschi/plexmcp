@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import React, { useState } from "react";
 
-import { API_BASE } from "@/utils/api";
+import { executeRepair } from "@/utils/api";
 
 interface RepairControlsProps {
 	item: any;
@@ -35,16 +35,7 @@ export function RepairControls({ item, probeData, onLog, onReload }: RepairContr
 		onLog(`[REPAIR] Starting ${operation} operation...`);
 
 		try {
-			const res = await fetch(`${API_BASE}/api/repair/execute`, {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
-					operation,
-					media_key: item.key,
-					params,
-				}),
-			});
-			const data = await res.json();
+			const data = await executeRepair(operation, item.key, params);
 			if (data.success) {
 				onLog(`[SUCCESS] ${operation} complete. Output: ${data.message || "File updated."}`);
 				onReload(); // Refresh probe to show changes

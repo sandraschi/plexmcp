@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import React, { useState, useEffect, useRef } from "react";
 
-import { API_BASE } from "@/utils/api";
+import { getRagContext, getRagStats, getRagSyncStatus, startRagSync } from "@/utils/api";
 
 export function RAGDashboard() {
 	const [stats, setStats] = useState<any>(null);
@@ -24,6 +24,23 @@ export function RAGDashboard() {
 	const [error, setError] = useState<string | null>(null);
 	const [logs, setLogs] = useState<string[]>([]);
 	const logEndRef = useRef<HTMLDivElement>(null);
+	const [ctxQuery, setCtxQuery] = useState("");
+	const [ctxOut, setCtxOut] = useState<string | null>(null);
+	const [ctxBusy, setCtxBusy] = useState(false);
+
+	async function runContextQuery() {
+		if (!ctxQuery.trim() || ctxBusy) return;
+		setCtxBusy(true);
+		setCtxOut(null);
+		try {
+			const res = await getRagContext({ query: ctxQuery.trim(), limit: 10 });
+			setCtxOut(typeof res?.context === "string" ? res.context : JSON.stringify(res));
+		} catch (e) {
+			setCtxOut(e instanceof Error ? e.message : "Context query failed");
+		} finally {
+			setCtxBusy(false);
+		}
+	}
 
 	// Initial stats fetch
 	useEffect(() => {
@@ -40,8 +57,7 @@ export function RAGDashboard() {
 
 	async function fetchStats() {
 		try {
-			const res = await fetch(`${API_BASE}/api/rag/stats`);
-			const data = await res.json();
+			const data = await getRagStats();
 			if (data.success) {
 				setStats(data.data);
 			}
@@ -52,8 +68,7 @@ export function RAGDashboard() {
 
 	async function fetchSyncStatus() {
 		try {
-			const res = await fetch(`${API_BASE}/api/rag/sync/status`);
-			const data = await res.json();
+			const data = await getRagSyncStatus();
 			setSyncStatus(data);
 
 			if (data.phase !== "idle" && data.phase !== "error") {
@@ -69,7 +84,7 @@ export function RAGDashboard() {
 			}
 
 			if (data.phase === "error") {
-				setError(data.message);
+				setError(data.message ?? "Sync error");
 			}
 		} catch (_err) {
 			console.error("Failed to fetch sync status");
@@ -84,9 +99,7 @@ export function RAGDashboard() {
 		addLog("[CORE] Preparing deep recursive traversal...");
 
 		try {
-			const endpoint = type === "metadata" ? "/api/rag/sync" : "/api/rag/sync/subtitles";
-			const res = await fetch(`${API_BASE}${endpoint}`, { method: "POST" });
-			const data = await res.json();
+			const data = await startRagSync(type);
 			if (data.success) {
 				setIsSyncing(true);
 			} else {
@@ -216,6 +229,39 @@ export function RAGDashboard() {
 								<span className="text-blue-400">LanceDB Enabled</span>
 							</div>
 						</div>
+					</div>
+
+					<div className="pt-4 border-t border-slate-800">
+						<p className="text-xs text-slate-500 mb-2">
+							Try light RAG context (GET /api/rag/context)
+						</p>
+						<div className="flex gap-2">
+							<input
+								value={ctxQuery}
+								onChange={(e) => setCtxQuery(e.target.value)}
+								onKeyDown={(e) => e.key === "Enter" && void runContextQuery()}
+								placeholder="e.g. heist movies"
+								data-testid="rag-context-query"
+								className="flex-1 px-3 py-2 rounded-lg bg-slate-800 border border-slate-600 text-slate-100 text-sm placeholder-slate-500"
+							/>
+							<button
+								type="button"
+								onClick={() => void runContextQuery()}
+								disabled={ctxBusy}
+								data-testid="rag-context-run"
+								className="px-3 py-2 rounded-lg bg-slate-700 text-slate-200 text-sm hover:bg-slate-600 disabled:opacity-50"
+							>
+								{ctxBusy ? "…" : "Test"}
+							</button>
+						</div>
+						{ctxOut && (
+							<pre
+								data-testid="rag-context-out"
+								className="mt-2 max-h-40 overflow-auto text-[11px] text-slate-400 whitespace-pre-wrap"
+							>
+								{ctxOut}
+							</pre>
+						)}
 					</div>
 
 					{error && (

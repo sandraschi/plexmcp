@@ -5,6 +5,7 @@ import { ErrorBanner } from "@/components/ui/error-banner";
 import { getServerInfo } from "@/utils/api";
 import { PLEX_TOKEN_HINT } from "@/utils/config-hints";
 import { useEffect, useState } from "react";
+import { DiagnosticsPanel } from "./diagnostics-panel";
 
 export default function ServerPage() {
 	const [data, setData] = useState<Record<string, unknown> | null>(null);
@@ -37,6 +38,7 @@ export default function ServerPage() {
 				<strong className="text-slate-400">Overview</strong> for readable fields or{" "}
 				<strong className="text-slate-400">Raw JSON</strong> for the full response.
 			</p>
+			<DiagnosticsPanel />
 			{loading ? (
 				<p className="text-slate-400">Loading server info…</p>
 			) : data === null ? (

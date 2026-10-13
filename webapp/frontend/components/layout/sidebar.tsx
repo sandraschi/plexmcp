@@ -1,5 +1,6 @@
 "use client";
 
+import { checkBackendHealth, getServerStatus } from "@/utils/api";
 import {
 	BookOpen,
 	ChevronLeft,
@@ -20,6 +21,9 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+
+const APP_VERSION = "v2.4.1";
 
 const navItems = [
 	{ href: "/", label: "Overview", icon: LayoutDashboard },
@@ -45,11 +49,80 @@ interface SidebarProps {
 
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 	const pathname = usePathname();
+	const [backendUp, setBackendUp] = useState<boolean | null>(null);
+	const [plexOk, setPlexOk] = useState<boolean | null>(null);
+
+	useEffect(() => {
+		let cancelled = false;
+		const probe = async () => {
+			try {
+				const up = await checkBackendHealth();
+				if (!cancelled) setBackendUp(up);
+				if (up) {
+					try {
+						const s = await getServerStatus();
+						if (!cancelled) setPlexOk(Boolean(s?.success));
+					} catch {
+						if (!cancelled) setPlexOk(false);
+					}
+				} else if (!cancelled) {
+					setPlexOk(false);
+				}
+			} catch {
+				if (!cancelled) {
+					setBackendUp(false);
+					setPlexOk(false);
+				}
+			}
+		};
+		probe();
+		const t = setInterval(probe, 15000);
+		return () => {
+			cancelled = true;
+			clearInterval(t);
+		};
+	}, []);
+
+	const dotClass = backendUp === null ? "bg-slate-500" : backendUp ? "bg-green-500" : "bg-red-500";
+	const statusText =
+		backendUp === null
+			? "Checking…"
+			: backendUp
+				? plexOk
+					? "Plex connected"
+					: "Backend up · Plex down"
+				: "Backend down";
+	const statusTitle = `Backend: ${backendUp === null ? "probing" : backendUp ? "up" : "down"} · Plex: ${plexOk === null ? "unknown" : plexOk ? "connected" : "down"}`;
 
 	return (
 		<aside
 			className={`shrink-0 flex flex-col glass-panel-strong border-r border-slate-600/50 transition-[width] duration-200 ${collapsed ? "w-16 min-w-[4rem]" : "w-56 min-w-[14rem]"}`}
 		>
+			{/* Header: logo + version + collapse toggle at the TOP (fleet standard). */}
+			<div
+				className={`flex items-center border-b border-slate-700 px-3 py-3 ${collapsed ? "flex-col gap-2 justify-center" : "justify-between"}`}
+			>
+				<Link href="/" className="flex items-center gap-2 min-w-0" title="PlexMCP home">
+					<Film className="w-6 h-6 text-amber shrink-0" />
+					{!collapsed && (
+						<span className="min-w-0 leading-tight">
+							<span className="block text-sm font-semibold text-slate-100 truncate">PlexMCP</span>
+							<span className="block text-[11px] text-slate-500">{APP_VERSION}</span>
+						</span>
+					)}
+				</Link>
+				<button
+					type="button"
+					onClick={onToggle}
+					data-testid="sidebar-toggle"
+					className="p-1.5 rounded-md text-slate-400 hover:text-amber hover:bg-slate-800"
+					title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+					aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+				>
+					{collapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
+				</button>
+			</div>
+
 			<nav className="flex-1 py-4 px-2 space-y-0.5 overflow-y-auto">
 				{navItems.map(({ href, label, icon: Icon }) => {
 					const isActive = pathname === href || (href !== "/" && pathname.startsWith(href));
@@ -71,14 +144,16 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 					);
 				})}
 			</nav>
-			<button
-				type="button"
-				onClick={onToggle}
-				className="flex items-center justify-center py-2 border-t border-slate-700 text-slate-400 hover:text-slate-200 hover:bg-slate-800"
-				title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+
+			{/* Connection status indicator (fleet standard). */}
+			<div
+				data-testid="sidebar-connection-status"
+				title={statusTitle}
+				className={`flex items-center border-t border-slate-700 px-3 py-2.5 text-xs ${collapsed ? "justify-center" : "gap-2"}`}
 			>
-				{collapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
-			</button>
+				<span className={`w-2.5 h-2.5 rounded-full shrink-0 ${dotClass}`} />
+				{!collapsed && <span className="text-slate-400 truncate">{statusText}</span>}
+			</div>
 		</aside>
 	);
 }

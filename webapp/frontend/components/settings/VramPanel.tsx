@@ -8,6 +8,17 @@ function formatMb(mb: number): string {
 	return mb >= 1024 ? `${(mb / 1024).toFixed(1)} GB` : `${mb} MB`;
 }
 
+const GPU_KEY = "llm_gpu";
+
+function pickTargetGpu(gpus: GpuInfo[]): number {
+	try {
+		const saved = localStorage.getItem(GPU_KEY);
+		if (saved != null && gpus.some((g) => g.index === Number(saved))) return Number(saved);
+	} catch {}
+	const secondary = gpus.find((g) => g.index > 0);
+	return secondary ? secondary.index : (gpus[0]?.index ?? 0);
+}
+
 export function VramPanel() {
 	const [gpus, setGpus] = useState<GpuInfo[]>([]);
 	const [loaded, setLoaded] = useState<LoadedModel[]>([]);
@@ -15,6 +26,7 @@ export function VramPanel() {
 	const [loading, setLoading] = useState(false);
 	const [evicting, setEvicting] = useState(false);
 	const [message, setMessage] = useState<string | null>(null);
+	const [targetGpu, setTargetGpu] = useState<number>(0);
 
 	const refresh = useCallback(async () => {
 		setLoading(true);
@@ -23,6 +35,7 @@ export function VramPanel() {
 			setGpus(gpuResult.gpus);
 			setLoaded(loadedResult.models);
 			setEngine(loadedResult.engine);
+			if (gpuResult.gpus.length > 0) setTargetGpu(pickTargetGpu(gpuResult.gpus));
 		} catch {
 			setGpus([]);
 			setLoaded([]);
@@ -31,6 +44,13 @@ export function VramPanel() {
 			setLoading(false);
 		}
 	}, []);
+
+	const handleGpuChange = (index: number) => {
+		setTargetGpu(index);
+		try {
+			localStorage.setItem(GPU_KEY, String(index));
+		} catch {}
+	};
 
 	useEffect(() => {
 		void refresh();
@@ -81,9 +101,27 @@ export function VramPanel() {
 				)}
 			</div>
 
+			{gpus.length > 1 && (
+				<label className="flex items-center gap-2 text-xs text-slate-400 mb-2">
+					Target GPU
+					<select
+						value={targetGpu}
+						onChange={(e) => handleGpuChange(Number(e.target.value))}
+						data-testid="llm-gpu-select"
+						className="px-2 py-1 rounded-md bg-slate-800 border border-slate-600 text-slate-200 text-xs"
+					>
+						{gpus.map((gpu) => (
+							<option key={gpu.index} value={gpu.index}>
+								GPU {gpu.index} - {gpu.name} ({formatMb(gpu.total_mb)})
+							</option>
+						))}
+					</select>
+				</label>
+			)}
 			{gpus.map((gpu) => (
 				<div key={gpu.index} className="text-xs text-slate-400 mb-1">
 					GPU {gpu.index} ({gpu.name}): {formatMb(gpu.used_mb)} / {formatMb(gpu.total_mb)} used
+					{gpus.length > 1 && gpu.index === targetGpu ? " (target)" : ""}
 				</div>
 			))}
 			{gpus.length === 0 && (

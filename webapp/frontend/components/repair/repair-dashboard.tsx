@@ -17,7 +17,7 @@ import { MediaProbeView } from "./media-probe-view";
 import { RepairControls } from "./repair-controls";
 import { StreamingLog } from "./streaming-log";
 
-import { API_BASE } from "@/utils/api";
+import { listLibraries, listLibraryItems, probeMedia } from "@/utils/api";
 
 export function RepairDashboard() {
 	const [libraries, setLibraries] = useState<any[]>([]);
@@ -36,8 +36,7 @@ export function RepairDashboard() {
 
 	async function fetchLibraries() {
 		try {
-			const res = await fetch(`${API_BASE}/api/libraries`);
-			const data = await res.json();
+			const data = await listLibraries();
 			if (data.success) {
 				setLibraries(data.data || []);
 			}
@@ -50,9 +49,7 @@ export function RepairDashboard() {
 		setLoading(true);
 		setError(null);
 		try {
-			// Use the existing movies or library browse endpoint
-			const res = await fetch(`${API_BASE}/api/libraries/${libId}/items?limit=50`);
-			const data = await res.json();
+			const data = await listLibraryItems(libId, { limit: 50 });
 			if (data.success) {
 				setItems(data.data || []);
 			}
@@ -71,10 +68,7 @@ export function RepairDashboard() {
 		addLog(`[PROBE] Initializing ffprobe for ${item.file_path || "Plex Binary"}`);
 
 		try {
-			const res = await fetch(`${API_BASE}/api/repair/probe?media_key=${item.key}`, {
-				method: "POST",
-			});
-			const data = await res.json();
+			const data = await probeMedia(item.key);
 			if (data.success) {
 				setProbeData(data.data);
 				addLog(`[SUCCESS] Probe complete. Found ${data.data.streams?.length || 0} streams.`);

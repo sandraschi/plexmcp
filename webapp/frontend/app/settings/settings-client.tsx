@@ -2,9 +2,11 @@
 
 import { ReindexProgressPanel } from "@/components/rag/reindex-progress";
 import { DiagnosticsPanel } from "@/components/settings/DiagnosticsPanel";
+import { LlmOnboardingCard } from "@/components/settings/LlmOnboardingCard";
 import { VramPanel } from "@/components/settings/VramPanel";
 import {
 	createPlexPin,
+	deleteLlmProviderKey,
 	getLlmModels,
 	getLlmProviders,
 	getRagSyncStatus,
@@ -474,6 +476,7 @@ export function SettingsClient({ settings }: SettingsClientProps) {
 
 			<section className="rounded-xl glass-panel border border-slate-600/50 p-6">
 				<h2 className="text-lg font-semibold text-amber mb-4">LLM</h2>
+				<LlmOnboardingCard />
 				<div className="space-y-4">
 					<div>
 						<label className="block text-sm text-slate-400 mb-1">Provider</label>
@@ -523,11 +526,37 @@ export function SettingsClient({ settings }: SettingsClientProps) {
 						</div>
 					)}
 					<div>
-						<label className="block text-sm text-slate-400 mb-1">
-							{llmProviders.find((p) => p.id === llmProvider)?.kind === "cloud"
-								? "API key"
-								: "API key (optional)"}
-						</label>
+						<div className="flex items-center justify-between mb-1">
+							<label className="block text-sm text-slate-400">
+								{llmProviders.find((p) => p.id === llmProvider)?.kind === "cloud"
+									? "API key"
+									: "API key (optional)"}
+							</label>
+							{KEYSTORE_CLOUD_PROVIDERS.includes(llmProvider) &&
+								llmProviders.find((p) => p.id === llmProvider)?.configured && (
+									<button
+										type="button"
+										data-testid={`llm-key-delete-${llmProvider}`}
+										onClick={() =>
+											void (async () => {
+												try {
+													await deleteLlmProviderKey(llmProvider);
+													setMessage({ type: "ok", text: "API key removed." });
+													void loadProviders();
+												} catch (e) {
+													setMessage({
+														type: "err",
+														text: e instanceof Error ? e.message : "Delete failed",
+													});
+												}
+											})()
+										}
+										className="text-xs text-red-400 hover:text-red-300 underline underline-offset-2"
+									>
+										Remove saved key
+									</button>
+								)}
+						</div>
 						<input
 							type="password"
 							value={llmApiKey}

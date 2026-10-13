@@ -13,6 +13,7 @@ import {
 	syncTaste,
 } from "@/utils/api";
 import { useCallback, useEffect, useState } from "react";
+import { TasteRankPanel } from "./taste-rank-panel";
 
 const BUCKETS = [
 	{ id: "", label: "Any time" },
@@ -377,6 +378,8 @@ export function TasteClient() {
 							</ul>
 						)}
 					</section>
+
+					<TasteRankPanel kind={kind} />
 
 					<p className="text-[11px] text-slate-500">
 						Built from {status?.events.toLocaleString()} views across{" "}
