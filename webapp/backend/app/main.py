@@ -37,6 +37,7 @@ from .api import (
     repair,
     search,
     server,
+    skills,
     system,
     taste,
     v1,
@@ -179,6 +180,7 @@ app.include_router(fleet.router, prefix="/api", tags=["fleet"])
 app.include_router(v1.router, prefix="/api/v1", tags=["v1"])
 app.include_router(logs.router, prefix="/api/logs", tags=["logs"])
 app.include_router(help_api.router, prefix="/api/help", tags=["help"])
+app.include_router(skills.router, prefix="/api/skills", tags=["skills"])
 app.include_router(llm.router, prefix="/api/llm", tags=["llm"])
 app.include_router(rag.router, prefix="/api/rag", tags=["rag"])
 app.include_router(arr_stack.router, prefix="/api/arr", tags=["arr"])
@@ -254,8 +256,8 @@ def _count_plex_tools() -> int:
     return 22
 
 
-@app.get("/api/v1/diagnostics")
-async def get_cua_diagnostics():
+def _build_cua_diagnostics() -> dict:
+    """Shared payload for the CUA diagnostics endpoints (see below)."""
     uptime = int(_time.time() - _SERVER_START)
     cpu = mem = disk = None
     tesseract = False
@@ -296,3 +298,122 @@ async def get_cua_diagnostics():
 @app.get("/mcp/status")
 async def mcp_status():
     return {"loaded": _mcp_loaded, "message": "FastMCP mounts in background ~90s after startup"}
+
+
+# --- Fleet-standard discovery & lifecycle endpoints ---------------------------
+# Canonical paths live directly under /api/*. The two legacy diagnostics paths
+# below are kept as thin aliases: /api/v1/diagnostics (CUA-NSIS smoke tests)
+# and /api/system/diagnostics (rich traffic-light checks used by Settings).
+
+
+@app.get("/api/v1/diagnostics")
+async def get_cua_diagnostics_v1():
+    """CUA-NSIS smoke-test diagnostics (versioned alias)."""
+    return _build_cua_diagnostics()
+
+
+@app.get("/api/diagnostics")
+async def get_diagnostics():
+    """Machine diagnostics (canonical alias of /api/v1/diagnostics)."""
+    return _build_cua_diagnostics()
+
+
+@app.get("/api/status")
+async def get_status():
+    """Richer server status than /health (uptime, tools, provider state)."""
+    plex_configured = bool(os.environ.get("PLEX_TOKEN") or settings.PLEX_TOKEN)
+    return {
+        "status": "ok",
+        "server": "plex-mcp",
+        "version": "2.4.1",
+        "uptime_seconds": int(_time.time() - _SERVER_START),
+        "tool_count": _count_plex_tools(),
+        "mcp_mounted": _mcp_loaded,
+        "providers": {"plex": "configured" if plex_configured else "not_configured"},
+    }
+
+
+@app.get("/api/capabilities")
+async def get_capabilities():
+    """Standard capability discovery (WEBAPP_STANDARDS §1.4): tools, features,
+    transports, and the canonical endpoint index. Legacy/alias paths are marked
+    so clients use the canonical form."""
+    return {
+        "name": "plex-mcp",
+        "version": "2.4.1",
+        "transports": ["http", "stdio"],
+        "tool_count": _count_plex_tools(),
+        "tool_categories": [
+            "library",
+            "media",
+            "search",
+            "streaming",
+            "server",
+            "user",
+            "playlist",
+            "collections",
+            "metadata",
+            "organization",
+            "performance",
+            "quality",
+            "reporting",
+            "rag",
+            "help",
+            "integration",
+            "enrichment",
+            "audio",
+            "ffmpeg",
+            "arr",
+            "taste",
+        ],
+        "features": {
+            "rag_semantic_search": True,
+            "taste_profiling": True,
+            "media_enrichment": True,
+            "arr_integration": True,
+            "llm_chat_proxy": True,
+            "image_proxy": True,
+            "tauri_desktop": True,
+        },
+        "endpoints_canonical": [
+            "GET /health",
+            "GET /api/status",
+            "GET /api/capabilities",
+            "POST /api/shutdown",
+            "GET /api/diagnostics",
+            "GET /api/dashboard/",
+            "GET /api/libraries/ | /api/libraries/{id} | /api/libraries/{id}/items",
+            "GET /api/server/status | /api/server/info",
+            "GET /api/search/ | POST /api/search/advanced",
+            "GET /api/movies",
+            "GET /api/media/{rating_key}[|/ai-context|/stream-url|/file|/art]",
+            "GET,POST /api/playback/play | GET /api/playback/clients",
+            "GET /api/repair (probe/execute)",
+            "GET /api/logs | GET /api/help | GET /api/skills",
+            "GET,POST,PATCH /api/system/* (settings, plex PIN/test, api-docs-info)",
+            "GET,POST /api/llm/* (providers, models, keys, chat, agentic, refine, gpus)",
+            "GET,POST /api/rag/* (sync, stats, semantic, context)",
+            "GET,POST /api/enrichment/* | GET,POST /api/taste/*",
+            "POST /api/workflows/run | GET,POST /api/arr/* | GET /image/{path}",
+        ],
+        "endpoints_legacy_alias": [
+            "GET /api/v1/diagnostics (alias of GET /api/diagnostics; kept for CUA smoke tests)",
+            "GET /api/system/diagnostics (rich traffic-light checks; used by Settings page)",
+            "POST /api/v1/search + POST /api/v1/chat (deprecated; use /api/rag/* and /api/llm/*)",
+        ],
+        "docs": "/docs",
+    }
+
+
+@app.post("/api/shutdown")
+async def shutdown_server():
+    """Orderly exit for the fleet launcher: respond 200 immediately, then exit
+    ~500 ms later so in-flight writes can flush (never hard-kill this)."""
+    import threading as _threading
+
+    def _delayed_exit():
+        _time.sleep(0.5)
+        os._exit(0)
+
+    _threading.Thread(target=_delayed_exit, daemon=True).start()
+    return {"success": True, "message": "PlexMCP backend shutting down in ~500 ms."}
