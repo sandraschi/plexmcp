@@ -1,7 +1,7 @@
 "use client";
 
 import { ErrorBanner } from "@/components/ui/error-banner";
-import { getCapabilities } from "@/utils/api";
+import { getApiStatus, getCapabilities } from "@/utils/api";
 import { BACKEND_DOWN_HINT } from "@/utils/config-hints";
 import { Terminal } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -19,6 +19,7 @@ type Capabilities = {
 
 export default function ToolsPage() {
 	const [caps, setCaps] = useState<Capabilities | null>(null);
+	const [uptime, setUptime] = useState<number | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
@@ -26,7 +27,9 @@ export default function ToolsPage() {
 		setLoading(true);
 		setError(null);
 		try {
-			setCaps(await getCapabilities());
+			const [c, s] = await Promise.all([getCapabilities(), getApiStatus()]);
+			setCaps(c);
+			setUptime(s.uptime_seconds ?? null);
 		} catch (e) {
 			setError(e instanceof Error ? e.message : String(e));
 		} finally {
@@ -49,7 +52,11 @@ export default function ToolsPage() {
 						{caps && (
 							<span data-testid="tools-count">
 								{caps.tool_count} tools · {caps.tool_categories.length} categories · {caps.name} v
-								{caps.version} ({caps.transports.join(", ")})
+								{caps.version} ({caps.transports.join(", ")}
+								{uptime != null
+									? ` · up ${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m`
+									: ""}
+								)
 							</span>
 						)}
 					</p>
