@@ -1,5 +1,21 @@
 # Configuration
 
+## Where .env files live (single source of truth per process)
+
+Three `.env` files exist because three different processes read config.
+Set each value where its process looks — they are not interchangeable:
+
+| File | Read by | Holds |
+|---|---|---|
+| `webapp/backend/.env` | FastAPI backend + MCP tools (in-process) | `PLEX_URL`, `PLEX_TOKEN`, `CORS_ORIGINS`, `HOST`/`PORT`, LLM vars |
+| `.env` (repo root) | MCP stdio server, CLIs, scripts | `PLEX_BASE_URL`, `PLEX_TOKEN` |
+| `webapp/frontend/.env` + `.env.local` | Next.js at **build time** (`NEXT_PUBLIC_*` only) | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_APP_URL` |
+
+Precedence inside the backend: real process environment >
+`webapp/backend/data/settings.json` (Settings page writes here) >
+`webapp/backend/.env`. A saved Settings override wins over the file every time.
+First-time setup walkthrough: [ONBOARDING.md](ONBOARDING.md).
+
 ## Plex (required)
 
 | Variable | Description |

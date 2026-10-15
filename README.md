@@ -44,6 +44,7 @@ just webapp
 |------------|------------------------|
 | [**docs/README.md**](docs/README.md) | **Hub** — every guide in one place |
 | [**docs/QUICKSTART.md**](docs/QUICKSTART.md) | **~60s** — MCP only, web UI, RAG pointer |
+| [**docs/ONBOARDING.md**](docs/ONBOARDING.md) | **First run** — connect Plex, costs, pitfalls, sanity check |
 | [**docs/INSTALL.md**](docs/INSTALL.md) | Tauri desktop (primary), uv, clone, MCPB, Claude Desktop |
 | [**docs/TAURI.md**](docs/TAURI.md) | Maintainer: build installer, production pitfalls |
 | [**docs/DOCUMENTATION_INDEX.md**](docs/DOCUMENTATION_INDEX.md) | Full doc map + archival paths |

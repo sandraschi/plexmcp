@@ -1,0 +1,15 @@
+{
+	"hooks": {
+		"SessionStart": [
+			{
+				"matcher": "startup",
+				"hooks": [
+					{
+						"type": "prompt",
+						"text": "## Session Context (Plex MCP)\n\nYou have access to a Plex Media Server management server with 22 portmanteau tools for library management, media browsing, streaming sessions, playlists, collections, users, search, reporting, RAG semantic search, quality profiles, taste profiling, enrichment, *arr status, and server admin.\n\nBefore starting work:\n1. Check server status: plex_server(operation=\"status\")\n2. Browse available libraries: plex_library(operation=\"list\")\n3. Semantic search for media context: plex_rag(operation=\"semantic_search\", query=\"<describe task>\")\n\nAt end of work:\n- Use plex_help(operation=\"list_tools\") to discover new capabilities\n- Save useful searches with plex_search(operation=\"save_search\")\n- Shut the server down only when asked: plex_shutdown(operation=\"shutdown\")"
+					}
+				]
+			}
+		]
+	}
+}
