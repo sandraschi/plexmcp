@@ -1,38 +1,63 @@
-# Logic/Dev Bloat
-.venv/
-node_modules/
-__pycache__/
-.ruff_cache/
-.pytest_cache/
+# MCPB Pack Exclusion List
+native/
+webapp/
+.claude/
+htmlcov/
+.pre-commit-cache/
+src/data/
+data/
 tests/
-
-# Discovery & Fleet Metadata
+.git/
+__pycache__/
+*.pyc
+.venv/
+dist/
+build/
+target/
+docs/
+scripts/
+logs/
+.cursor/
+.windsurf/
+.pytest_cache/
+.coverage
+Cargo.lock
 glama.json
 llms.txt
 llms-full.txt
-.git/
+
+# Dev/CI tooling and reports irrelevant to a running MCP server
+.ruff_cache/
+.snapshots/
 .github/
-.vscode/
+.opencode/
+_llm_test_scripts/
+docs-private/
+cua-reports/
+tmp/
+mcpb/
+coverage.xml
+uv.lock
 
-# Build Artifacts
-dist/
-build/
-*.mcpb
+# Rust/Tauri/Zed sources (native desktop wrapper + Zed IDE extension, not part of the MCP server)
+src-tauri/
+zed-extension/
 
-# Editor / tooling backups (MCPB_PACKAGING_STANDARDS.md section 2.4)
+# Legacy/unused code and build artifacts
 *.bak
 *.bak.*
-*.bak-*
-*.orig
-*.rej
+*.egg-info/
+justfile.*.bak
+justfile.bak-*
 
-# Pack build tooling itself -- not runtime code
-mcpb/pack.ps1
-mcpb/verify_pack.py
-pack.ps1
-verify_pack.py
-
-# Non-MCP components detected in this repo
-webapp/
-native/
-scripts/
+# Dev-only scripts and root-level docs not needed at runtime
+verify_setup.py
+restart.bat
+stop.bat
+start.bat
+start.ps1
+WEBAPP_SETUP_GUIDE.md
+CLIENT_DISCOVERY_FIX.md
+FIXES_APPLIED.md
+BUILD_LOG.md
+reports/
