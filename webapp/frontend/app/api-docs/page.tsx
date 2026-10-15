@@ -163,6 +163,11 @@ export default function ApiDocsPage() {
 				<code className="text-xs text-amber-400 font-mono shrink-0">{backendLabel}</code>
 				<span className="text-zinc-700 mx-1">·</span>
 				{[
+					["GET", "/health", "blue"],
+					["GET", "/api/status", "blue"],
+					["GET", "/api/capabilities", "blue"],
+					["GET", "/api/diagnostics", "blue"],
+					["GET", "/api/skills", "blue"],
 					["GET", "/api/libraries/", "blue"],
 					["GET", "/api/movies", "blue"],
 					["GET", "/api/search/", "blue"],

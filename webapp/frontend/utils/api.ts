@@ -1183,3 +1183,61 @@ export async function getApiDocsInfo(): Promise<{
 	if (!res.ok) throw new Error(await res.text());
 	return res.json();
 }
+
+export type SkillPrompt = {
+	uri: string;
+	name: string;
+	title: string;
+	description: string;
+	use_when: string;
+};
+
+export type SkillResource = {
+	uri: string;
+	title: string;
+	description: string;
+};
+
+/** MCP prompts/resources catalog (mirrors src/plex_mcp/app.py via GET /api/skills). */
+export async function getSkills(): Promise<{
+	source: string;
+	prompts: SkillPrompt[];
+	resources: SkillResource[];
+	count: number;
+}> {
+	const res = await fetch(`${getBaseUrl()}/api/skills`, { cache: "no-store" });
+	if (!res.ok) throw new Error(await res.text());
+	return res.json();
+}
+
+/** Fleet-standard capability discovery (tools, features, canonical endpoints). */
+export async function getCapabilities(): Promise<{
+	name: string;
+	version: string;
+	transports: string[];
+	tool_count: number;
+	tool_categories: string[];
+	features: Record<string, boolean>;
+	endpoints_canonical: string[];
+	endpoints_legacy_alias: string[];
+	docs: string;
+}> {
+	const res = await fetch(`${getBaseUrl()}/api/capabilities`, { cache: "no-store" });
+	if (!res.ok) throw new Error(await res.text());
+	return res.json();
+}
+
+/** Richer server status than /health (uptime, tools, provider state). */
+export async function getApiStatus(): Promise<{
+	status: string;
+	server: string;
+	version: string;
+	uptime_seconds: number;
+	tool_count: number;
+	mcp_mounted: boolean;
+	providers: Record<string, string>;
+}> {
+	const res = await fetch(`${getBaseUrl()}/api/status`, { cache: "no-store" });
+	if (!res.ok) throw new Error(await res.text());
+	return res.json();
+}

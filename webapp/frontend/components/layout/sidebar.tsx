@@ -7,8 +7,11 @@ import {
 	ChevronRight,
 	Code2,
 	Database,
+	FileText,
 	Film,
 	Fingerprint,
+	GraduationCap,
+	Inbox,
 	LayoutDashboard,
 	Library,
 	MessageSquare,
@@ -17,6 +20,7 @@ import {
 	Server,
 	Settings,
 	Sparkles,
+	Terminal,
 	Wrench,
 } from "lucide-react";
 import Link from "next/link";
@@ -27,6 +31,7 @@ const APP_VERSION = "v2.4.1";
 
 const navItems = [
 	{ href: "/", label: "Overview", icon: LayoutDashboard },
+	{ href: "/inbox", label: "Inbox", icon: Inbox },
 	{ href: "/libraries", label: "Libraries", icon: Library },
 	{ href: "/movies", label: "Movies", icon: Film },
 	{ href: "/repair", label: "Media Repair", icon: Wrench },
@@ -36,8 +41,11 @@ const navItems = [
 	{ href: "/enrichment", label: "Enrichment", icon: ScrollText },
 	{ href: "/taste", label: "Taste", icon: Fingerprint },
 	{ href: "/chat", label: "Chat", icon: MessageSquare },
+	{ href: "/tools", label: "Tools", icon: Terminal },
+	{ href: "/skills", label: "Skills", icon: GraduationCap },
 	{ href: "/api-docs", label: "API Docs", icon: Code2 },
 	{ href: "/server", label: "Server", icon: Server },
+	{ href: "/logs", label: "Logs", icon: FileText },
 	{ href: "/help", label: "Help", icon: BookOpen },
 	{ href: "/settings", label: "Settings", icon: Settings },
 ];
