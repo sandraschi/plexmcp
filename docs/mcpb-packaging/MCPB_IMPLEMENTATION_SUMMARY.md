@@ -93,7 +93,7 @@ Successfully implemented complete MCPB (MCP Bundle) packaging for the Notepad++ 
       "command": "python",
       "args": ["-m", "notepadpp_mcp.tools.server"],
       "env": {
-        "PYTHONPATH": "${PWD}",
+        "PYTHONPATH": "${__dirname}/src",
         "NOTEPADPP_PATH": "${user_config.notepadpp_path}",
         "NOTEPADPP_AUTO_START": "${user_config.auto_start}",
         "NOTEPADPP_TIMEOUT": "${user_config.timeout}",

@@ -199,7 +199,7 @@ When users install our MCPB package, they're prompted for:
       "command": "python",
       "args": ["-m", "notepadpp_mcp.tools.server"],
       "env": {
-        "PYTHONPATH": "${PWD}",
+        "PYTHONPATH": "${__dirname}/src",
         "NOTEPADPP_PATH": "${user_config.notepadpp_path}"
       }
     }

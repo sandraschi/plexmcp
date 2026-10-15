@@ -598,7 +598,7 @@ your-mcp/
       "command": "python",
       "args": ["-m", "your_mcp.server"],
       "env": {
-        "PYTHONPATH": "${PWD}",  // ⭐ CRITICAL: Use ${PWD} to reference the package root
+        "PYTHONPATH": "${__dirname}/src",  // MCPB-spec var; ${PWD} is NOT expanded by Claude Desktop (Oct 2026 fleet fix)
         "PYTHONUNBUFFERED": "1"
       }
     }

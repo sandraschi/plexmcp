@@ -29,6 +29,12 @@
 
 Download **`Plex MCP_*_x64-setup.exe`** from [Releases](https://github.com/sandraschi/plexmcp/releases/latest) → double-click → launch **Plex MCP**. [Install guide](docs/INSTALL.md).
 
+Claude Desktop only (no installer) — latest `.mcpb` bundle + registration script:
+
+```powershell
+powershell -ExecutionPolicy Bypass -c "irm https://github.com/sandraschi/plexmcp/releases/latest/download/install.ps1 | iex"
+```
+
 Developers from source:
 
 ```powershell

@@ -50,7 +50,7 @@ mcp-server/
       "command": "python",
       "args": ["-m", "package_name.mcp_server"],
       "env": {
-        "PYTHONPATH": "${PWD}",
+        "PYTHONPATH": "${__dirname}/src",
         "PYTHONUNBUFFERED": "1"
       }
     }
