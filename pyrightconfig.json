@@ -1,0 +1,9 @@
+{
+	"$schema": "https://raw.githubusercontent.com/microsoft/pyright/main/packages/vscode-pyright/schemas/pyrightconfig.schema.json",
+	"comment": "Fleet five-gate type check. basic mode; legacy error volume is ratcheted by scripts/pyright-baseline-check.ps1 (fails only when the count grows).",
+	"displayName": "plex-mcp",
+	"typeCheckingMode": "basic",
+	"include": ["src/plex_mcp", "webapp/backend/app"],
+	"pythonVersion": "3.12",
+	"reportMissingModuleSource": "none"
+}

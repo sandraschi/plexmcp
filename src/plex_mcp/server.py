@@ -58,8 +58,9 @@ if not _is_stdio_mode:
 
     def _count_plex_tools() -> int:
         try:
-            if hasattr(mcp, "_tools"):
-                return len(mcp._tools)
+            tools = getattr(mcp, "_tools", None)
+            if isinstance(tools, dict):
+                return len(tools)
         except Exception:
             logger.debug("Could not count registered tools", exc_info=True)
         return 0

@@ -50,3 +50,7 @@ jobs:
       - name: Biome check
         run: npm run biome:ci
         working-directory: webapp/frontend
+
+      - name: Pyright ratchet (no new type errors)
+        shell: pwsh
+        run: ./scripts/pyright-baseline-check.ps1

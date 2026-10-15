@@ -194,8 +194,8 @@ import os as _os
 
 _frontend_dist = None
 _try_paths = []
-if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
-    _mei = sys._MEIPASS
+_mei = getattr(sys, "_MEIPASS", None)
+if getattr(sys, "frozen", False) and _mei:
     _try_paths = [
         _os.path.join(_mei, "webapp", "frontend", "out"),
         _os.path.join(_mei, "frontend", "out"),
@@ -249,8 +249,9 @@ def _count_plex_tools() -> int:
     try:
         from plex_mcp.app import mcp as _mcp
 
-        if hasattr(_mcp, "_tools"):
-            return len(_mcp._tools)
+        tools = getattr(_mcp, "_tools", None)
+        if isinstance(tools, dict):
+            return len(tools)
     except Exception as e:
         logger.debug("Could not count registered tools, using fallback: %s", e)
     return 22
