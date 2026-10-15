@@ -88,6 +88,10 @@ build:
 	@powershell -ExecutionPolicy Bypass -File webapp/start.ps1 -BuildOnly
 	@echo "Package built in dist/plex-mcp.mcpb"
 
+# Build the .mcpb package (fleet shim -> canonical pipeline + checks)
+mcpb-pack:
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -File '{{justfile_directory()}}\scripts\mcpb-pack.ps1'
+
 # Cleanup
 clean:
 	@powershell -Command "Remove-Item -Recurse -Force .pytest_cache, .ruff_cache, dist, build, htmlcov -ErrorAction SilentlyContinue"
