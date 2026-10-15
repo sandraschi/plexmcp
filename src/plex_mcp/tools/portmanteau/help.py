@@ -275,6 +275,12 @@ async def plex_help(
                 "description": "Single-turn Plex Q&A via sampling (no tools); use portmanteau tools for live data",
                 "operations": ["answer"],
             },
+            "plex_shutdown": {
+                "name": "plex_shutdown",
+                "category": "server",
+                "description": "Server lifecycle (status, shutdown) for graceful self-termination",
+                "operations": ["status", "shutdown"],
+            },
         }
 
         if operation == "help":

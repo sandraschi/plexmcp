@@ -52,6 +52,8 @@
     {"name": "plex_reporting", "description": "Plex library reporting — stats, popular, recent, genres, resolution, codec, user_activity, export."},
     {"name": "plex_rag", "description": "Semantic RAG search over Plex metadata — sync, search, status, reindex, purge using LanceDB + FastEmbed."},
     {"name": "plex_help", "description": "PlexMCP help and discovery — discover, tool_help, status, tips, quickstart, faq."},
+    {"name": "plex_shutdown", "description": "Server lifecycle — status (stdio instance info) and shutdown (graceful self-termination)."},
+    {"name": "plex_taste", "description": "Taste profiling — status, profile, temporal buckets, recent shifts, scoring, ranking, rebuild, sync."},
     {"name": "plex_integration", "description": "Cross-platform integration — export_plex, import_plex, sync_watchstate, backup, restore."},
     {"name": "plex_media_enrichment", "description": "External metadata enrichment — tmdb, wikipedia, musicbrainz, omdb, tvdb, batch enrichment."},
     {"name": "plex_audio_mgr", "description": "Plex audio management — status, libraries, codecs, transcode, quality, optimize."},
