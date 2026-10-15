@@ -12,9 +12,9 @@
     "entry_point": "src/plex_mcp/main.py",
     "mcp_config": {
       "command": "uv",
-      "args": ["run", "--directory", "${PWD}", "python", "-m", "plex_mcp.main"],
+      "args": ["run", "--directory", "${__dirname}", "python", "-m", "plex_mcp.main"],
       "env": {
-        "PYTHONPATH": "${PWD}/src",
+        "PYTHONPATH": "${__dirname}/src",
         "PLEX_URL": "${user_config.plex_url}",
         "PLEX_TOKEN": "${user_config.plex_token}",
         "PYTHONUNBUFFERED": "1"

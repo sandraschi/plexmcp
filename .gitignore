@@ -102,6 +102,10 @@ _dashboard/
 run_server.py
 pyproject.toml.bak
 *.bak
+*.bak.*
+reports/
+*.mcpb
+.pre-commit-cache/
 
 # Runtime logs
 *.log

@@ -103,7 +103,7 @@ class PlexConfig(BaseModel):
             Path(__file__).parent.parent.parent / ".env",  # repo root
             Path.cwd() / ".env",  # current working directory
             Path(__file__).parent / ".env",  # same as config.py
-            Path("D:/Dev/repos/plexmcp/.env"),  # absolute path as fallback
+            Path.home() / ".plex-mcp" / ".env",  # user-level fallback (portable)
         ]
 
         env_loaded = False
