@@ -23,7 +23,9 @@ logger = get_logger(__name__)
 async def plex_shutdown(
     operation: Annotated[
         Literal["status", "shutdown"],
-        Field(description="status: report whether this instance owns state or is a proxy. shutdown: exit this process after responding."),
+        Field(
+            description="status: report whether this instance owns state or is a proxy. shutdown: exit this process after responding."
+        ),
     ],
 ) -> ToolResult:
     """
