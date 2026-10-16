@@ -35,6 +35,7 @@ Everything below links from the [project README](../README.md). Pick a path by *
 | [**ENRICHMENT.md**](ENRICHMENT.md) | Wikipedia-style enrichment |
 | [**LIBRARY_BUILDING.md**](LIBRARY_BUILDING.md) | Build a library: folders, naming, agents, ripping legality, rtorrent-mcp handoff |
 | [**COLLECTORS_TOOLKIT.md**](COLLECTORS_TOOLKIT.md) | Scene naming, verification, Plex realities, self-audit, lawful links |
+| [**BITTORRENT_GUIDE.md**](BITTORRENT_GUIDE.md) | Protocol, lawful uses, rtorrent-mcp setup, issue policy on sourcing questions |
 | [**PRD.md**](PRD.md) | Product scope — in / out of scope |
 
 ---
