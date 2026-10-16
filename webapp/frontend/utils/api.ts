@@ -1241,3 +1241,70 @@ export async function getApiStatus(): Promise<{
 	if (!res.ok) throw new Error(await res.text());
 	return res.json();
 }
+
+export type CanonEntry = {
+	title: string;
+	year?: number | null;
+	rank?: number | null;
+	held_as?: { id?: string; title?: string; year?: number | null } | null;
+	reason?: string;
+};
+
+export type CanonResult = {
+	success: boolean;
+	operation: string;
+	canon?: string;
+	checked?: number;
+	owned_count?: number;
+	missing_count?: number;
+	owned: CanonEntry[];
+	missing: CanonEntry[];
+	error?: string;
+};
+
+async function fetchCanon(path: string, init?: RequestInit): Promise<CanonResult> {
+	const res = await fetch(`${getBaseUrl()}${path}`, { cache: "no-store", ...init });
+	if (!res.ok) throw new Error(await res.text());
+	const data = await res.json();
+	if (data && data.success === false && !data.missing)
+		throw new Error(data.error ?? "Canon check failed");
+	return {
+		success: data.success ?? true,
+		operation: data.operation ?? "",
+		canon: data.data?.canon ?? data.canon,
+		checked: data.data?.checked ?? data.checked,
+		owned_count: data.data?.owned_count ?? data.owned_count ?? data.data?.owned?.length ?? 0,
+		missing_count:
+			data.data?.missing_count ?? data.missing_count ?? data.data?.missing?.length ?? 0,
+		owned: data.data?.owned ?? data.owned ?? [],
+		missing: data.data?.missing ?? data.missing ?? [],
+		error: data.error,
+	};
+}
+
+/** Live Oscar winners vs holdings (limit caps latency, max 200). */
+export function canonOscars(limit = 25): Promise<CanonResult> {
+	return fetchCanon(`/api/canon/oscar-best-picture?limit=${limit}`);
+}
+
+/** Live AFI 100 vs holdings. */
+export function canonAfi(limit = 25): Promise<CanonResult> {
+	return fetchCanon(`/api/canon/afi-100?limit=${limit}`);
+}
+
+/** Live TMDB top-rated (needs TMDB_API_KEY on the backend). */
+export function canonTmdb(
+	media: "movie" | "show" | "both" = "both",
+	limit = 20,
+): Promise<CanonResult> {
+	return fetchCanon(`/api/canon/tmdb-top?media=${media}&limit=${limit}`);
+}
+
+/** Your own list: [{title, year?}] — 1001-style book, article series, site ranking (max 200). */
+export function canonCheckList(items: { title: string; year?: number }[]): Promise<CanonResult> {
+	return fetchCanon("/api/canon/check-list", {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({ items, limit: 200 }),
+	});
+}

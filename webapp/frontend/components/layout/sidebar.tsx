@@ -2,6 +2,7 @@
 
 import { checkBackendHealth, getServerStatus } from "@/utils/api";
 import {
+	Award,
 	BookOpen,
 	ChevronLeft,
 	ChevronRight,
@@ -38,6 +39,7 @@ const navItems = [
 	{ href: "/search", label: "Search", icon: Search },
 	{ href: "/search/semantic", label: "Semantic search", icon: Sparkles },
 	{ href: "/rag", label: "RAG Management", icon: Database },
+	{ href: "/canon", label: "Canon Coverage", icon: Award },
 	{ href: "/enrichment", label: "Enrichment", icon: ScrollText },
 	{ href: "/taste", label: "Taste", icon: Fingerprint },
 	{ href: "/chat", label: "Chat", icon: MessageSquare },
