@@ -281,6 +281,18 @@ async def plex_help(
                 "description": "Server lifecycle (status, shutdown) for graceful self-termination",
                 "operations": ["status", "shutdown"],
             },
+            "plex_completeness": {
+                "name": "plex_completeness",
+                "category": "library",
+                "description": "TV gap detection (status, scan_library, show_gaps) — missing episodes per season",
+                "operations": ["status", "scan_library", "show_gaps"],
+            },
+            "plex_canon": {
+                "name": "plex_canon",
+                "category": "search",
+                "description": "Canon coverage (list_canons, oscar_best_picture, afi_100, tmdb_top, check_list)",
+                "operations": ["list_canons", "oscar_best_picture", "afi_100", "tmdb_top", "check_list"],
+            },
         }
 
         if operation == "help":
@@ -305,7 +317,12 @@ Available Tool Categories:
 - reporting: Reporting and analytics (plex_reporting)
 - collections: Collection management (plex_collections)
 - quality: Quality profiles (plex_quality)
+- completeness: TV gap detection (plex_completeness — missing episodes per season)
+- canon: Canon coverage (plex_canon — Oscars/AFI/TMDB holdings, your own 1001-style lists)
 - sampling: agentic_plex_workflow (tools + sample_step), plex_natural_assistant (sample only)
+
+Building a library from scratch? Read docs/LIBRARY_BUILDING.md in the repo
+(folder layout, naming, agents, ripping legality, rtorrent-mcp handoff).
 
 Use list_tools to see all available tools, or tool_info to get details about a specific tool.
 """

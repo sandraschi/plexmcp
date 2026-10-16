@@ -18,6 +18,11 @@ HELP_BASIC = """
 1. Set PLEX_TOKEN and PLEX_URL in webapp/backend/.env
 2. Run: cd webapp; powershell -ExecutionPolicy Bypass -File .\\start.ps1
 3. Backend: http://localhost:10740  Frontend: http://localhost:10741
+
+## Building a library
+Folder layout, Plex naming, agents, first scan, ripping legality, and the
+rtorrent-mcp download-to-shelf handoff: repo docs/LIBRARY_BUILDING.md.
+In-app: Canon page (gap finder), Inbox (missing episodes), Taste (what to watch).
 """.strip()
 
 HELP_INTERMEDIATE = (

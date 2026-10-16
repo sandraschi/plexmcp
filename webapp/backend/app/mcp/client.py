@@ -56,6 +56,22 @@ _tool_map = {
     "plex_streaming": ("plex_mcp.tools.portmanteau.streaming", "plex_streaming"),
     "plex_rag": ("plex_mcp.tools.portmanteau.rag", "plex_rag"),
     "plex_ffmpeg_mgr": ("plex_mcp.tools.portmanteau.ffmpeg_mgr", "plex_ffmpeg_mgr"),
+    "plex_user": ("plex_mcp.tools.portmanteau.user", "plex_user"),
+    "plex_playlist": ("plex_mcp.tools.portmanteau.playlist", "plex_playlist"),
+    "plex_collections": ("plex_mcp.tools.portmanteau.collections", "plex_collections"),
+    "plex_metadata": ("plex_mcp.tools.portmanteau.metadata", "plex_metadata"),
+    "plex_organization": ("plex_mcp.tools.portmanteau.organization", "plex_organization"),
+    "plex_performance": ("plex_mcp.tools.portmanteau.performance", "plex_performance"),
+    "plex_quality": ("plex_mcp.tools.portmanteau.quality", "plex_quality"),
+    "plex_reporting": ("plex_mcp.tools.portmanteau.reporting", "plex_reporting"),
+    "plex_help": ("plex_mcp.tools.portmanteau.help", "plex_help"),
+    "plex_shutdown": ("plex_mcp.tools.portmanteau.shutdown", "plex_shutdown"),
+    "plex_integration": ("plex_mcp.tools.portmanteau.integration", "plex_integration"),
+    "plex_media_enrichment": ("plex_mcp.tools.portmanteau.enrichment", "plex_media_enrichment"),
+    "plex_audio_mgr": ("plex_mcp.tools.portmanteau.audio_mgr", "plex_audio_mgr"),
+    "plex_taste": ("plex_mcp.tools.portmanteau.taste", "plex_taste"),
+    "plex_completeness": ("plex_mcp.tools.portmanteau.completeness", "plex_completeness"),
+    "plex_canon": ("plex_mcp.tools.portmanteau.canon", "plex_canon"),
 }
 
 

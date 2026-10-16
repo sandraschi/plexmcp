@@ -22,6 +22,7 @@ class SPAStaticFiles(StaticFiles):
 
 from .api import (
     arr_stack,
+    canon,
     dashboard,
     enrichment,
     fleet,
@@ -166,6 +167,7 @@ app.add_middleware(
 
 # 4. Route Registration
 app.include_router(images.router, prefix="/api/image", tags=["images"])
+app.include_router(canon.router, prefix="/api/canon", tags=["canon"])
 app.include_router(library.router, prefix="/api/libraries", tags=["libraries"])
 app.include_router(server.router, prefix="/api/server", tags=["server"])
 app.include_router(search.router, prefix="/api/search", tags=["search"])
@@ -240,24 +242,36 @@ async def health():
         "server": "plex-mcp",
         "version": "2.4.1",
         "uptime_seconds": int(_time.time() - _SERVER_START),
-        "tool_count": _count_plex_tools(),
+        "tool_count": await _count_plex_tools(),
         "providers": {"plex": "configured" if plex_configured else "not_configured"},
     }
 
 
-def _count_plex_tools() -> int:
+async def _count_plex_tools() -> int:
+    """Live tool count: portmanteau exports plus anything else registered.
+
+    Imports the portmanteau package so every @mcp.tool decorator has executed
+    in this process (~3s, once), then unions with the live registry. Falls
+    back to the export list alone. The 2 agentic sampling tools attach on MCP
+    transports (see capabilities sampling_tools) and are counted when present.
+    """
+    try:
+        from plex_mcp.tools import portmanteau as _pm
+
+        names = set(_pm.__all__)
+    except Exception as e:
+        logger.debug("Could not import portmanteau package, using fallback: %s", e)
+        return 24
     try:
         from plex_mcp.app import mcp as _mcp
 
-        tools = getattr(_mcp, "_tools", None)
-        if isinstance(tools, dict):
-            return len(tools)
+        names |= {t.name for t in await _mcp.list_tools()}
     except Exception as e:
-        logger.debug("Could not count registered tools, using fallback: %s", e)
-    return 22
+        logger.debug("Could not list registered tools, using exports: %s", e)
+    return len(names)
 
 
-def _build_cua_diagnostics() -> dict:
+async def _build_cua_diagnostics() -> dict:
     """Shared payload for the CUA diagnostics endpoints (see below)."""
     uptime = int(_time.time() - _SERVER_START)
     cpu = mem = disk = None
@@ -289,7 +303,7 @@ def _build_cua_diagnostics() -> dict:
         "data": {
             "backend": {"status": "ok", "version": "2.4.1", "uptime_seconds": uptime, "port": 10740},
             "system": {"cpu_percent": cpu, "memory_percent": mem, "disk_percent": disk},
-            "tools": {"total": _count_plex_tools(), "categories": ["library", "media", "search", "playlist", "server"]},
+            "tools": {"total": await _count_plex_tools(), "categories": ["library", "media", "search", "playlist", "server"]},
             "errors": {"count": 0, "recent": []},
             "cua_status": {"window_found": window, "backend_reachable": True, "tesseract_available": tesseract},
         },
@@ -310,13 +324,13 @@ async def mcp_status():
 @app.get("/api/v1/diagnostics")
 async def get_cua_diagnostics_v1():
     """CUA-NSIS smoke-test diagnostics (versioned alias)."""
-    return _build_cua_diagnostics()
+    return await _build_cua_diagnostics()
 
 
 @app.get("/api/diagnostics")
 async def get_diagnostics():
     """Machine diagnostics (canonical alias of /api/v1/diagnostics)."""
-    return _build_cua_diagnostics()
+    return await _build_cua_diagnostics()
 
 
 @app.get("/api/status")
@@ -328,7 +342,7 @@ async def get_status():
         "server": "plex-mcp",
         "version": "2.4.1",
         "uptime_seconds": int(_time.time() - _SERVER_START),
-        "tool_count": _count_plex_tools(),
+        "tool_count": await _count_plex_tools(),
         "mcp_mounted": _mcp_loaded,
         "providers": {"plex": "configured" if plex_configured else "not_configured"},
     }
@@ -343,7 +357,7 @@ async def get_capabilities():
         "name": "plex-mcp",
         "version": "2.4.1",
         "transports": ["http", "stdio"],
-        "tool_count": _count_plex_tools(),
+        "tool_count": await _count_plex_tools(),
         "tool_categories": [
             "library",
             "media",
@@ -366,11 +380,16 @@ async def get_capabilities():
             "ffmpeg",
             "arr",
             "taste",
+            "completeness",
+            "canon",
         ],
+        "sampling_tools": ["agentic_plex_workflow", "plex_natural_assistant"],
         "features": {
             "rag_semantic_search": True,
             "taste_profiling": True,
             "media_enrichment": True,
+            "completeness_gap_detection": True,
+            "canon_coverage": True,
             "arr_integration": True,
             "llm_chat_proxy": True,
             "image_proxy": True,
@@ -391,6 +410,7 @@ async def get_capabilities():
             "GET,POST /api/playback/play | GET /api/playback/clients",
             "GET /api/repair (probe/execute)",
             "GET /api/logs | GET /api/help | GET /api/skills",
+            "GET /api/canon/* (canons, oscar-best-picture, afi-100, tmdb-top, check-list)",
             "GET,POST,PATCH /api/system/* (settings, plex PIN/test, api-docs-info)",
             "GET,POST /api/llm/* (providers, models, keys, chat, agentic, refine, gpus)",
             "GET,POST /api/rag/* (sync, stats, semantic, context)",
