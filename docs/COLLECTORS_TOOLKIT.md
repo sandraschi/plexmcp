@@ -1,5 +1,13 @@
 # Collector's toolkit (naming, verification, Plex realities, lawful links)
 
+> # ⛔ This guide explicitly does NOT help with copyright infringement.
+> **No pirate sites. No release groups to seek out. No sourcing tips, real
+> names or wink-wink aliases. Nothing here tells you where to get infringing
+> content or how to do it better.** The links below are unambiguously lawful
+> resources (metadata databases, edition comparisons, legal availability
+> guides, open-source tooling docs). If you came looking for "the big three"
+> or similar, you will not find them here — by design, and that will not change.
+
 For builders of large personal libraries: the Scene naming grammar your
 files arrive in, how verification works, the honest tension between
 Plex-the-company and Plex-the-use-case, how to audit your own shelves with
