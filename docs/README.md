@@ -34,6 +34,7 @@ Everything below links from the [project README](../README.md). Pick a path by *
 | [**RAG.md**](RAG.md) | Semantic search, LanceDB, indexing, `PYTHONPATH` |
 | [**ENRICHMENT.md**](ENRICHMENT.md) | Wikipedia-style enrichment |
 | [**LIBRARY_BUILDING.md**](LIBRARY_BUILDING.md) | Build a library: folders, naming, agents, ripping legality, rtorrent-mcp handoff |
+| [**COLLECTORS_TOOLKIT.md**](COLLECTORS_TOOLKIT.md) | Scene naming, verification, Plex realities, self-audit, lawful links |
 | [**PRD.md**](PRD.md) | Product scope — in / out of scope |
 
 ---
