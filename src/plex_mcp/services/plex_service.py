@@ -986,6 +986,15 @@ class PlexService:
             "key": getattr(item, "key", ""),
         }
 
+        # Season / episode position (gap analysis, e.g. S01E03). Absent on
+        # movies and other non-episodic types.
+        if hasattr(item, "index") and getattr(item, "index") is not None:
+            result["index"] = getattr(item, "index")
+        if hasattr(item, "parentIndex") and getattr(item, "parentIndex") is not None:
+            result["parent_index"] = getattr(item, "parentIndex")
+        if hasattr(item, "parentTitle") and getattr(item, "parentTitle"):
+            result["parent_title"] = getattr(item, "parentTitle")
+
         # Add timestamp fields safely
         if hasattr(item, "addedAt"):
             result["added_at"] = safe_ts(item.addedAt)

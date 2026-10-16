@@ -93,6 +93,38 @@ def build_mock_plex_service() -> MagicMock:
 
     svc.get_library_items = AsyncMock(side_effect=_mock_get_items)
     svc.search_media = AsyncMock(return_value=[])
+
+    async def _mock_get_children(media_id=None, limit=500, offset=0, **kwargs):
+        """Show -> seasons; season -> episodes (se1 has a planted S01E03 gap)."""
+        if str(media_id) == "s1":
+            return {
+                "items": [
+                    {"id": "se1", "title": "Season 1", "type": "season", "index": 1},
+                    {"id": "se2", "title": "Season 2", "type": "season", "index": 2},
+                ],
+                "total": 2,
+            }
+        if str(media_id) == "se1":
+            return {
+                "items": [
+                    {"id": "e1", "title": "Pilot", "type": "episode", "index": 1, "parent_index": 1},
+                    {"id": "e2", "title": "Second", "type": "episode", "index": 2, "parent_index": 1},
+                    {"id": "e4", "title": "Fourth", "type": "episode", "index": 4, "parent_index": 1},
+                ],
+                "total": 3,
+            }
+        if str(media_id) == "se2":
+            return {
+                "items": [
+                    {"id": "e5", "title": "Return", "type": "episode", "index": 1, "parent_index": 2},
+                    {"id": "e6", "title": "Again", "type": "episode", "index": 2, "parent_index": 2},
+                ],
+                "total": 2,
+            }
+        return {"items": [], "total": 0}
+
+    svc.get_media_children = AsyncMock(side_effect=_mock_get_children)
+    svc.get_media_metadata = AsyncMock(return_value={"title": "Mock Show"})
     svc.get_media_info = AsyncMock(return_value={"title": "x"})
     svc.get_recently_added = AsyncMock(return_value=[])
     svc.update_media_metadata = AsyncMock(return_value=True)

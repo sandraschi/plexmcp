@@ -18,7 +18,9 @@ after thorough testing and user migration.
 # Import implemented portmanteau tools
 from .arr_stack import arr_stack
 from .audio_mgr import plex_audio_mgr
+from .canon import plex_canon
 from .collections import plex_collections
+from .completeness import plex_completeness
 from .enrichment import plex_media_enrichment
 from .ffmpeg_mgr import plex_ffmpeg_mgr
 from .help import plex_help
@@ -42,7 +44,9 @@ from .user import plex_user
 __all__ = [
     "arr_stack",
     "plex_audio_mgr",
+    "plex_canon",
     "plex_collections",
+    "plex_completeness",
     "plex_ffmpeg_mgr",
     "plex_help",
     "plex_integration",
