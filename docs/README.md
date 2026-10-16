@@ -33,6 +33,7 @@ Everything below links from the [project README](../README.md). Pick a path by *
 |-------|---------|
 | [**RAG.md**](RAG.md) | Semantic search, LanceDB, indexing, `PYTHONPATH` |
 | [**ENRICHMENT.md**](ENRICHMENT.md) | Wikipedia-style enrichment |
+| [**LIBRARY_BUILDING.md**](LIBRARY_BUILDING.md) | Build a library: folders, naming, agents, ripping legality, rtorrent-mcp handoff |
 | [**PRD.md**](PRD.md) | Product scope — in / out of scope |
 
 ---

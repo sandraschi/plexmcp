@@ -59,6 +59,7 @@ just webapp
 | [**docs/SELF_HOSTING.md**](docs/SELF_HOSTING.md) | Home lab: HTTPS, reverse proxy, secrets, hardening |
 | [**docs/DOCKER.md**](docs/DOCKER.md) | Optional Docker Compose example |
 | [**docs/CONFIGURATION.md**](docs/CONFIGURATION.md) | Environment variables, sampling, RAG, *arr |
+| [**docs/LIBRARY_BUILDING.md**](docs/LIBRARY_BUILDING.md) | Build a library: folders, naming, agents, ripping legality, rtorrent-mcp handoff |
 | [**docs/TOOLS.md**](docs/TOOLS.md) | Tool surface (portmanteaus and what they do) |
 | [**docs/WEBAPP.md**](docs/WEBAPP.md) | Web app ports, startup, feature pointers |
 | [**docs/RAG.md**](docs/RAG.md) | Semantic search and indexing |

@@ -1,7 +1,8 @@
 # MCP tools (portmanteau)
 
 PlexMCP registers **portmanteau** tools: one tool per domain with an `operation` parameter.
-All 22 tools are FastMCP 3.2 aligned (`version="1.0.0"`, `annotations=READ_ONLY|MUTATING|DESTRUCTIVE`,
+All 24 portmanteau tools (+ 2 sampling tools) are FastMCP 3.2 aligned (`version="1.0.0"`,
+`annotations=READ_ONLY|MUTATING|DESTRUCTIVE`,
 `Annotated[Field]` parameters, `ToolResult` returns, SOTA docstrings).
 
 
@@ -26,6 +27,8 @@ All 22 tools are FastMCP 3.2 aligned (`version="1.0.0"`, `annotations=READ_ONLY|
 | `plex_reporting` | `READ_ONLY` | Server statistics, usage reports, activity logs |
 | `plex_integration` | `MUTATING` | Third-party integration setup and sync |
 | `plex_help` | `READ_ONLY` | Tool discovery, capability overview |
+| `plex_completeness` | `READ_ONLY` | TV gap detection: `status` inventory, `scan_library` per-season missing episodes (S01E03 ranges), `show_gaps` depth |
+| `plex_canon` | `READ_ONLY` | Canon coverage: `list_canons`, live `oscar_best_picture` / `afi_100`, keyed `tmdb_top`, caller-supplied `check_list` (1001-style) |
 | `plex_audio_mgr` | `MUTATING` | Audio stream management |
 | `plex_ffmpeg_mgr` | `DESTRUCTIVE` | FFmpeg process management |
 | `plex_media_enrichment` | `MUTATING` | Wikipedia + TMDB + JustWatch quick lookups, and deep LLM-synthesised per-item dossiers with library cross-references (writes to local `data/enrichment.db`) |

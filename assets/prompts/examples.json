@@ -99,5 +99,15 @@
 	{"tool": "plex_media_enrichment", "operation": "get_related", "arguments": {"rating_key": "12345"}, "description": "The double feature for tonight."},
 	{"tool": "plex_media_enrichment", "operation": "stale_report", "arguments": {}, "description": "Dossiers older than cache window, due for refresh."},
 	{"tool": "plex_reporting", "operation": "performance_report", "arguments": {}, "description": "Load over time for host sizing."},
-	{"tool": "plex_reporting", "operation": "usage_report", "arguments": {}, "description": "Aggregate consumption for the month."}
+	{"tool": "plex_reporting", "operation": "usage_report", "arguments": {}, "description": "Aggregate consumption for the month."},
+	{"tool": "plex_completeness", "operation": "status", "arguments": {}, "description": "TV library inventory with show counts."},
+	{"tool": "plex_completeness", "operation": "scan_library", "arguments": {"library_id": "2"}, "description": "Per-season missing episodes across a TV library, worst-first."},
+	{"tool": "plex_completeness", "operation": "scan_library", "arguments": {"library_id": "2", "include_complete": true}, "description": "Full scan including complete shows for the audit record."},
+	{"tool": "plex_completeness", "operation": "show_gaps", "arguments": {"rating_key": "12345"}, "description": "Full-depth gap report for one show (S01E03 style ranges)."},
+	{"tool": "plex_canon", "operation": "list_canons", "arguments": {}, "description": "Enumerate canon lists, sources, and requirements."},
+	{"tool": "plex_canon", "operation": "afi_100", "arguments": {"limit": 25}, "description": "Live AFI top-100 vs movie holdings."},
+	{"tool": "plex_canon", "operation": "oscar_best_picture", "arguments": {"limit": 25}, "description": "Live Oscar winners vs movie holdings."},
+	{"tool": "plex_canon", "operation": "tmdb_top", "arguments": {"media_type": "show", "limit": 20}, "description": "TMDB top-rated TV vs holdings (needs TMDB_API_KEY)."},
+	{"tool": "plex_canon", "operation": "check_list", "arguments": {"items": [{"title": "Stalker", "year": 1979}]}, "description": "Your own 1001-style list vs holdings, title plus year match."},
+	{"tool": "plex_canon", "operation": "check_list", "arguments": {"items": [{"title": "Severance", "media_type": "show"}]}, "description": "Check a show title from a book appendix or article ranking."}
 ]
