@@ -28,4 +28,6 @@ class PlexServerStatus(BaseModel):
     size: int = Field(0, description="Size of the Plex database in bytes")
     my_plex_username: str = Field("", description="Plex account username")
     my_plex_mapping_state: str = Field("", description="Plex account mapping state")
-    connected: bool = Field(False, description="Connection status to Plex services")
+    connected: bool = Field(True, description="Connection status to Plex services")
+    active_sessions: int = Field(0, description="Number of active playback sessions")
+    libraries: list[str] = Field(default_factory=list, description="Available Plex library names")
