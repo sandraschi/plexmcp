@@ -16,10 +16,11 @@ from enum import StrEnum
 from typing import Any
 
 from plexapi import utils
-from plexapi.exceptions import BadConfig, NotFound, Unauthorized
+from plexapi.exceptions import BadRequest, NotFound, Unauthorized
+from plexapi.playlist import Playlist
 from plexapi.playqueue import PlayQueue
 from plexapi.server import CONFIG, PlexServer
-from plexapi.video import Episode, Movie, Playlist, Season, Show
+from plexapi.video import Episode, Movie, Season, Show
 from pydantic import BaseModel
 
 # RequestMethod is typically from plexapi.utils
@@ -182,7 +183,9 @@ class PlexMediaService(BaseService):
                 code="auth_error",
                 status_code=401,
             ) from e
-        except BadConfig as e:
+        except BadRequest as e:
+            # The auth arm above is caught first, and Unauthorized subclasses
+            # BadRequest, so a bad token still reads as 401 and never as this.
             raise ServiceError(
                 f"Invalid Plex server configuration: {str(e)}", code="config_error", status_code=400
             ) from e

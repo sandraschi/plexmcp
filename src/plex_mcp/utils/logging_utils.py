@@ -187,3 +187,85 @@ def log_warning(logger: logging.Logger, operation: str, message: str, **kwargs: 
 
 # Alias for backward compatibility
 setup_logging = configure_logging
+
+
+def log_exceptions(logger: logging.Logger | None = None, reraise: bool = True, *,
+                   log_errors: bool = True):
+    """Log an exception raised by the wrapped callable, then re-raise it.
+
+    ``services/base.py`` imports and applies this to every service method, and
+    ``d3fbd38`` removed the implementation while leaving the callers, so the
+    whole service layer failed to import and every tool on the server failed
+    with it. The version that commit deleted was sync-only and took no
+    ``log_errors``; this one meets the caller's contract and is async-aware,
+    because base.py applies it to a coroutine.
+    """
+    import functools
+    import inspect
+
+    def _record(exc: BaseException, func) -> None:
+        if not log_errors:
+            return
+        (logger or get_logger(getattr(func, "__module__", __name__))).error(
+            "Exception in %s: %s", func.__name__, exc, exc_info=True)
+
+    def decorator(func):
+        if inspect.iscoroutinefunction(func):
+            @functools.wraps(func)
+            async def wrapper(*args, **kwargs):
+                try:
+                    return await func(*args, **kwargs)
+                except Exception as exc:
+                    _record(exc, func)
+                    if reraise:
+                        raise
+            return wrapper
+
+        @functools.wraps(func)
+        def sync_wrapper(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except Exception as exc:
+                _record(exc, func)
+                if reraise:
+                    raise
+        return sync_wrapper
+
+    return decorator
+
+
+def log_execution_time(logger: logging.Logger | None = None):
+    """Decorator factory: log how long the wrapped callable took.
+
+    Restored with ``log_exceptions`` and for the same reason: base.py applies
+    it as ``log_execution_time(logger=logger)(method)`` on an async method.
+    Logged at DEBUG, because it is on the hot path of every service call and
+    base.py already logs entry at DEBUG.
+    """
+    import functools
+    import inspect
+    import time
+
+    def decorator(func):
+        if inspect.iscoroutinefunction(func):
+            @functools.wraps(func)
+            async def wrapper(*args, **kwargs):
+                started = time.perf_counter()
+                try:
+                    return await func(*args, **kwargs)
+                finally:
+                    (logger or get_logger(getattr(func, "__module__", __name__))).debug(
+                        "%s took %.3fs", func.__name__, time.perf_counter() - started)
+            return wrapper
+
+        @functools.wraps(func)
+        def sync_wrapper(*args, **kwargs):
+            started = time.perf_counter()
+            try:
+                return func(*args, **kwargs)
+            finally:
+                (logger or get_logger(getattr(func, "__module__", __name__))).debug(
+                    "%s took %.3fs", func.__name__, time.perf_counter() - started)
+        return sync_wrapper
+
+    return decorator

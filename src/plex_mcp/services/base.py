@@ -81,7 +81,7 @@ def service_method(
     ) -> Callable[..., Coroutine[Any, Any, R]]:
         @wraps(method)
         @log_exceptions(log_errors=log_errors)
-        @async_retry(tries=retry_attempts + 1, delay=retry_delay)
+        @async_retry(max_attempts=retry_attempts + 1, delay=retry_delay)
         async def wrapper(self, *args, **kwargs) -> R:
             # Get logger for the service
             logger = getattr(self, "logger", get_logger(f"{self.__class__.__name__}"))

@@ -2117,7 +2117,7 @@ requires-dist = [
     { name = "jsonschema", specifier = ">=4.21.0" },
     { name = "lancedb", specifier = ">=0.4.0" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.8.0,<2.0.0" },
-    { name = "plexapi", specifier = ">=4.15.0" },
+    { name = "plexapi", specifier = ">=4.17,<5" },
     { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=3.6.0" },
     { name = "prefab-ui", specifier = ">=0.14.0" },
     { name = "pydantic", specifier = ">=2.0.0,<3.0.0" },

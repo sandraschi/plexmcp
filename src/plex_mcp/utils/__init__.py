@@ -23,6 +23,8 @@ from .async_utils import (
 from .config import get_config_value, load_config, save_config, set_config_value
 from .logging_utils import (
     get_logger,
+    log_exceptions,
+    log_execution_time,
     setup_logging,
 )
 from .network import (
@@ -52,6 +54,8 @@ from .validation import (
 __all__ = [
     # From logging_utils
     "get_logger",
+    "log_exceptions",
+    "log_execution_time",
     "setup_logging",
     # From async_utils
     "async_retry",
