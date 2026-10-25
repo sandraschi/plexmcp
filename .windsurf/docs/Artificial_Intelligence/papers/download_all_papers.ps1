@@ -1,7 +1,7 @@
 # Script to download all seminal AI papers
 
 # Base paths
-$basePath = "D:\Dev\repos\mywienerlinien\.windsurf\docs\3_ai\papers"
+$basePath = "D:\Dev\repos\publictransport-mcp\.windsurf\docs\3_ai\papers"
 
 # List of papers to download
 $papers = @(
@@ -66,20 +66,20 @@ foreach ($paper in $papers) {
     $fileName = $paper.title -replace '[^\w]', '_' + ".pdf"
     $outputPath = Join-Path $outputDir $fileName
     $pdfUrl = "https://arxiv.org/pdf/$($paper.arxivId).pdf"
-    
+
     # Skip if file already exists
     if (Test-Path $outputPath) {
         Write-Host "Already exists: $($paper.title)" -ForegroundColor DarkGray
         continue
     }
-    
+
     # Download the paper
     Write-Host "Downloading $($paper.title)..." -ForegroundColor Cyan
-    
+
     try {
         $webClient = New-Object System.Net.WebClient
         $webClient.DownloadFile($pdfUrl, $outputPath)
-        
+
         # Create metadata
         $metadata = @{
             title = $paper.title
@@ -90,15 +90,15 @@ foreach ($paper in $papers) {
             arxivId = $paper.arxivId
             downloaded = (Get-Date -Format "yyyy-MM-dd")
         } | ConvertTo-Json
-        
+
         $metadataPath = $outputPath -replace '\.pdf$', '.json'
         $metadata | Out-File -FilePath $metadataPath -Encoding utf8
-        
+
         Write-Host "âœ" Downloaded: $($paper.title)" -ForegroundColor Green
     } catch {
         Write-Host "âœ- Error downloading $($paper.title): $_" -ForegroundColor Red
     }
-    
+
     # Be nice to arXiv servers
     Start-Sleep -Seconds 2
 }
