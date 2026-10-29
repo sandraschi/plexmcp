@@ -1184,7 +1184,10 @@ class PlexService:
             # Sorting
             if sort_dir.lower() not in ("asc", "desc"):
                 sort_dir = "asc"
-            sort = f"{sort_dir.lower()}:{sort_by}"
+            # plexapi expects FIELD:DIRECTION -- search(sort="titleSort:desc")
+            # -- so building "asc:titleSort" sent an unknown sort FIELD and the
+            # server answered HTTP 400.
+            sort = f"{sort_by}:{sort_dir.lower()}"
 
             # Search in specific library or across all
             if library_id:
