@@ -183,8 +183,9 @@ def build_server_status(status: dict[str, Any]) -> PrefabApp:
     version = _value(status.get("version"))
     uptime = _value(status.get("uptime"))
     sessions = status.get("sessions", status.get("active_sessions", 0))
-    libraries = status.get("libraries", status.get("library_count", 0))
-    is_reachable = status.get("reachable", status.get("online", False))
+    library_value = status.get("libraries", status.get("library_count", 0))
+    libraries = len(library_value) if isinstance(library_value, (list, tuple, set, dict)) else library_value
+    is_reachable = status.get("reachable", status.get("online", status.get("connected", False)))
 
     with PrefabApp(title="Plex Server Status") as app:
         with Row():
