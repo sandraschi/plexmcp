@@ -7,7 +7,7 @@ export async function OPTIONS() {
 		status: 204,
 		headers: {
 			Allow: "GET, POST, OPTIONS",
-			"Access-Control-Allow-Origin": "*",
+			"Access-Control-Allow-Origin": "http://localhost:10741",
 			"Access-Control-Allow-Methods": "GET, POST, OPTIONS",
 			"Access-Control-Allow-Headers": "Content-Type",
 		},
