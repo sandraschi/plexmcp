@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     API_VERSION: str = "1.0.0"
     API_DESCRIPTION: str = "HTTP API wrapper for PlexMCP server"
 
-    HOST: str = "0.0.0.0"  # noqa: S104
+    HOST: str = "127.0.0.1"
     PORT: int = 10740
     RELOAD: bool = True
 
